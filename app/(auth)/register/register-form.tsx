@@ -11,15 +11,23 @@ export function RegisterForm() {
   const [state, formAction, isPending] = useActionState(registerAction, {});
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-5">
       {state.error && (
-        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 p-3 text-sm text-red-600 dark:text-red-400">
           {state.error}
         </div>
       )}
 
+      {state.success && state.message && (
+        <div className="rounded-lg bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 p-3 text-sm text-green-600 dark:text-green-400">
+          {state.message}
+        </div>
+      )}
+
       <div className="space-y-2">
-        <Label htmlFor="full_name">Full Name</Label>
+        <Label htmlFor="full_name" className="text-sm font-medium">
+          Full Name
+        </Label>
         <Input
           id="full_name"
           name="full_name"
@@ -27,11 +35,14 @@ export function RegisterForm() {
           required
           autoComplete="name"
           disabled={isPending}
+          className="h-11 rounded-lg"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-sm font-medium">
+          Email
+        </Label>
         <Input
           id="email"
           name="email"
@@ -40,25 +51,31 @@ export function RegisterForm() {
           required
           autoComplete="email"
           disabled={isPending}
+          className="h-11 rounded-lg"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password" className="text-sm font-medium">
+          Password
+        </Label>
         <Input
           id="password"
           name="password"
           type="password"
-          placeholder="••••••••"
+          placeholder="Min. 8 characters"
           required
           minLength={8}
           autoComplete="new-password"
           disabled={isPending}
+          className="h-11 rounded-lg"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone">Phone (optional)</Label>
+        <Label htmlFor="phone" className="text-sm font-medium">
+          Phone <span className="text-muted-foreground font-normal">(optional)</span>
+        </Label>
         <Input
           id="phone"
           name="phone"
@@ -66,25 +83,36 @@ export function RegisterForm() {
           placeholder="+880 1XXXXXXXXX"
           autoComplete="tel"
           disabled={isPending}
+          className="h-11 rounded-lg"
         />
       </div>
 
       <div className="space-y-2">
-        <Label>I am a</Label>
+        <Label className="text-sm font-medium">I am a</Label>
         <div className="grid grid-cols-3 gap-2">
           {(["TEACHER", "STUDENT", "GUARDIAN"] as const).map((role) => (
             <label
               key={role}
-              className="flex cursor-pointer items-center justify-center rounded-md border p-3 text-sm font-medium transition-colors hover:bg-muted has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+              className="flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 text-sm font-medium transition-all hover:border-blue-200 hover:bg-blue-50/50 dark:hover:border-blue-800 dark:hover:bg-blue-950/50 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 dark:has-[:checked]:border-blue-500 dark:has-[:checked]:bg-blue-950/50 has-[:checked]:text-blue-600 dark:has-[:checked]:text-blue-400"
             >
-              <input type="radio" name="role" value={role} className="sr-only" defaultChecked={role === "STUDENT"} />
+              <input
+                type="radio"
+                name="role"
+                value={role}
+                className="sr-only"
+                defaultChecked={role === "STUDENT"}
+              />
               {role.charAt(0) + role.slice(1).toLowerCase()}
             </label>
           ))}
         </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button
+        type="submit"
+        className="w-full h-11 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium"
+        disabled={isPending}
+      >
         {isPending ? (
           <>
             <Loader2 className="mr-2 size-4 animate-spin" />

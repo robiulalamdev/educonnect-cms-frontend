@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // ─── Cookie names (must match backend exactly) ──────────────
-const USER_ACCESS = "user_access";
-const USER_REFRESH = "user_refresh";
-const ADMIN_ACCESS = "admin_access";
-const ADMIN_REFRESH = "admin_refresh";
+// process.env is available in Next.js 16 middleware
+const USER_ACCESS = process.env.COOKIE_ACCESS_NAME || "cms_access_token";
+const USER_REFRESH = process.env.COOKIE_REFRESH_NAME || "cms_refresh_token";
+const ADMIN_ACCESS = process.env.ADMIN_COOKIE_ACCESS_NAME || "cms_admin_access";
+const ADMIN_REFRESH = process.env.ADMIN_COOKIE_REFRESH_NAME || "cms_admin_refresh";
 
 // ─── Route config ───────────────────────────────────────────
 const adminLogin = "/admin/login";

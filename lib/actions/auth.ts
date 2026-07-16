@@ -12,42 +12,13 @@ interface ApiResponse<T = any> {
 }
 
 /**
- * Server-side fetch helper that forwards cookies to the backend.
- */
-async function serverFetch<T>(
-  endpoint: string,
-  options: RequestInit = {},
-): Promise<ApiResponse<T>> {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const url = `${env.API_BASE_URL}${endpoint}`;
-
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: cookieHeader,
-      ...options.headers,
-    },
-    cache: "no-store",
-  });
-
-  const data = await res.json();
-  return { ...data, _status: res.status } as ApiResponse<T> & { _status: number };
-}
-
-/**
  * Register a new user.
- * On success, sets auth cookies and redirects to dashboard.
+ * On success, redirects to login with success message.
  */
 export async function registerAction(
   _prevState: any,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string; success?: boolean; message?: string }> {
   const full_name = formData.get("full_name") as string;
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -59,8 +30,9 @@ export async function registerAction(
   }
 
   try {
-    const result = await serverFetch(API.AUTH.REGISTER, {
+    const res = await fetch(`${env.API_BASE_URL}${API.AUTH.REGISTER}`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         full_name,
         email,
@@ -68,31 +40,32 @@ export async function registerAction(
         role,
         phone: phone || undefined,
       }),
+      cache: "no-store",
     });
 
-    if (!result.success) {
-      return { error: result.message ?? "Registration failed." };
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      return { error: data.message ?? "Registration failed." };
     }
 
-    // Set cookies from Set-Cookie headers
-    const cookieStore = await cookies();
-    // The backend sets cookies via Set-Cookie header — extract and forward
-    // For now, the login after register will handle cookies
+    return {
+      success: true,
+      message: "Registration successful! Please check your email to verify your account, then log in.",
+    };
   } catch (err: any) {
-    return { error: err.message ?? "Something went wrong." };
+    return { error: err.message ?? "Something went wrong. Please try again." };
   }
-
-  redirect(ROUTES.LOGIN);
 }
 
 /**
  * Login action — server-side form handler.
- * On success, the backend sets HTTP-only cookies.
+ * Forwards Set-Cookie headers from backend to browser.
  */
 export async function loginAction(
   _prevState: any,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string; success?: boolean; message?: string }> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
@@ -115,30 +88,36 @@ export async function loginAction(
       return { error: data.message ?? "Invalid credentials." };
     }
 
-    // Forward Set-Cookie headers to the browser
+    // Forward Set-Cookie headers from backend to browser via Next.js cookie store
     const setCookies = res.headers.getSetCookie();
     const cookieStore = await cookies();
 
     for (const cookieStr of setCookies) {
-      const [nameValue, ...rest] = cookieStr.split(";");
-      const [name, value] = nameValue.split("=");
+      // Parse: "name=value; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400000"
+      const parts = cookieStr.split(";");
+      const [nameValue] = parts;
+      const eqIndex = nameValue.indexOf("=");
+      const name = nameValue.substring(0, eqIndex).trim();
+      const value = nameValue.substring(eqIndex + 1).trim();
 
-      const parts: Record<string, string> = {};
-      for (const part of rest) {
-        const [key, val] = part.trim().split("=");
-        parts[key.toLowerCase()] = val ?? "";
+      // Parse attributes
+      const attrs: Record<string, string> = {};
+      for (let i = 1; i < parts.length; i++) {
+        const part = parts[i].trim();
+        const [key, val] = part.split("=");
+        attrs[key.toLowerCase()] = val ?? "";
       }
 
-      cookieStore.set(name.trim(), value.trim(), {
+      cookieStore.set(name, value, {
         httpOnly: true,
         secure: env.IS_PRODUCTION,
         sameSite: "lax",
-        path: parts["path"] ?? "/",
-        maxAge: parts["max-age"] ? parseInt(parts["max-age"]) : undefined,
+        path: attrs["path"] || "/",
+        maxAge: attrs["max-age"] ? Math.floor(parseInt(attrs["max-age"]) / 1000) : undefined,
       });
     }
   } catch (err: any) {
-    return { error: err.message ?? "Something went wrong." };
+    return { error: err.message ?? "Something went wrong. Please try again." };
   }
 
   redirect(ROUTES.USER.DASHBOARD);
@@ -150,7 +129,7 @@ export async function loginAction(
 export async function adminLoginAction(
   _prevState: any,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string; success?: boolean; message?: string }> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
@@ -173,30 +152,34 @@ export async function adminLoginAction(
       return { error: data.message ?? "Invalid credentials." };
     }
 
-    // Forward Set-Cookie headers to the browser
+    // Forward Set-Cookie headers from backend to browser
     const setCookies = res.headers.getSetCookie();
     const cookieStore = await cookies();
 
     for (const cookieStr of setCookies) {
-      const [nameValue, ...rest] = cookieStr.split(";");
-      const [name, value] = nameValue.split("=");
+      const parts = cookieStr.split(";");
+      const [nameValue] = parts;
+      const eqIndex = nameValue.indexOf("=");
+      const name = nameValue.substring(0, eqIndex).trim();
+      const value = nameValue.substring(eqIndex + 1).trim();
 
-      const parts: Record<string, string> = {};
-      for (const part of rest) {
-        const [key, val] = part.trim().split("=");
-        parts[key.toLowerCase()] = val ?? "";
+      const attrs: Record<string, string> = {};
+      for (let i = 1; i < parts.length; i++) {
+        const part = parts[i].trim();
+        const [key, val] = part.split("=");
+        attrs[key.toLowerCase()] = val ?? "";
       }
 
-      cookieStore.set(name.trim(), value.trim(), {
+      cookieStore.set(name, value, {
         httpOnly: true,
         secure: env.IS_PRODUCTION,
         sameSite: "lax",
-        path: parts["path"] ?? "/",
-        maxAge: parts["max-age"] ? parseInt(parts["max-age"]) : undefined,
+        path: attrs["path"] || "/",
+        maxAge: attrs["max-age"] ? Math.floor(parseInt(attrs["max-age"]) / 1000) : undefined,
       });
     }
   } catch (err: any) {
-    return { error: err.message ?? "Something went wrong." };
+    return { error: err.message ?? "Something went wrong. Please try again." };
   }
 
   redirect(ROUTES.ADMIN.DASHBOARD);
