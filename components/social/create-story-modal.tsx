@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useActionState } from "react";
+import { useState, useRef, useTransition } from "react";
 import { createStoryAction } from "@/lib/actions/stories";
 import { Button } from "@/components/ui/button";
 import { X, Camera, Type, Loader2, Image } from "lucide-react";
@@ -19,7 +19,8 @@ export function CreateStoryModal({ open, onClose, onCreated }: CreateStoryModalP
   const [bgColor, setBgColor] = useState(bgColors[0]);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [state, formAction, isPending] = useActionState(createStoryAction, {});
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   if (!open) return null;
@@ -30,28 +31,30 @@ export function CreateStoryModal({ open, onClose, onCreated }: CreateStoryModalP
   }
 
   function reset() {
-    setContent(""); setFile(null); setPreview(null); setMode("text"); setBgColor(bgColors[0]);
+    setContent(""); setFile(null); setPreview(null); setMode("text"); setBgColor(bgColors[0]); setError(null);
   }
 
-  function handleClose() {
-    reset();
-    onClose();
-  }
-
-  // Handle success
-  if (state?.success) {
-    onCreated?.();
-    handleClose();
-    return null;
-  }
+  function handleClose() { reset(); onClose(); }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (mode === "text" && !content.trim()) return;
+    if (mode === "image" && !file) return;
+
     const formData = new FormData();
     formData.set("content", content);
     formData.set("bg_color", bgColor);
     if (file) formData.set("media", file);
-    formAction(formData);
+
+    startTransition(async () => {
+      const result = await createStoryAction(null, formData);
+      if (result?.error) {
+        setError(result.error);
+      } else if (result?.success) {
+        onCreated?.();
+        handleClose();
+      }
+    });
   }
 
   return (
@@ -64,11 +67,11 @@ export function CreateStoryModal({ open, onClose, onCreated }: CreateStoryModalP
 
         <form onSubmit={handleSubmit}>
           <div className="p-5 space-y-4">
-            {state?.error && (
-              <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200/60 dark:border-red-800/60 p-3 text-sm text-red-600 dark:text-red-400">{state.error}</div>
+            {error && (
+              <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200/60 dark:border-red-800/60 p-3 text-sm text-red-600 dark:text-red-400">{error}</div>
             )}
 
-            {/* Preview - full width */}
+            {/* Preview */}
             <div className="w-full aspect-[9/16] max-h-[360px] rounded-xl overflow-hidden">
               {mode === "image" && preview ? (
                 <div className="relative w-full h-full bg-gray-100 dark:bg-gray-800">
@@ -77,7 +80,7 @@ export function CreateStoryModal({ open, onClose, onCreated }: CreateStoryModalP
                 </div>
               ) : mode === "text" ? (
                 <div className="w-full h-full flex items-center justify-center p-6" style={{ backgroundColor: bgColor }}>
-                  <textarea name="content" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Type something..."
+                  <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Type something..."
                     className="w-full bg-transparent text-white text-lg font-medium text-center resize-none focus:outline-none placeholder:text-white/50" rows={4} />
                 </div>
               ) : (
@@ -89,7 +92,6 @@ export function CreateStoryModal({ open, onClose, onCreated }: CreateStoryModalP
             </div>
             <input type="hidden" name="bg_color" value={bgColor} />
 
-            {/* Mode Toggle */}
             <div className="flex gap-2">
               <button type="button" onClick={() => { setMode("image"); if (!preview) fileRef.current?.click(); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all ${mode === "image" ? "bg-[#0066FF] text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
@@ -102,7 +104,6 @@ export function CreateStoryModal({ open, onClose, onCreated }: CreateStoryModalP
             </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
-            {/* Color Picker */}
             {mode === "text" && (
               <div className="flex gap-2 justify-center">
                 {bgColors.map((c) => (
