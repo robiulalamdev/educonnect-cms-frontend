@@ -71,7 +71,7 @@ export const API = {
   SERVICE: "/api/v1/service",
   BATCH: "/api/v1/batch",
   ENROLLMENT: "/api/v1/enrollment",
-  POST: "/api/v1/post",
+  POST: "/api/v1/posts",
   MESSAGING: "/api/v1/messaging",
   NOTIFICATION: "/api/v1/notification",
   REVIEW: "/api/v1/review",

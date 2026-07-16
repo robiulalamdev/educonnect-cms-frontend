@@ -40,14 +40,14 @@ async function serverFetch<T>(
  * Get my posts (paginated).
  */
 export async function getMyPosts(page = 1, limit = 10) {
-  return serverFetch(`/api/v1/post/profile/?page=${page}&limit=${limit}`);
+  return serverFetch(`/api/v1/posts/profile/?page=${page}&limit=${limit}`);
 }
 
 /**
  * Get a single post by ID.
  */
 export async function getPostById(id: string) {
-  return serverFetch(`/api/v1/post/${id}`);
+  return serverFetch(`/api/v1/posts/${id}`);
 }
 
 /**
@@ -92,7 +92,7 @@ export async function createPostAction(
       }
     }
 
-    const res = await fetch(`${API_BASE}/api/v1/post/profile/`, {
+    const res = await fetch(`${API_BASE}/api/v1/posts/profile/`, {
       method: "POST",
       headers: { Cookie: cookieHeader },
       body: submitData,
@@ -152,7 +152,7 @@ export async function updatePostAction(
       }
     }
 
-    const res = await fetch(`${API_BASE}/api/v1/post/profile/${postId}`, {
+    const res = await fetch(`${API_BASE}/api/v1/posts/profile/${postId}`, {
       method: "PATCH",
       headers: { Cookie: cookieHeader },
       body: submitData,
@@ -190,7 +190,7 @@ export async function deletePostAction(
     const submitData = new FormData();
     submitData.append("status", "DELETED");
 
-    const res = await fetch(`${API_BASE}/api/v1/post/profile/${postId}`, {
+    const res = await fetch(`${API_BASE}/api/v1/posts/profile/${postId}`, {
       method: "PATCH",
       headers: { Cookie: cookieHeader },
       body: submitData,
