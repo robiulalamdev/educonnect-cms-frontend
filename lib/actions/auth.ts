@@ -340,7 +340,8 @@ export async function updateProfileAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
 
-    const body: any = {};
+    // Send as FormData (backend expects multipart)
+    const submitData = new FormData();
     const full_name = formData.get("full_name") as string;
     const phone = formData.get("phone") as string;
     const bio = formData.get("bio") as string;
@@ -348,17 +349,17 @@ export async function updateProfileAction(
     const area = formData.get("area") as string;
     const country = formData.get("country") as string;
 
-    if (full_name) body.full_name = full_name;
-    if (phone) body.phone = phone;
-    if (bio) body.bio = bio;
-    if (city) body.city = city;
-    if (area) body.area = area;
-    if (country) body.country = country;
+    if (full_name) submitData.append("full_name", full_name);
+    if (phone) submitData.append("phone", phone);
+    if (bio) submitData.append("bio", bio);
+    if (city) submitData.append("city", city);
+    if (area) submitData.append("area", area);
+    if (country) submitData.append("country", country);
 
     const res = await fetch(`${env.API_BASE_URL}/api/v1/auth/me`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", Cookie: cookieHeader },
-      body: JSON.stringify(body),
+      headers: { Cookie: cookieHeader },
+      body: submitData,
       cache: "no-store",
     });
 
