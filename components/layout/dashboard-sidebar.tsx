@@ -29,6 +29,7 @@ import {
   Settings,
   X,
   FileText,
+  FolderOpen,
 } from "lucide-react";
 
 interface DashboardSidebarProps {
@@ -43,6 +44,7 @@ interface DashboardSidebarProps {
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, href: ROUTES.USER.DASHBOARD },
   { title: "Profile", icon: User, href: ROUTES.USER.PROFILE },
+  { title: "Media", icon: FolderOpen, href: ROUTES.USER.DASHBOARD + "/media" },
   { title: "Posts", icon: FileText, href: ROUTES.USER.DASHBOARD + "/posts" },
   { title: "Services", icon: BookOpen, href: ROUTES.USER.SERVICES },
   { title: "Batches", icon: GraduationCap, href: ROUTES.USER.BATCHES },
