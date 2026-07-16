@@ -13,7 +13,9 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ROUTES } from "@/lib/constants";
 import {
@@ -25,6 +27,7 @@ import {
   MessageSquare,
   Bell,
   Settings,
+  X,
 } from "lucide-react";
 
 interface DashboardSidebarProps {
@@ -49,6 +52,7 @@ const navItems = [
 
 export function DashboardSidebar({ user }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
   const initials = user.full_name
     .split(" ")
     .map((n) => n[0])
@@ -59,15 +63,28 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
   return (
     <Sidebar className="border-r-0">
       <SidebarHeader className="border-b border-gray-100 dark:border-gray-800 px-4 py-4">
-        <Link
-          href={ROUTES.USER.DASHBOARD}
-          className="flex items-center gap-2.5 font-bold text-lg"
-        >
-          <div className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-            <GraduationCap className="size-4.5" />
-          </div>
-          <span className="text-gray-900 dark:text-white">CMS</span>
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link
+            href={ROUTES.USER.DASHBOARD}
+            className="flex items-center gap-2.5 font-bold text-lg"
+            onClick={() => isMobile && setOpenMobile(false)}
+          >
+            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+              <GraduationCap className="size-4.5" />
+            </div>
+            <span className="text-gray-900 dark:text-white">CMS</span>
+          </Link>
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              onClick={() => setOpenMobile(false)}
+            >
+              <X className="size-4" />
+            </Button>
+          )}
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="px-3 py-4">
@@ -87,6 +104,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
                     <SidebarMenuButton
                       render={<Link href={item.href} />}
                       isActive={isActive}
+                      onClick={() => isMobile && setOpenMobile(false)}
                       className={`h-10 rounded-lg transition-all duration-200 ${
                         isActive
                           ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-medium"

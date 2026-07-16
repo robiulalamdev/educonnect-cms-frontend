@@ -12,7 +12,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { logoutAction } from "@/lib/actions/auth";
-import { LogOut, User, Settings, Bell } from "lucide-react";
+import { LogOut, User, Settings, Bell, Menu } from "lucide-react";
 
 interface DashboardHeaderProps {
   user: {
@@ -32,7 +32,11 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
 
   return (
     <header className="flex h-16 items-center gap-4 border-b border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl px-4 sm:px-6">
-      <SidebarTrigger className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" />
+      {/* Mobile menu button - always visible on small screens */}
+      <SidebarTrigger className="size-10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 md:hidden" />
+      {/* Desktop sidebar toggle */}
+      <SidebarTrigger className="size-9 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 hidden md:flex" />
+
       <div className="flex-1" />
 
       <ThemeToggle />
