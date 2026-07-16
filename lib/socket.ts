@@ -16,23 +16,27 @@ export function getSocket(): Socket {
 }
 
 export function joinPostRoom(postId: string) {
-  const s = getSocket();
-  s.emit("join_post", postId);
+  getSocket().emit("join_post", postId);
 }
 
 export function leavePostRoom(postId: string) {
-  const s = getSocket();
-  s.emit("leave_post", postId);
+  getSocket().emit("leave_post", postId);
 }
 
-export function onNewComment(callback: (data: any) => void) {
+export function onNewComment(callback: (data: any) => void): () => void {
   const s = getSocket();
   s.on("new_comment", callback);
-  return () => s.off("new_comment", callback);
+  return () => { s.off("new_comment", callback); };
 }
 
-export function onPostLiked(callback: (data: any) => void) {
+export function onPostLiked(callback: (data: any) => void): () => void {
   const s = getSocket();
   s.on("post_liked", callback);
-  return () => s.off("post_liked", callback);
+  return () => { s.off("post_liked", callback); };
+}
+
+export function onNewNotification(callback: (data: any) => void): () => void {
+  const s = getSocket();
+  s.on("new_notification", callback);
+  return () => { s.off("new_notification", callback); };
 }
