@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ImageCropModal } from "@/components/social/image-crop-modal";
-import { Loader2, Camera, User, Mail, Phone, MapPin, FileText, AtSign } from "lucide-react";
+import { Loader2, Camera, User, Mail, Phone, MapPin, FileText, AtSign, Check, X } from "lucide-react";
 
 interface ProfileFormProps { user: any; }
 
@@ -17,8 +17,15 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
   const [showCrop, setShowCrop] = useState(false);
   const [rawImage, setRawImage] = useState<string | null>(null);
+  const [username, setUsername] = useState(user.email?.split("@")[0] || "");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initials = user.full_name?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+
+  const avatarUrl = avatarPreview || (user.avatar?.key
+    ? `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_192,h_192,c_fill/${user.avatar.key}`
+    : null);
 
   function handleAvatarClick() { fileInputRef.current?.click(); }
 
@@ -29,51 +36,91 @@ export function ProfileForm({ user }: ProfileFormProps) {
       setRawImage(url);
       setShowCrop(true);
     }
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  function handleCropComplete(blob: Blob) {
+  // When crop is done, auto-save the avatar
+  const handleCropComplete = useCallback(async (blob: Blob) => {
     const url = URL.createObjectURL(blob);
     setAvatarPreview(url);
     setCroppedBlob(blob);
     setShowCrop(false);
-    if (rawImage) URL.revokeObjectURL(rawImage);
-    setRawImage(null);
-  }
 
-  const avatarUrl = avatarPreview || (user.avatar?.key
-    ? `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_192,h_192,c_fill/${user.avatar.key}`
-    : null);
+    // Auto-upload to backend
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", blob, "avatar.jpg");
+      const res = await fetch("/api/v1/auth/me", {
+        method: "PATCH",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) console.error("Failed to upload avatar");
+    } catch (err) { console.error(err); }
+    finally { setUploadingAvatar(false); }
+  }, []);
+
+  // Username check with debounce
+  function handleUsernameChange(value: string) {
+    const clean = value.toLowerCase().replace(/[^a-z0-9_]/g, "");
+    setUsername(clean);
+    if (clean.length < 3) { setUsernameStatus("idle"); return; }
+    setUsernameStatus("checking");
+    // Debounced check
+    clearTimeout((window as any).__usernameTimeout);
+    (window as any).__usernameTimeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/v1/user/?search=${clean}`, { credentials: "include" });
+        const data = await res.json();
+        const taken = data.data?.some((u: any) => u.email?.split("@")[0] === clean && u.id !== user.id);
+        setUsernameStatus(taken ? "taken" : "available");
+      } catch { setUsernameStatus("idle"); }
+    }, 500);
+  }
 
   return (
     <>
       <div className="grid gap-6 lg:grid-cols-3">
+        {/* Avatar Card */}
         <Card className="border border-gray-100 dark:border-gray-800 rounded-[24px] bg-white dark:bg-gray-900">
           <CardContent className="p-8 text-center">
             <div className="relative inline-block group cursor-pointer" onClick={handleAvatarClick}>
-              <Avatar className="size-28 ring-4 ring-[#EFF6FF] dark:ring-blue-950/50">
+              <div className="size-28 rounded-full overflow-hidden ring-4 ring-[#EFF6FF] dark:ring-blue-950/50">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={user.full_name} className="w-full h-full object-cover" />
                 ) : (
-                  <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-[#0066FF] to-[#3B82F6] text-white">{initials}</AvatarFallback>
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0066FF] to-[#3B82F6]">
+                    <span className="text-2xl font-bold text-white">{initials}</span>
+                  </div>
                 )}
-              </Avatar>
+              </div>
+              {/* Hover overlay */}
               <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Camera className="size-6 text-white" />
+                {uploadingAvatar ? (
+                  <Loader2 className="size-6 text-white animate-spin" />
+                ) : (
+                  <Camera className="size-6 text-white" />
+                )}
               </div>
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+
             <h3 className="mt-5 text-xl font-bold text-gray-900 dark:text-white">{user.full_name}</h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">@{user.email?.split("@")[0]}</p>
-            <div className="mt-4"><span className="inline-flex items-center rounded-full bg-[#0066FF]/10 px-4 py-1.5 text-xs font-semibold text-[#0066FF]">{user.role}</span></div>
-            {croppedBlob && (
-              <Button className="mt-4 rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white px-6" disabled={saving}>
-                {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                Save Avatar
-              </Button>
+            <p className="mt-1 text-sm text-gray-500">@{username}</p>
+            <div className="mt-4">
+              <span className="inline-flex items-center rounded-full bg-[#0066FF]/10 px-4 py-1.5 text-xs font-semibold text-[#0066FF]">{user.role}</span>
+            </div>
+            {uploadingAvatar && (
+              <p className="mt-3 text-xs text-gray-400 flex items-center justify-center gap-1">
+                <Loader2 className="size-3 animate-spin" /> Uploading...
+              </p>
             )}
           </CardContent>
         </Card>
 
+        {/* Profile Form */}
         <Card className="lg:col-span-2 border border-gray-100 dark:border-gray-800 rounded-[24px] bg-white dark:bg-gray-900">
           <CardHeader className="pb-4"><CardTitle className="text-lg font-bold text-gray-900 dark:text-white">Personal Information</CardTitle></CardHeader>
           <CardContent className="space-y-5">
@@ -84,7 +131,16 @@ export function ProfileForm({ user }: ProfileFormProps) {
               </div>
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><AtSign className="size-3.5" /> Username</Label>
-                <Input defaultValue={user.email?.split("@")[0]} placeholder="unique-username" className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
+                <div className="relative">
+                  <Input value={username} onChange={(e) => handleUsernameChange(e.target.value)} placeholder="unique-username" className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20 pr-10" />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {usernameStatus === "checking" && <Loader2 className="size-4 text-gray-400 animate-spin" />}
+                    {usernameStatus === "available" && <Check className="size-4 text-green-500" />}
+                    {usernameStatus === "taken" && <X className="size-4 text-red-500" />}
+                  </div>
+                </div>
+                {usernameStatus === "taken" && <p className="text-xs text-red-500">This username is already taken</p>}
+                {usernameStatus === "available" && <p className="text-xs text-green-500">Username is available</p>}
               </div>
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><Mail className="size-3.5" /> Email</Label>

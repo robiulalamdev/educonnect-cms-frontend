@@ -62,3 +62,59 @@ export async function deleteStory(storyId: string) {
     return { success: false };
   }
 }
+
+export async function createStoryAction(
+  _prevState: any,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    const content = formData.get("content") as string;
+    const bg_color = formData.get("bg_color") as string;
+    const file = formData.get("media") as File;
+
+    let body: any = {};
+    if (content) body.content = content;
+    if (bg_color) body.bg_color = bg_color;
+    if (file && file.size > 0) body.media_type = "IMAGE";
+
+    // For text stories, send JSON
+    if (!file || file.size === 0) {
+      const cookieStore = await cookies();
+      const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
+      const res = await fetch(`${env.API_BASE_URL}/api/v1/stories/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: cookieHeader },
+        body: JSON.stringify(body),
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        return { error: data.message || "Failed to create story" };
+      }
+      return { success: true };
+    }
+
+    // For image stories, send FormData
+    const submitData = new FormData();
+    if (content) submitData.append("content", content);
+    submitData.append("media_type", "IMAGE");
+    submitData.append("media", file);
+
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
+    const res = await fetch(`${env.API_BASE_URL}/api/v1/stories/`, {
+      method: "POST",
+      headers: { Cookie: cookieHeader },
+      body: submitData,
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      return { error: data.message || "Failed to create story" };
+    }
+    return { success: true };
+  } catch (err: any) {
+    if (err.message === "UNAUTHORIZED") redirect(ROUTES.LOGIN);
+    return { error: err.message ?? "Something went wrong" };
+  }
+}
