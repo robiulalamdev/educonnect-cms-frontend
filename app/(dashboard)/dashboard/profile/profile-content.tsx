@@ -88,10 +88,10 @@ export function ProfileContent({ user }: ProfileContentProps) {
         {/* Left - Avatar & Info Card */}
         <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-[24px] bg-white dark:bg-[#16161D] overflow-hidden">
           {/* Avatar with gradient background */}
-          <div className="relative h-32 bg-gradient-to-br from-blue-400 via-indigo-400 to-purple-400">
-            <div className="absolute -bottom-14 left-1/2 -translate-x-1/2">
+          <div className="relative h-24 bg-gradient-to-br from-blue-400 via-indigo-400 to-purple-400">
+            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
               <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
-                <div className="size-[108px] rounded-full overflow-hidden ring-4 ring-white dark:ring-[#16161D]">
+                <div className="size-[96px] rounded-full overflow-hidden ring-4 ring-white dark:ring-[#16161D]">
                   {avatarUrl ? <img src={avatarUrl} alt={user.full_name} className="w-full h-full object-cover" />
                   : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0066FF] to-[#3B82F6]"><span className="text-3xl font-bold text-white">{initials}</span></div>}
                 </div>
@@ -103,7 +103,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
             </div>
           </div>
 
-          <div className="pt-16 px-6 text-center">
+          <div className="pt-14 px-6 text-center">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">{user.full_name}</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">@{username}</p>
             <div className="mt-3">
