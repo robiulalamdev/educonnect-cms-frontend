@@ -1,5 +1,7 @@
 "use client";
 
+import { LikeButton } from "@/components/social/like-button";
+import { CommentSection } from "@/components/social/comment-section";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getPublicFeed, getTrendingFeed } from "@/lib/actions/feed";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,6 +69,7 @@ export function FeedContent() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [feedType, setFeedType] = useState<"trending" | "latest">("latest");
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const observerRef = useRef<HTMLDivElement>(null);
 
   const loadPosts = useCallback(async (p: number, append = false) => {
@@ -276,11 +279,13 @@ export function FeedContent() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 pt-3 border-t border-gray-100 dark:border-gray-800">
-                  <Button variant="ghost" size="sm" className="flex-1 text-gray-500 dark:text-gray-400 hover:text-red-500 rounded-xl">
-                    <Heart className="mr-1.5 size-4" />
-                    Like
-                  </Button>
-                  <Button variant="ghost" size="sm" className="flex-1 text-gray-500 dark:text-gray-400 hover:text-blue-500 rounded-xl">
+                  <LikeButton postId={post.id} />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 text-gray-500 dark:text-gray-400 hover:text-blue-500 rounded-xl"
+                    onClick={() => setExpandedComments((prev) => ({ ...prev, [post.id]: !prev[post.id] }))}
+                  >
                     <MessageCircle className="mr-1.5 size-4" />
                     Comment
                   </Button>
@@ -289,6 +294,11 @@ export function FeedContent() {
                     Share
                   </Button>
                 </div>
+                {expandedComments[post.id] && (
+                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <CommentSection postId={post.id} />
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
