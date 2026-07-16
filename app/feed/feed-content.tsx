@@ -1,6 +1,7 @@
 "use client";
 
 import { LikeButton } from "@/components/social/like-button";
+import { StoryBubbles } from "@/components/social/story-bubbles";
 import { CommentSection } from "@/components/social/comment-section";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getPublicFeed, getTrendingFeed } from "@/lib/actions/feed";
@@ -173,6 +174,9 @@ export function FeedContent() {
           ))}
         </div>
       )}
+
+      {/* Stories */}
+      <StoryBubbles />
 
       {/* Posts */}
       {!loading && (

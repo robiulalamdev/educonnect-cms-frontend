@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { DashboardFeed } from "./dashboard-feed";
+import { StoryBubbles } from "@/components/social/story-bubbles";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -85,6 +86,9 @@ export default async function DashboardPage() {
           href={ROUTES.USER.NOTIFICATIONS}
         />
       </div>
+
+      {/* Stories */}
+      <StoryBubbles currentUserId={user.id} />
 
       {/* Feed Section */}
       <div>
