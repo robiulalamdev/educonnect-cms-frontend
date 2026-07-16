@@ -1,32 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { BookOpen, CheckCircle, Award, Calendar, MapPin, Mail, MessageSquare, UserPlus, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
-interface ProfilePublicProps { user: any; }
+interface ProfilePublicProps { user: any; posts?: any[]; }
 
 function getInitials(name: string) { return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2); }
 
-export function ProfilePublic({ user }: ProfilePublicProps) {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [loadingPosts, setLoadingPosts] = useState(true);
+export function ProfilePublic({ user, posts: initialPosts = [] }: ProfilePublicProps) {
+  const posts = initialPosts;
+  const loadingPosts = false;
   const avatarUrl = user.avatar?.key
     ? `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_192,h_192,c_fill/${user.avatar.key}`
     : null;
   const initials = user.full_name?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
   const memberSince = new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
-  useEffect(() => {
-    fetch(`/api/v1/posts/?teacher_id=${user.id}&page=1&limit=10`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => { if (d.success) setPosts(d.data); })
-      .catch(() => {})
-      .finally(() => setLoadingPosts(false));
-  }, [user.id]);
+
 
   return (
     <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0D0D12]">
