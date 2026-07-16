@@ -328,3 +328,48 @@ export async function uploadAvatarAction(
     return { error: err.message ?? "Failed to upload avatar" };
   }
 }
+
+/**
+ * Update profile via server action.
+ */
+export async function updateProfileAction(
+  _prevState: any,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
+
+    const body: any = {};
+    const full_name = formData.get("full_name") as string;
+    const phone = formData.get("phone") as string;
+    const bio = formData.get("bio") as string;
+    const city = formData.get("city") as string;
+    const area = formData.get("area") as string;
+    const country = formData.get("country") as string;
+
+    if (full_name) body.full_name = full_name;
+    if (phone) body.phone = phone;
+    if (bio) body.bio = bio;
+    if (city) body.city = city;
+    if (area) body.area = area;
+    if (country) body.country = country;
+
+    const res = await fetch(`${env.API_BASE_URL}/api/v1/auth/me`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Cookie: cookieHeader },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      return { error: data.message || "Failed to update profile" };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    if (err.message === "UNAUTHORIZED") redirect(ROUTES.LOGIN);
+    return { error: err.message ?? "Failed to update profile" };
+  }
+}

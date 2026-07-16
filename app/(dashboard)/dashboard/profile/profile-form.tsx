@@ -1,20 +1,18 @@
 "use client";
 
-import { useState, useRef, useCallback, useActionState } from "react";
+import { useState, useRef, useCallback, useActionState, useTransition } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ImageCropModal } from "@/components/social/image-crop-modal";
-import { uploadAvatarAction } from "@/lib/actions/auth";
+import { uploadAvatarAction, updateProfileAction } from "@/lib/actions/auth";
 import { Loader2, Camera, User, Mail, Phone, MapPin, FileText, AtSign, Check, X, Save } from "lucide-react";
 
 interface ProfileFormProps { user: any; }
 
 export function ProfileForm({ user }: ProfileFormProps) {
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showCrop, setShowCrop] = useState(false);
   const [rawImage, setRawImage] = useState<string | null>(null);
@@ -22,6 +20,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarState, avatarFormAction] = useActionState(uploadAvatarAction, {});
+  const [profileState, profileFormAction, isSaving] = useActionState(updateProfileAction, {});
+  const [saved, setSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const initials = user.full_name?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
@@ -42,46 +42,20 @@ export function ProfileForm({ user }: ProfileFormProps) {
     setAvatarPreview(URL.createObjectURL(blob));
     setShowCrop(false);
     setUploadingAvatar(true);
-    try {
-      const formData = new FormData();
-      formData.append("avatar", new File([blob], "avatar.jpg", { type: "image/jpeg" }));
-      avatarFormAction(formData);
-    } catch (err) { console.error(err); }
-    finally { setUploadingAvatar(false); }
+    const formData = new FormData();
+    formData.append("avatar", new File([blob], "avatar.jpg", { type: "image/jpeg" }));
+    avatarFormAction(formData);
+    setUploadingAvatar(false);
   }, [avatarFormAction]);
 
-  async function handleSave(e: React.FormEvent) {
+  function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
-    setSaved(false);
-    try {
-      // Collect form data
-      const form = formRef.current;
-      if (!form) return;
-      const formData = new FormData(form);
-
-      const res = await fetch("/api/v1/auth/me", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          full_name: formData.get("full_name"),
-          phone: formData.get("phone"),
-          bio: formData.get("bio"),
-          city: formData.get("city"),
-          area: formData.get("area"),
-          country: formData.get("country"),
-        }),
-        credentials: "include",
-      });
-
-      if (res.ok) {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-      }
-    } catch (err) { console.error(err); }
-    finally { setSaving(false); }
+    const form = formRef.current;
+    if (!form) return;
+    const formData = new FormData(form);
+    profileFormAction(formData);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   }
 
   function handleUsernameChange(value: string) {
@@ -103,18 +77,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
   return (
     <>
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Avatar Card */}
         <Card className="border border-gray-100 dark:border-gray-800 rounded-[24px] bg-white dark:bg-gray-900">
           <CardContent className="p-8 text-center">
             <div className="relative inline-block group cursor-pointer" onClick={handleAvatarClick}>
               <div className="size-28 rounded-full overflow-hidden ring-4 ring-[#EFF6FF] dark:ring-blue-950/50">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={user.full_name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0066FF] to-[#3B82F6]">
-                    <span className="text-2xl font-bold text-white">{initials}</span>
-                  </div>
-                )}
+                {avatarUrl ? <img src={avatarUrl} alt={user.full_name} className="w-full h-full object-cover" />
+                : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0066FF] to-[#3B82F6]"><span className="text-2xl font-bold text-white">{initials}</span></div>}
               </div>
               <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 {uploadingAvatar ? <Loader2 className="size-6 text-white animate-spin" /> : <Camera className="size-6 text-white" />}
@@ -129,10 +97,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </CardContent>
         </Card>
 
-        {/* Profile Form */}
         <Card className="lg:col-span-2 border border-gray-100 dark:border-gray-800 rounded-[24px] bg-white dark:bg-gray-900">
           <CardHeader className="pb-4"><CardTitle className="text-lg font-bold text-gray-900 dark:text-white">Personal Information</CardTitle></CardHeader>
           <CardContent>
+            {profileState?.error && <div className="mb-4 rounded-xl bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-600">{profileState.error}</div>}
+            {profileState?.success && <div className="mb-4 rounded-xl bg-green-50 dark:bg-green-950/30 p-3 text-sm text-green-600">Profile updated successfully!</div>}
             <form ref={formRef} onSubmit={handleSave} className="space-y-5">
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2"><Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><User className="size-3.5" /> Full Name</Label><Input name="full_name" defaultValue={user.full_name} className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" /></div>
@@ -155,9 +124,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 <div className="space-y-2"><Label className="text-[13px] font-medium text-gray-600 dark:text-gray-400">Country</Label><Input name="country" defaultValue={user.country || ""} placeholder="Bangladesh" className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" /></div>
               </div>
               <div className="flex justify-end pt-2">
-                <Button type="submit" className="rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white px-8 h-11 shadow-lg shadow-blue-500/20 disabled:opacity-50" disabled={saving}>
-                  {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : saved ? <Check className="mr-2 size-4" /> : <Save className="mr-2 size-4" />}
-                  {saving ? "Saving..." : saved ? "Saved!" : "Save Changes"}
+                <Button type="submit" className="rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white px-8 h-11 shadow-lg shadow-blue-500/20 disabled:opacity-50" disabled={isSaving}>
+                  {isSaving ? <Loader2 className="mr-2 size-4 animate-spin" /> : saved ? <Check className="mr-2 size-4" /> : <Save className="mr-2 size-4" />}
+                  {isSaving ? "Saving..." : saved ? "Saved!" : "Save Changes"}
                 </Button>
               </div>
             </form>
