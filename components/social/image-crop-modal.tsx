@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Loader2, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
+import { X, Loader2, Minus, Plus } from "lucide-react";
 
 interface ImageCropModalProps {
   open: boolean;
@@ -13,118 +13,130 @@ interface ImageCropModalProps {
 
 export function ImageCropModal({ open, imageSrc, onClose, onCrop }: ImageCropModalProps) {
   const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
-  const [posX, setPosX] = useState(0);
-  const [posY, setPosY] = useState(0);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [saving, setSaving] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const handleCrop = useCallback(async () => {
+  const handleSave = useCallback(async () => {
     const canvas = canvasRef.current;
     const img = imgRef.current;
     if (!canvas || !img) return;
 
     setSaving(true);
-    const w = 400;
-    const h = 300;
-    canvas.width = w;
-    canvas.height = h;
+    const size = 300;
+    canvas.width = size;
+    canvas.height = size;
     const ctx = canvas.getContext("2d");
     if (!ctx) { setSaving(false); return; }
 
-    ctx.clearRect(0, 0, w, h);
+    ctx.clearRect(0, 0, size, size);
 
-    // Fill background
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, w, h);
+    // Circular clip
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.clip();
 
-    const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight) * zoom;
+    const scale = Math.max(size / img.naturalWidth, size / img.naturalHeight) * zoom;
     const imgW = img.naturalWidth * scale;
     const imgH = img.naturalHeight * scale;
-    const x = (w - imgW) / 2 + posX;
-    const y = (h - imgH) / 2 + posY;
+    const x = (size - imgW) / 2 + offset.x;
+    const y = (size - imgH) / 2 + offset.y;
 
-    ctx.save();
-    ctx.translate(w / 2, h / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(-w / 2, -h / 2);
     ctx.drawImage(img, x, y, imgW, imgH);
-    ctx.restore();
 
     canvas.toBlob((blob) => {
       if (blob) onCrop(blob);
       setSaving(false);
     }, "image/jpeg", 0.92);
-  }, [zoom, rotation, posX, posY, onCrop]);
+  }, [zoom, offset, onCrop]);
 
   useEffect(() => {
-    if (open && imageSrc) { setZoom(1); setRotation(0); setPosX(0); setPosY(0); }
+    if (open) { setZoom(1); setOffset({ x: 0, y: 0 }); }
   }, [open, imageSrc]);
 
   function handleMouseDown(e: React.MouseEvent) {
     setDragging(true);
-    setDragStart({ x: e.clientX - posX, y: e.clientY - posY });
+    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
   }
 
   function handleMouseMove(e: React.MouseEvent) {
     if (!dragging) return;
-    setPosX(e.clientX - dragStart.x);
-    setPosY(e.clientY - dragStart.y);
+    setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   }
 
   function handleMouseUp() { setDragging(false); }
 
+  function handleTouchStart(e: React.TouchEvent) {
+    const touch = e.touches[0];
+    setDragging(true);
+    setDragStart({ x: touch.clientX - offset.x, y: touch.clientY - offset.y });
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!dragging) return;
+    const touch = e.touches[0];
+    setOffset({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y });
+  }
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="w-full max-w-[420px] bg-white dark:bg-[#16161D] rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-          <h2 className="text-[15px] font-bold text-gray-900 dark:text-white">Crop Photo</h2>
-          <button onClick={onClose} className="size-7 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"><X className="size-4 text-gray-400" /></button>
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-[400px] mx-4 bg-white dark:bg-[#16161D] rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+          <h2 className="text-[15px] font-bold text-gray-900 dark:text-white">Update Profile Photo</h2>
+          <button onClick={onClose} className="size-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center">
+            <X className="size-4 text-gray-400" />
+          </button>
         </div>
 
-        <div className="p-5 space-y-4">
-          {/* Rectangular Crop Area */}
-          <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-900 cursor-move"
-            onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+        {/* Crop Area - circular mask like Facebook */}
+        <div className="flex justify-center py-6">
+          <div className="relative size-[280px] rounded-full overflow-hidden bg-gray-900 cursor-grab active:cursor-grabbing"
+            onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleMouseUp}>
             <img ref={imgRef} src={imageSrc} alt="" draggable={false}
-              className="w-full h-full object-cover pointer-events-none"
-              style={{ transform: `scale(${zoom}) rotate(${rotation}deg) translate(${posX / zoom}px, ${posY / zoom}px)` }} />
-            {/* Crop guide overlay */}
-            <div className="absolute inset-4 border-2 border-white/50 rounded-lg pointer-events-none" />
-            <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none" />
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+              style={{
+                transform: `scale(${zoom}) translate(${offset.x / zoom}px, ${offset.y / zoom}px)`,
+                transformOrigin: "center center",
+              }} />
+            {/* Circle border ring */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-white/30 pointer-events-none" />
           </div>
+        </div>
 
-          {/* Zoom */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-[12px] text-gray-500"><span>Zoom</span><span>{Math.round(zoom * 100)}%</span></div>
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))} className="size-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"><ZoomOut className="size-3.5" /></button>
-              <input type="range" min="0.5" max="3" step="0.05" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))}
-                className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer accent-[#0066FF]" />
-              <button type="button" onClick={() => setZoom((z) => Math.min(3, z + 0.1))} className="size-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"><ZoomIn className="size-3.5" /></button>
-            </div>
-          </div>
-
-          {/* Rotate */}
-          <div className="flex justify-center">
-            <button type="button" onClick={() => setRotation((r) => r + 90)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-[12px] font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-              <RotateCw className="size-3.5" /> Rotate 90°
+        {/* Zoom Slider */}
+        <div className="px-6 pb-2">
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))}
+              className="size-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              <Minus className="size-3.5 text-gray-600 dark:text-gray-400" />
+            </button>
+            <input type="range" min="0.5" max="3" step="0.01" value={zoom}
+              onChange={(e) => setZoom(parseFloat(e.target.value))}
+              className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer accent-[#0066FF] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#0066FF] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md" />
+            <button type="button" onClick={() => setZoom((z) => Math.min(3, z + 0.1))}
+              className="size-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              <Plus className="size-3.5 text-gray-600 dark:text-gray-400" />
             </button>
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1 rounded-xl h-10" onClick={onClose}>Cancel</Button>
-            <Button onClick={handleCrop} disabled={saving}
-              className="flex-1 rounded-xl h-10 bg-[#0066FF] hover:bg-[#0052CC] text-white font-semibold shadow-lg shadow-blue-500/20">
-              {saving ? <Loader2 className="size-4 animate-spin mr-2" /> : null} Save Photo
-            </Button>
-          </div>
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+          <Button variant="ghost" onClick={onClose} className="rounded-full px-5 h-9 text-[13px] font-semibold text-gray-600 dark:text-gray-400">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={saving}
+            className="rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white px-6 h-9 text-[13px] font-semibold shadow-md shadow-blue-500/20 disabled:opacity-50">
+            {saving ? <Loader2 className="size-3.5 animate-spin mr-1.5" /> : null}
+            Save
+          </Button>
         </div>
       </div>
       <canvas ref={canvasRef} className="hidden" />
