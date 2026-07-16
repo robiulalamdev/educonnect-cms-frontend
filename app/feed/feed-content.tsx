@@ -205,10 +205,10 @@ function PostCard({ post, expandedComments, setExpandedComments, expandedPost, s
     <article className="bg-white dark:bg-[#16161D] rounded-2xl border border-gray-200/80 dark:border-gray-800/80 overflow-hidden hover:shadow-sm transition-shadow">
       <div className="flex items-center justify-between px-5 pt-5 pb-3">
         <div className="flex items-center gap-3">
-          <Avatar className="size-11 ring-2 ring-gray-100 dark:ring-gray-800">
+          <div className="size-11 rounded-full overflow-hidden ring-2 ring-gray-100 dark:ring-gray-800 shrink-0">
             {post.author.avatar ? <img src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_88,h_88,c_fill/${post.author.avatar.key}`} alt="" className="w-full h-full object-cover" loading="lazy" />
             : <AvatarFallback className="text-[11px] font-bold bg-gradient-to-br from-blue-500 to-blue-600 text-white">{getInitials(post.author.full_name)}</AvatarFallback>}
-          </Avatar>
+          </div>
           <div>
             <span className="text-[15px] font-semibold text-gray-900 dark:text-white">{post.author.full_name}</span>
             <div className="flex items-center gap-1.5 text-[12px] text-gray-400">
