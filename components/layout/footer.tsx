@@ -4,7 +4,7 @@ import { GraduationCap } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
+    <footer className="border-t border-gray-100 dark:border-white/5">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-4">
           <div className="space-y-4">
@@ -12,7 +12,7 @@ export function Footer() {
               href={ROUTES.HOME}
               className="inline-flex items-center gap-2.5 font-bold text-lg"
             >
-              <div className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
                 <GraduationCap className="size-4.5" />
               </div>
               <span className="text-gray-900 dark:text-white">CMS</span>
@@ -89,15 +89,13 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-gray-200 dark:border-gray-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-12 border-t border-gray-200 dark:border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             &copy; {new Date().getFullYear()} {SITE.NAME}. All rights reserved.
           </p>
-          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-            Built with
-            <span className="text-red-500">&hearts;</span>
-            for education
-          </div>
+          <p className="text-sm text-gray-400 dark:text-gray-500">
+            Built for education
+          </p>
         </div>
       </div>
     </footer>

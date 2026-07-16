@@ -13,7 +13,7 @@ interface ApiResponse<T = any> {
 
 /**
  * Register a new user.
- * On success, redirects to login with success message.
+ * On success, redirects to verify-email page.
  */
 export async function registerAction(
   _prevState: any,
@@ -49,11 +49,11 @@ export async function registerAction(
       return { error: data.message ?? "Registration failed." };
     }
 
-    return {
-      success: true,
-      message: "Registration successful! Please check your email to verify your account, then log in.",
-    };
+    // Redirect to verify-email page with email as search param
+    redirect(`${ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(email)}`);
   } catch (err: any) {
+    // redirect() throws a special error - don't catch it
+    if (err.message === "NEXT_REDIRECT") throw err;
     return { error: err.message ?? "Something went wrong. Please try again." };
   }
 }
@@ -65,7 +65,7 @@ export async function registerAction(
 export async function loginAction(
   _prevState: any,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean; message?: string }> {
+): Promise<{ error?: string; success?: boolean }> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
@@ -93,14 +93,12 @@ export async function loginAction(
     const cookieStore = await cookies();
 
     for (const cookieStr of setCookies) {
-      // Parse: "name=value; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400000"
       const parts = cookieStr.split(";");
       const [nameValue] = parts;
       const eqIndex = nameValue.indexOf("=");
       const name = nameValue.substring(0, eqIndex).trim();
       const value = nameValue.substring(eqIndex + 1).trim();
 
-      // Parse attributes
       const attrs: Record<string, string> = {};
       for (let i = 1; i < parts.length; i++) {
         const part = parts[i].trim();
@@ -113,7 +111,9 @@ export async function loginAction(
         secure: env.IS_PRODUCTION,
         sameSite: "lax",
         path: attrs["path"] || "/",
-        maxAge: attrs["max-age"] ? Math.floor(parseInt(attrs["max-age"]) / 1000) : undefined,
+        maxAge: attrs["max-age"]
+          ? Math.floor(parseInt(attrs["max-age"]) / 1000)
+          : undefined,
       });
     }
   } catch (err: any) {
@@ -129,7 +129,7 @@ export async function loginAction(
 export async function adminLoginAction(
   _prevState: any,
   formData: FormData,
-): Promise<{ error?: string; success?: boolean; message?: string }> {
+): Promise<{ error?: string; success?: boolean }> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
@@ -152,7 +152,6 @@ export async function adminLoginAction(
       return { error: data.message ?? "Invalid credentials." };
     }
 
-    // Forward Set-Cookie headers from backend to browser
     const setCookies = res.headers.getSetCookie();
     const cookieStore = await cookies();
 
@@ -175,7 +174,9 @@ export async function adminLoginAction(
         secure: env.IS_PRODUCTION,
         sameSite: "lax",
         path: attrs["path"] || "/",
-        maxAge: attrs["max-age"] ? Math.floor(parseInt(attrs["max-age"]) / 1000) : undefined,
+        maxAge: attrs["max-age"]
+          ? Math.floor(parseInt(attrs["max-age"]) / 1000)
+          : undefined,
       });
     }
   } catch (err: any) {
@@ -186,12 +187,82 @@ export async function adminLoginAction(
 }
 
 /**
+ * Verify email action — submits the verification token.
+ */
+export async function verifyEmailAction(
+  _prevState: any,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean; message?: string }> {
+  const token = formData.get("token") as string;
+
+  if (!token) {
+    return { error: "Verification code is required." };
+  }
+
+  try {
+    const res = await fetch(`${env.API_BASE_URL}${API.AUTH.VERIFY_EMAIL}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token.trim() }),
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      return { error: data.message ?? "Verification failed." };
+    }
+
+    return { success: true, message: data.message };
+  } catch (err: any) {
+    return { error: err.message ?? "Something went wrong. Please try again." };
+  }
+}
+
+/**
+ * Resend verification email action.
+ */
+export async function resendVerificationAction(
+  _prevState: any,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean; message?: string }> {
+  const email = formData.get("email") as string;
+
+  if (!email) {
+    return { error: "Email is required." };
+  }
+
+  try {
+    const res = await fetch(
+      `${env.API_BASE_URL}${API.AUTH.RESEND_VERIFICATION}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+        cache: "no-store",
+      },
+    );
+
+    const data = await res.json();
+
+    // Always return success message (backend uses generic message to prevent enumeration)
+    return {
+      success: true,
+      message:
+        data.message ??
+        "If this email is registered and unverified, a new verification code has been sent.",
+    };
+  } catch (err: any) {
+    return { error: err.message ?? "Something went wrong. Please try again." };
+  }
+}
+
+/**
  * Logout action — clears cookies and redirects.
  */
 export async function logoutAction(role: "user" | "admin" = "user") {
   const cookieStore = await cookies();
 
-  // Call backend logout to invalidate refresh token
   try {
     const endpoint =
       role === "admin" ? API.ADMIN.AUTH.LOGOUT : API.AUTH.LOGOUT;
@@ -212,7 +283,6 @@ export async function logoutAction(role: "user" | "admin" = "user") {
     // Even if backend fails, clear local cookies
   }
 
-  // Clear all auth cookies
   if (role === "admin") {
     cookieStore.delete(env.ADMIN_COOKIE_ACCESS_NAME);
     cookieStore.delete(env.ADMIN_COOKIE_REFRESH_NAME);

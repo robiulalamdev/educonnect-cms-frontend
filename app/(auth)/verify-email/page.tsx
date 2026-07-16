@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { LoginForm } from "./login-form";
+import { VerifyEmailForm } from "./verify-email-form";
 
 export const metadata: Metadata = {
-  title: "Login",
-  description: "Sign in to your Coaching Management System account",
+  title: "Verify Email",
+  description: "Verify your email address to activate your account",
 };
 
-export default function LoginPage() {
+export default function VerifyEmailPage() {
   return (
     <>
       <div className="absolute right-4 top-4 z-20">
@@ -29,24 +30,16 @@ export default function LoginPage() {
             <span className="text-gray-900 dark:text-white">CMS</span>
           </Link>
           <h1 className="mt-6 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Welcome back
+            Check your email
           </h1>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Sign in to your account to continue
+            We sent a verification code to your email address. Enter it below to verify your account.
           </p>
         </div>
 
-        <LoginForm />
-
-        <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-          Don&apos;t have an account?{" "}
-          <Link
-            href={ROUTES.REGISTER}
-            className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-          >
-            Sign up for free
-          </Link>
-        </div>
+        <Suspense fallback={<div className="space-y-4 animate-pulse"><div className="h-12 rounded-2xl bg-gray-100 dark:bg-gray-800" /><div className="h-12 rounded-2xl bg-gray-100 dark:bg-gray-800" /></div>}>
+          <VerifyEmailForm />
+        </Suspense>
       </div>
     </>
   );

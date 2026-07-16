@@ -49,6 +49,7 @@ export const API = {
     ME: "/api/v1/auth/me",
     REFRESH: "/api/v1/auth/refresh",
     VERIFY_EMAIL: "/api/v1/auth/verify-email",
+    RESEND_VERIFICATION: "/api/v1/auth/resend-verification",
     FORGOT_PASSWORD: "/api/v1/auth/forgot-password",
     RESET_PASSWORD: "/api/v1/auth/reset-password",
   },
@@ -79,14 +80,6 @@ export const API = {
 } as const;
 
 /**
- * Protected route prefixes for middleware.
- */
-export const PROTECTED_PREFIXES = {
-  USER: ["/dashboard"],
-  ADMIN: ["/admin/dashboard", "/admin/users", "/admin/teachers", "/admin/services", "/admin/enrollments", "/admin/reviews", "/admin/posts", "/admin/subscriptions", "/admin/settings"],
-} as const;
-
-/**
  * User roles matching backend.
  */
 export const USER_ROLES = {
@@ -106,7 +99,8 @@ export const ADMIN_ROLES = {
  */
 export const SITE = {
   NAME: "Coaching Management System",
-  DESCRIPTION: "A comprehensive platform for coaching and education management. Connect teachers, students, and guardians seamlessly.",
+  DESCRIPTION:
+    "A comprehensive platform for coaching and education management. Connect teachers, students, and guardians seamlessly.",
   URL: process.env.FRONTEND_URL ?? "http://localhost:3000",
   OG_IMAGE: "/og-image.png",
 } as const;

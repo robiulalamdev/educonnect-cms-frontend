@@ -13,13 +13,16 @@ export function LoginForm() {
   return (
     <form action={formAction} className="space-y-5">
       {state.error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 p-3 text-sm text-red-600 dark:text-red-400">
+        <div className="rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200/60 dark:border-red-800/60 p-4 text-sm text-red-600 dark:text-red-400 backdrop-blur-sm">
           {state.error}
         </div>
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-sm font-medium">
+        <Label
+          htmlFor="email"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Email
         </Label>
         <Input
@@ -30,18 +33,21 @@ export function LoginForm() {
           required
           autoComplete="email"
           disabled={isPending}
-          className="h-11 rounded-lg"
+          className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
         />
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password" className="text-sm font-medium">
+          <Label
+            htmlFor="password"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             Password
           </Label>
           <a
             href="#"
-            className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            className="text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
           >
             Forgot password?
           </a>
@@ -54,13 +60,13 @@ export function LoginForm() {
           required
           autoComplete="current-password"
           disabled={isPending}
-          className="h-11 rounded-lg"
+          className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
         />
       </div>
 
       <Button
         type="submit"
-        className="w-full h-11 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium"
+        className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-300 active:scale-[0.98]"
         disabled={isPending}
       >
         {isPending ? (

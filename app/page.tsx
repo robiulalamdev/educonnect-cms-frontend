@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { ROUTES } from "@/lib/constants";
 import {
   GraduationCap,
@@ -14,8 +13,6 @@ import {
   CheckCircle2,
   ArrowRight,
   Star,
-  Zap,
-  Target,
 } from "lucide-react";
 
 const features = [
@@ -134,29 +131,41 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* ─── Hero ──────────────────────────────────────────── */}
-        <section className="relative overflow-hidden py-24 sm:py-32">
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-50/50 to-white dark:from-blue-950/20 dark:to-gray-950" />
+        <section className="relative overflow-hidden py-28 sm:py-36">
+          {/* Ambient glows */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-blue-500/10 blur-3xl" />
+            <div className="absolute top-1/2 -left-40 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl" />
+            <div className="absolute top-1/2 -right-40 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
+          </div>
+
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 dark:bg-blue-950/50 px-4 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 mb-6">
-                <Star className="size-3.5" />
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 backdrop-blur-sm border border-white/20 dark:border-white/10 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-8 shadow-sm">
+                <Star className="size-3.5 text-blue-600 fill-blue-600" />
                 Trusted by 500+ coaching centers
               </div>
-              <h1 className="text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
-                Coaching Made{" "}
+
+              <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+                <span className="text-gray-900 dark:text-white">Digital Products</span>
+                <br />
+                <span className="text-gray-900 dark:text-white">built to a </span>
                 <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-                  Simple
+                  Higher
                 </span>
+                <span className="text-gray-900 dark:text-white"> Standard</span>
               </h1>
-              <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+
+              <p className="mt-6 text-lg leading-8 text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
                 A comprehensive platform for coaching and education management.
                 Connect teachers, students, and guardians seamlessly.
               </p>
+
               <div className="mt-10 flex items-center justify-center gap-4">
                 <Link href={ROUTES.REGISTER}>
                   <Button
                     size="lg"
-                    className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 font-medium text-base"
+                    className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-8 h-13 font-semibold text-base shadow-xl shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-300 active:scale-[0.98]"
                   >
                     Get Started Free
                     <ArrowRight className="ml-2 size-4" />
@@ -166,16 +175,16 @@ export default function HomePage() {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="rounded-full px-8 h-12 font-medium text-base"
+                    className="rounded-full px-8 h-13 font-semibold text-base border-gray-200/60 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300"
                   >
-                    Learn More
+                    See Our Work
                   </Button>
                 </Link>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="mt-20 grid grid-cols-2 gap-8 sm:grid-cols-4 max-w-3xl mx-auto">
+            <div className="mt-24 grid grid-cols-2 gap-8 sm:grid-cols-4 max-w-3xl mx-auto">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-center">
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -191,55 +200,63 @@ export default function HomePage() {
         </section>
 
         {/* ─── Features ──────────────────────────────────────── */}
-        <section id="features" className="py-24 sm:py-32 bg-gray-50/50 dark:bg-gray-900/50">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section id="features" className="relative py-28 sm:py-36">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-96 w-[600px] rounded-full bg-blue-500/5 blur-3xl" />
+          </div>
+
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-                Everything you need
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl text-gray-900 dark:text-white">
+                A Complete <span className="text-blue-600">Product</span> Delivery Process
               </h2>
-              <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                Built for modern coaching centers with all the tools you need to
-                succeed.
+              <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
+                From strategy and UX to ongoing support, we handle
+                the complete digital product lifecycle.
               </p>
             </div>
+
             <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:max-w-none">
               {features.map((feature) => (
-                <Card
+                <div
                   key={feature.title}
-                  className="group border-0 shadow-sm hover:shadow-md dark:bg-gray-900 dark:border dark:border-gray-800 transition-all duration-300 rounded-2xl"
+                  className="group glass-card-solid p-7 hover:shadow-2xl hover:shadow-blue-900/5 dark:hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-500"
                 >
-                  <CardContent className="p-7">
-                    <div className="flex size-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-950 transition-colors">
-                      <feature.icon className="size-6" />
-                    </div>
-                    <h3 className="mt-5 text-lg font-semibold text-gray-900 dark:text-white">
-                      {feature.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
+                  <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-950 transition-colors duration-300">
+                    <feature.icon className="size-6" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-gray-900 dark:text-white">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
         {/* ─── How It Works ──────────────────────────────────── */}
-        <section id="how-it-works" className="py-24 sm:py-32">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section id="how-it-works" className="relative py-28 sm:py-36">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/2 right-0 h-96 w-96 rounded-full bg-blue-500/5 blur-3xl" />
+          </div>
+
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl text-gray-900 dark:text-white">
                 How it works
               </h2>
-              <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
+              <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
                 Get started in three simple steps.
               </p>
             </div>
+
             <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-3 lg:max-w-none">
               {steps.map((step) => (
                 <div key={step.number} className="relative">
-                  <div className="flex size-12 items-center justify-center rounded-full bg-blue-600 text-white font-bold text-lg mb-5">
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-blue-600 text-white font-bold text-xl mb-6 shadow-xl shadow-blue-600/25">
                     {step.number}
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -248,11 +265,11 @@ export default function HomePage() {
                   <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                     {step.description}
                   </p>
-                  <ul className="mt-5 space-y-2">
+                  <ul className="mt-5 space-y-3">
                     {step.items.map((item) => (
                       <li
                         key={item}
-                        className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300"
+                        className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"
                       >
                         <CheckCircle2 className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
                         {item}
@@ -266,68 +283,80 @@ export default function HomePage() {
         </section>
 
         {/* ─── Roles ─────────────────────────────────────────── */}
-        <section id="roles" className="py-24 sm:py-32 bg-gray-50/50 dark:bg-gray-900/50">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section id="roles" className="relative py-28 sm:py-36">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 h-96 w-[600px] rounded-full bg-indigo-500/5 blur-3xl" />
+          </div>
+
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-                Built for everyone
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl text-gray-900 dark:text-white">
+                Built for <span className="text-blue-600">everyone</span>
               </h2>
-              <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
+              <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
                 Whether you are a teacher, student, or guardian, we have got you
                 covered.
               </p>
             </div>
+
             <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-3 lg:max-w-none">
               {roles.map((role) => (
-                <Card
+                <div
                   key={role.title}
-                  className="group border-0 shadow-sm hover:shadow-md dark:bg-gray-900 dark:border dark:border-gray-800 transition-all duration-300 rounded-2xl"
+                  className="group glass-card-solid p-7 hover:shadow-2xl hover:shadow-blue-900/5 dark:hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-500"
                 >
-                  <CardContent className="p-7">
-                    <div className="flex size-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-950 transition-colors">
-                      <role.icon className="size-6" />
-                    </div>
-                    <h3 className="mt-5 text-xl font-semibold text-gray-900 dark:text-white">
-                      {role.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                      {role.description}
-                    </p>
-                    <ul className="mt-6 space-y-3">
-                      {role.benefits.map((benefit) => (
-                        <li
-                          key={benefit}
-                          className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"
-                        >
-                          <CheckCircle2 className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                          {benefit}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
+                  <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-950 transition-colors duration-300">
+                    <role.icon className="size-6" />
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold text-gray-900 dark:text-white">
+                    {role.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    {role.description}
+                  </p>
+                  <ul className="mt-6 space-y-3">
+                    {role.benefits.map((benefit) => (
+                      <li
+                        key={benefit}
+                        className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"
+                      >
+                        <CheckCircle2 className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
         {/* ─── CTA ───────────────────────────────────────────── */}
-        <section className="py-24 sm:py-32">
+        <section className="relative py-28 sm:py-36">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-3xl bg-blue-600 px-8 py-16 sm:px-16 sm:py-20 text-center">
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMS41IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40" />
+            <div className="relative overflow-hidden rounded-[2rem] bg-blue-600 px-8 py-20 sm:px-16 sm:py-24 text-center shadow-2xl shadow-blue-600/20">
+              {/* Decorative elements */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+                <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
+              </div>
+
               <div className="relative">
                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-white">
-                  Ready to get started?
+                  Let&apos;s build something
+                  <br />
+                  that performs
                 </h2>
-                <p className="mt-4 text-lg text-blue-100">
-                  Join thousands of coaching centers already using CMS.
+                <p className="mt-4 text-lg text-blue-100 max-w-lg mx-auto">
+                  Ready to transform your website? Get in touch and
+                  we&apos;ll show you what&apos;s possible for your brand.
                 </p>
                 <div className="mt-8">
                   <Link href={ROUTES.REGISTER}>
                     <Button
                       size="lg"
-                      className="rounded-full bg-white text-blue-600 hover:bg-gray-100 px-8 h-12 font-medium text-base"
+                      className="rounded-full bg-white text-blue-600 hover:bg-gray-100 px-8 h-13 font-semibold text-base shadow-xl transition-all duration-300 active:scale-[0.98]"
                     >
                       Create Your Account
                       <ArrowRight className="ml-2 size-4" />

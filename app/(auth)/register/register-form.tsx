@@ -13,19 +13,16 @@ export function RegisterForm() {
   return (
     <form action={formAction} className="space-y-5">
       {state.error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 p-3 text-sm text-red-600 dark:text-red-400">
+        <div className="rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200/60 dark:border-red-800/60 p-4 text-sm text-red-600 dark:text-red-400 backdrop-blur-sm">
           {state.error}
         </div>
       )}
 
-      {state.success && state.message && (
-        <div className="rounded-lg bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 p-3 text-sm text-green-600 dark:text-green-400">
-          {state.message}
-        </div>
-      )}
-
       <div className="space-y-2">
-        <Label htmlFor="full_name" className="text-sm font-medium">
+        <Label
+          htmlFor="full_name"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Full Name
         </Label>
         <Input
@@ -35,12 +32,15 @@ export function RegisterForm() {
           required
           autoComplete="name"
           disabled={isPending}
-          className="h-11 rounded-lg"
+          className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-sm font-medium">
+        <Label
+          htmlFor="email"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Email
         </Label>
         <Input
@@ -51,12 +51,15 @@ export function RegisterForm() {
           required
           autoComplete="email"
           disabled={isPending}
-          className="h-11 rounded-lg"
+          className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-sm font-medium">
+        <Label
+          htmlFor="password"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Password
         </Label>
         <Input
@@ -68,13 +71,17 @@ export function RegisterForm() {
           minLength={8}
           autoComplete="new-password"
           disabled={isPending}
-          className="h-11 rounded-lg"
+          className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone" className="text-sm font-medium">
-          Phone <span className="text-muted-foreground font-normal">(optional)</span>
+        <Label
+          htmlFor="phone"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          Phone{" "}
+          <span className="text-gray-400 font-normal">(optional)</span>
         </Label>
         <Input
           id="phone"
@@ -83,17 +90,19 @@ export function RegisterForm() {
           placeholder="+880 1XXXXXXXXX"
           autoComplete="tel"
           disabled={isPending}
-          className="h-11 rounded-lg"
+          className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">I am a</Label>
-        <div className="grid grid-cols-3 gap-2">
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          I am a
+        </Label>
+        <div className="grid grid-cols-3 gap-3">
           {(["TEACHER", "STUDENT", "GUARDIAN"] as const).map((role) => (
             <label
               key={role}
-              className="flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 text-sm font-medium transition-all hover:border-blue-200 hover:bg-blue-50/50 dark:hover:border-blue-800 dark:hover:bg-blue-950/50 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 dark:has-[:checked]:border-blue-500 dark:has-[:checked]:bg-blue-950/50 has-[:checked]:text-blue-600 dark:has-[:checked]:text-blue-400"
+              className="flex cursor-pointer items-center justify-center rounded-2xl border-2 border-gray-200/60 dark:border-white/10 bg-white/50 dark:bg-white/5 p-3.5 text-sm font-medium transition-all duration-300 hover:border-blue-300 hover:bg-blue-50/50 dark:hover:border-blue-800 dark:hover:bg-blue-950/30 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 dark:has-[:checked]:border-blue-500 dark:has-[:checked]:bg-blue-950/30 has-[:checked]:text-blue-600 dark:has-[:checked]:text-blue-400 has-[:checked]:shadow-lg has-[:checked]:shadow-blue-600/10"
             >
               <input
                 type="radio"
@@ -110,7 +119,7 @@ export function RegisterForm() {
 
       <Button
         type="submit"
-        className="w-full h-11 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium"
+        className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-300 active:scale-[0.98]"
         disabled={isPending}
       >
         {isPending ? (
