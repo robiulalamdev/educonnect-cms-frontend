@@ -12,80 +12,28 @@ export function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, {});
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} className="space-y-4">
       {state.error && (
-        <div className="rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200/60 dark:border-red-800/60 p-4 text-sm text-red-600 dark:text-red-400 backdrop-blur-sm">
+        <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200/60 dark:border-red-800/60 p-3.5 text-sm text-red-600 dark:text-red-400">
           <p>{state.error}</p>
           {state.error.toLowerCase().includes("verify") && (
-            <Link
-              href="/verify-email"
-              className="mt-2 inline-block font-semibold underline underline-offset-2 hover:text-red-700 dark:hover:text-red-300"
-            >
-              Resend verification code &rarr;
-            </Link>
+            <Link href="/verify-email" className="mt-1 inline-block font-semibold underline underline-offset-2">Resend verification &rarr;</Link>
           )}
         </div>
       )}
-
       <div className="space-y-2">
-        <Label
-          htmlFor="email"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
-          Email
-        </Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="you@example.com"
-          required
-          autoComplete="email"
-          disabled={isPending}
-          className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
-        />
+        <Label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">Email</Label>
+        <Input name="email" type="email" placeholder="you@example.com" required autoComplete="email" disabled={isPending} className="h-11 rounded-full bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
       </div>
-
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label
-            htmlFor="password"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
-            Password
-          </Label>
-          <a
-            href="#"
-            className="text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-          >
-            Forgot password?
-          </a>
+          <Label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">Password</Label>
+          <a href="#" className="text-xs font-medium text-[#0066FF] hover:text-[#0052CC]">Forgot?</a>
         </div>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="••••••••"
-          required
-          autoComplete="current-password"
-          disabled={isPending}
-          className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
-        />
+        <Input name="password" type="password" placeholder="••••••••" required autoComplete="current-password" disabled={isPending} className="h-11 rounded-full bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
       </div>
-
-      <Button
-        type="submit"
-        className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-300 active:scale-[0.98]"
-        disabled={isPending}
-      >
-        {isPending ? (
-          <>
-            <Loader2 className="mr-2 size-4 animate-spin" />
-            Signing in...
-          </>
-        ) : (
-          "Sign in"
-        )}
+      <Button type="submit" className="w-full h-11 rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all" disabled={isPending}>
+        {isPending ? <><Loader2 className="mr-2 size-4 animate-spin" /> Signing in...</> : "Sign in"}
       </Button>
     </form>
   );
