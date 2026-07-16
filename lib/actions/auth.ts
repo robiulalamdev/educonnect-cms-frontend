@@ -296,3 +296,35 @@ export async function logoutAction(role: "user" | "admin" = "user") {
 
   redirect(role === "admin" ? ROUTES.ADMIN.LOGIN : ROUTES.LOGIN);
 }
+
+/**
+ * Upload avatar via server action (multipart forwarding).
+ */
+export async function uploadAvatarAction(
+  _prevState: any,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean; avatarUrl?: string }> {
+  try {
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
+
+    const res = await fetch(`${env.API_BASE_URL}/api/v1/auth/me`, {
+      method: "PATCH",
+      headers: { Cookie: cookieHeader },
+      body: formData,
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      return { error: data.message || "Failed to upload avatar" };
+    }
+
+    const data = await res.json();
+    const avatarKey = data.data?.avatar?.key;
+    return { success: true, avatarUrl: avatarKey ? `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_192,h_192,c_fill/${avatarKey}` : undefined };
+  } catch (err: any) {
+    if (err.message === "UNAUTHORIZED") redirect(ROUTES.LOGIN);
+    return { error: err.message ?? "Failed to upload avatar" };
+  }
+}
