@@ -4,8 +4,7 @@ import { useState, useRef } from "react";
 import { createPostAction } from "@/lib/actions/posts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { X, Image, Video, Hash, Loader2 } from "lucide-react";
+import { X, Image, Hash, Loader2, Bold, Italic, List, Link2 } from "lucide-react";
 
 interface CreatePostModalProps {
   open: boolean;
@@ -20,6 +19,7 @@ export function CreatePostModal({ open, onClose, onCreated }: CreatePostModalPro
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   if (!open) return null;
@@ -36,6 +36,17 @@ export function CreatePostModal({ open, onClose, onCreated }: CreatePostModalPro
     setPreviews((p) => p.filter((_, idx) => idx !== i));
   }
 
+  function insertFormatting(prefix: string, suffix: string) {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const selected = content.substring(start, end);
+    const newContent = content.substring(0, start) + prefix + selected + suffix + content.substring(end);
+    setContent(newContent);
+    setTimeout(() => { ta.focus(); ta.setSelectionRange(start + prefix.length, start + prefix.length + selected.length); }, 0);
+  }
+
   async function handleSubmit() {
     if (!title.trim() || !content.trim()) return;
     setSubmitting(true);
@@ -43,7 +54,7 @@ export function CreatePostModal({ open, onClose, onCreated }: CreatePostModalPro
       const formData = new FormData();
       formData.set("type", type);
       formData.set("title", title);
-      formData.set("content", content);
+      formData.set("content", `<p>${content.replace(/\n/g, "</p><p>")}</p>`);
       formData.set("subject_ids", "[]");
       formData.set("level_ids", "[]");
       for (const file of files) formData.append("media", file);
@@ -59,7 +70,7 @@ export function CreatePostModal({ open, onClose, onCreated }: CreatePostModalPro
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-start justify-center bg-black/60 backdrop-blur-sm pt-20 px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[80] flex items-start justify-center bg-black/60 backdrop-blur-sm pt-16 px-4" onClick={onClose}>
       <div className="w-full max-w-[540px] bg-white dark:bg-[#16161D] rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-[16px] font-bold text-gray-900 dark:text-white">Create Post</h2>
@@ -78,10 +89,33 @@ export function CreatePostModal({ open, onClose, onCreated }: CreatePostModalPro
           </div>
 
           <Input placeholder="Post title..." value={title} onChange={(e) => setTitle(e.target.value)}
-            className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 text-[15px] font-semibold" />
+            className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 text-[15px] font-semibold focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
 
-          <textarea placeholder="What do you want to share?" value={content} onChange={(e) => setContent(e.target.value)}
-            rows={4} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 px-4 py-3 text-[15px] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 focus:border-[#0066FF] resize-none" />
+          {/* Rich Text Editor Area */}
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 overflow-hidden focus-within:border-[#0066FF] focus-within:ring-2 focus-within:ring-[#0066FF]/20 transition-all">
+            {/* Toolbar */}
+            <div className="flex items-center gap-0.5 px-3 py-2 border-b border-gray-200/60 dark:border-gray-700/60">
+              <button type="button" onClick={() => insertFormatting("**", "**")} className="size-7 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition-colors" title="Bold">
+                <Bold className="size-3.5" />
+              </button>
+              <button type="button" onClick={() => insertFormatting("*", "*")} className="size-7 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition-colors" title="Italic">
+                <Italic className="size-3.5" />
+              </button>
+              <button type="button" onClick={() => insertFormatting("\n- ", "")} className="size-7 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition-colors" title="List">
+                <List className="size-3.5" />
+              </button>
+              <button type="button" onClick={() => insertFormatting("[", "](url)")} className="size-7 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition-colors" title="Link">
+                <Link2 className="size-3.5" />
+              </button>
+              <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-1" />
+              <button type="button" onClick={() => fileRef.current?.click()} className="size-7 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition-colors" title="Add Image">
+                <Image className="size-3.5" />
+              </button>
+            </div>
+            {/* Textarea */}
+            <textarea ref={textareaRef} placeholder="What do you want to share?" value={content} onChange={(e) => setContent(e.target.value)}
+              rows={5} className="w-full bg-transparent px-4 py-3 text-[15px] text-gray-700 dark:text-gray-300 focus:outline-none resize-none placeholder:text-gray-400" />
+          </div>
 
           {/* Previews */}
           {previews.length > 0 && (
@@ -97,20 +131,12 @@ export function CreatePostModal({ open, onClose, onCreated }: CreatePostModalPro
 
           {/* Actions */}
           <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
-            <div className="flex items-center gap-1">
-              <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
-              <Button variant="ghost" size="sm" className="rounded-full text-gray-500 hover:text-[#0066FF] hover:bg-[#0066FF]/5" onClick={() => fileRef.current?.click()}>
-                <Image className="size-4 mr-1.5" /> Photo
-              </Button>
-              <Button variant="ghost" size="sm" className="rounded-full text-gray-500 hover:text-[#0066FF] hover:bg-[#0066FF]/5">
-                <Video className="size-4 mr-1.5" /> Video
-              </Button>
-              <Button variant="ghost" size="sm" className="rounded-full text-gray-500 hover:text-[#0066FF] hover:bg-[#0066FF]/5">
-                <Hash className="size-4 mr-1.5" /> Tag
-              </Button>
-            </div>
+            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
+            <Button variant="ghost" size="sm" className="rounded-full text-gray-500 hover:text-[#0066FF] hover:bg-[#0066FF]/5" onClick={() => fileRef.current?.click()}>
+              <Image className="size-4 mr-1.5" /> Photo
+            </Button>
             <Button onClick={handleSubmit} disabled={!title.trim() || !content.trim() || submitting}
-              className="rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white px-5 h-9 text-[13px] font-semibold shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:shadow-none">
+              className="rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white px-5 h-9 text-[13px] font-semibold shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:shadow-none transition-all">
               {submitting ? <Loader2 className="size-4 animate-spin mr-1.5" /> : null}
               Post
             </Button>

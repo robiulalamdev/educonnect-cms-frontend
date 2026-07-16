@@ -127,9 +127,9 @@ export function FeedContent() {
             <div className="bg-white dark:bg-[#16161D] rounded-2xl border border-gray-200/80 dark:border-gray-800/80 p-4 mb-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[14px] font-bold text-gray-900 dark:text-white">Stories</h3>
-                <button onClick={() => setShowCreateStory(true)} className="text-[12px] font-semibold text-[#0066FF] hover:text-[#0052CC]">+ Create</button>
+                
               </div>
-              <StoryBubbles />
+              <StoryBubbles onCreateStory={() => setShowCreateStory(true)} />
             </div>
 
             <div className="flex items-center gap-2 mb-4">
