@@ -1,51 +1,80 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Users, BookOpen, CheckCircle, CreditCard } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, BookOpen, MessageCircle, CreditCard, Calendar, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 export function GuardianDashboard() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Link href="/dashboard/enrollments">
-        <StatCard icon={Users} iconColor="blue" title="Linked Students" value="0" change="Children linked" />
-      </Link>
-      <Link href="/dashboard/enrollments">
-        <StatCard icon={BookOpen} iconColor="green" title="Active Enrollments" value="0" change="Across all students" />
-      </Link>
-      <Link href="/dashboard/messages">
-        <StatCard icon={CheckCircle} iconColor="purple" title="Messages" value="0" change="From teachers" />
-      </Link>
-      <Link href="/dashboard/enrollments">
-        <StatCard icon={CreditCard} iconColor="yellow" title="Payments" value="$0" change="Pending payments" />
-      </Link>
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href="/dashboard/enrollments">
+          <StatCard icon={Users} color="blue" title="Linked Students" value="0" change="+0" up />
+        </Link>
+        <Link href="/dashboard/enrollments">
+          <StatCard icon={BookOpen} color="green" title="Active Enrollments" value="0" change="+0" up />
+        </Link>
+        <Link href="/dashboard/messages">
+          <StatCard icon={MessageCircle} color="purple" title="Messages" value="0" change="+0" up />
+        </Link>
+        <Link href="/dashboard/enrollments">
+          <StatCard icon={CreditCard} color="yellow" title="Pending Payments" value="$0" change="+0" up />
+        </Link>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="border border-gray-100 dark:border-gray-800 rounded-[20px]">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">My Children</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <Users className="size-10 text-gray-300 dark:text-gray-600 mx-auto" />
+              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No linked students</p>
+              <p className="mt-1 text-xs text-gray-400">Link your child to see their progress</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-gray-100 dark:border-gray-800 rounded-[20px]">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Upcoming Events</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <Calendar className="size-10 text-gray-300 dark:text-gray-600 mx-auto" />
+              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No upcoming events</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
 
-function StatCard({ icon: Icon, iconColor, title, value, change }: {
-  icon: React.ComponentType<{ className?: string }>;
-  iconColor: string;
-  title: string;
-  value: string;
-  change: string;
+function StatCard({ icon: Icon, color, title, value, change, up }: {
+  icon: React.ComponentType<{ className?: string }>; color: string; title: string; value: string; change: string; up: boolean;
 }) {
-  const colorMap: Record<string, string> = {
-    blue: "bg-[#EFF6FF] dark:bg-blue-950/50 text-[#2563EB] dark:text-blue-400",
-    green: "bg-[#F0FDF4] dark:bg-green-950/50 text-[#22C55E] dark:text-green-400",
-    yellow: "bg-[#FFFBEB] dark:bg-yellow-950/50 text-[#F59E0B] dark:text-yellow-400",
-    purple: "bg-[#FAF5FF] dark:bg-purple-950/50 text-[#9333EA] dark:text-purple-400",
+  const colors: Record<string, string> = {
+    blue: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+    green: "bg-green-50 dark:bg-green-950/50 text-green-600 dark:text-green-400",
+    yellow: "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
+    purple: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
   };
   return (
-    <Card className="border border-[#E5E7EB] dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300 rounded-[20px] cursor-pointer group">
+    <Card className="border border-gray-100 dark:border-gray-800 rounded-[20px] hover:shadow-md transition-all cursor-pointer group">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[13px] font-medium text-[#6B7280] dark:text-gray-400">{title}</p>
-            <p className="mt-1 text-2xl font-bold text-[#111827] dark:text-white">{value}</p>
-            <p className="mt-1 text-[12px] text-[#9CA3AF]">{change}</p>
+            <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400">{title}</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+            <div className="mt-1 flex items-center gap-1 text-[12px]">
+              <ArrowUpRight className="size-3 text-green-500" />
+              <span className="text-green-500">{change}</span>
+              <span className="text-gray-400">this month</span>
+            </div>
           </div>
-          <div className={`flex size-10 items-center justify-center rounded-xl ${colorMap[iconColor]} group-hover:scale-110 transition-transform`}>
+          <div className={`flex size-10 items-center justify-center rounded-xl ${colors[color]} group-hover:scale-110 transition-transform`}>
             <Icon className="size-5" />
           </div>
         </div>
