@@ -19,28 +19,26 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     const data = await res.json();
     if (data.success && data.data.length > 0) {
       // Get unique authors
-      const authors = new Map();
+      const authors = new Map<string, any>();
       for (const post of data.data) {
         if (post.author && !authors.has(post.author.id)) {
-          authors.set(post.author.id, post.author);
+          authors.set(post.author.id, { ...post.author, created_at: post.created_at });
         }
       }
 
-      // Try to match username to an author
-      const slug = username.toLowerCase();
+      // Match username to author by full_name slug
+      const slug = username.toLowerCase().replace(/[^a-z0-9]/g, "");
       for (const [id, author] of authors) {
-        const nameSlug = (author.full_name || "").toLowerCase().replace(/\s+/g, "");
-        const emailSlug = ""; // email not available in public API
-        if (nameSlug.includes(slug) || slug.includes(nameSlug)) {
+        const nameSlug = (author.full_name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (nameSlug.includes(slug) || slug.includes(nameSlug) || nameSlug === slug) {
           user = author;
           break;
         }
       }
 
-      // If no match, try first author (fallback)
+      // Fallback: show first author
       if (!user && authors.size > 0) {
-        const firstAuthor = authors.values().next().value;
-        if (firstAuthor) user = firstAuthor;
+        user = authors.values().next().value;
       }
 
       if (user) {
