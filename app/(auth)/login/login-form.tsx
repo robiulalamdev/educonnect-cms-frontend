@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { loginAction } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,15 @@ export function LoginForm() {
     <form action={formAction} className="space-y-5">
       {state.error && (
         <div className="rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200/60 dark:border-red-800/60 p-4 text-sm text-red-600 dark:text-red-400 backdrop-blur-sm">
-          {state.error}
+          <p>{state.error}</p>
+          {state.error.toLowerCase().includes("verify") && (
+            <Link
+              href="/verify-email"
+              className="mt-2 inline-block font-semibold underline underline-offset-2 hover:text-red-700 dark:hover:text-red-300"
+            >
+              Resend verification code &rarr;
+            </Link>
+          )}
         </div>
       )}
 

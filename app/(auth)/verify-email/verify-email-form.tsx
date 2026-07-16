@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -12,11 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/lib/constants";
 import { Loader2, CheckCircle2, Mail, ArrowLeft } from "lucide-react";
-import { useState } from "react";
 
 export function VerifyEmailForm() {
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") ?? "";
+  const emailFromUrl = searchParams.get("email") ?? "";
+  const [email, setEmail] = useState(emailFromUrl);
   const [verifyState, verifyFormAction, isVerifying] = useActionState(
     verifyEmailAction,
     {},
@@ -27,7 +27,6 @@ export function VerifyEmailForm() {
   );
   const [verified, setVerified] = useState(false);
 
-  // If verified successfully, show success state
   if (verified || verifyState.success) {
     return (
       <div className="text-center space-y-6">
@@ -43,7 +42,7 @@ export function VerifyEmailForm() {
           </p>
         </div>
         <Link href={ROUTES.LOGIN}>
-          <Button className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-base">
+          <Button className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-base shadow-lg shadow-blue-600/25">
             Sign in to your account
           </Button>
         </Link>
@@ -54,13 +53,13 @@ export function VerifyEmailForm() {
   return (
     <div className="space-y-6">
       {verifyState.error && (
-        <div className="rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 p-4 text-sm text-red-600 dark:text-red-400">
+        <div className="rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200/60 dark:border-red-800/60 p-4 text-sm text-red-600 dark:text-red-400">
           {verifyState.error}
         </div>
       )}
 
       {resendState.message && (
-        <div className="rounded-2xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 p-4 text-sm text-blue-600 dark:text-blue-400">
+        <div className="rounded-2xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/60 p-4 text-sm text-blue-600 dark:text-blue-400">
           <div className="flex items-start gap-3">
             <Mail className="size-4 mt-0.5 shrink-0" />
             <span>{resendState.message}</span>
@@ -68,11 +67,45 @@ export function VerifyEmailForm() {
         </div>
       )}
 
+      {/* Email Input (if not from URL) */}
+      {!emailFromUrl && (
+        <form action={resendFormAction} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="resend-email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Enter your email to resend verification code
+            </Label>
+            <Input
+              id="resend-email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isResending}
+              className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm"
+            />
+          </div>
+          <Button
+            type="submit"
+            className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-base shadow-lg shadow-blue-600/25"
+            disabled={isResending || !email}
+          >
+            {isResending ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              "Send verification code"
+            )}
+          </Button>
+        </form>
+      )}
+
       {/* Verification Code Form */}
       <form action={verifyFormAction} className="space-y-4">
-        {email && (
-          <input type="hidden" name="email" value={email} />
-        )}
+        <input type="hidden" name="email" value={email} />
         <div className="space-y-2">
           <Label htmlFor="token" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Verification code
@@ -83,7 +116,7 @@ export function VerifyEmailForm() {
             placeholder="Paste your verification code here"
             required
             disabled={isVerifying}
-            className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 text-center text-base tracking-wider"
+            className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm text-center text-base tracking-wider"
           />
           <p className="text-xs text-gray-400 dark:text-gray-500">
             Check your email inbox (and spam folder) for the verification code.
@@ -93,7 +126,7 @@ export function VerifyEmailForm() {
         <Button
           type="submit"
           className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-base shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-300"
-          disabled={isVerifying}
+          disabled={isVerifying || !email}
         >
           {isVerifying ? (
             <>
@@ -106,31 +139,33 @@ export function VerifyEmailForm() {
         </Button>
       </form>
 
-      {/* Resend Code */}
-      <div className="text-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-          Didn&apos;t receive the code?
-        </p>
-        <form action={resendFormAction}>
-          <input type="hidden" name="email" value={email} />
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
-            disabled={isResending}
-          >
-            {isResending ? (
-              <>
-                <Loader2 className="mr-2 size-3 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              "Resend verification code"
-            )}
-          </Button>
-        </form>
-      </div>
+      {/* Resend Code (only show if email is from URL) */}
+      {emailFromUrl && (
+        <div className="text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Didn&apos;t receive the code?
+          </p>
+          <form action={resendFormAction}>
+            <input type="hidden" name="email" value={email} />
+            <Button
+              type="submit"
+              variant="ghost"
+              size="sm"
+              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+              disabled={isResending}
+            >
+              {isResending ? (
+                <>
+                  <Loader2 className="mr-2 size-3 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Resend verification code"
+              )}
+            </Button>
+          </form>
+        </div>
+      )}
 
       {/* Back to login */}
       <div className="text-center">

@@ -199,11 +199,14 @@ export async function verifyEmailAction(
     return { error: "Verification code is required." };
   }
 
+  // Get email from FormData (hidden field)
+  const email = formData.get("email") as string;
+
   try {
     const res = await fetch(`${env.API_BASE_URL}${API.AUTH.VERIFY_EMAIL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: token.trim() }),
+      body: JSON.stringify({ email, token: token.trim() }),
       cache: "no-store",
     });
 
