@@ -49,6 +49,7 @@ const navItems = [
   { title: "Services", icon: BookOpen, href: ROUTES.USER.SERVICES },
   { title: "Batches", icon: GraduationCap, href: ROUTES.USER.BATCHES },
   { title: "Enrollments", icon: CreditCard, href: ROUTES.USER.ENROLLMENTS },
+  { title: "Payments", icon: CreditCard, href: ROUTES.USER.PAYMENTS },
   { title: "Messages", icon: MessageSquare, href: ROUTES.USER.MESSAGES },
   { title: "Notifications", icon: Bell, href: ROUTES.USER.NOTIFICATIONS },
   { title: "Settings", icon: Settings, href: ROUTES.USER.SETTINGS },

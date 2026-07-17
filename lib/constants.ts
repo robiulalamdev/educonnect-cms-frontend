@@ -68,15 +68,17 @@ export const API = {
       ADMINS: "/api/v1/admin/dashboard/admins",
     },
   },
-  SERVICE: "/api/v1/service",
-  BATCH: "/api/v1/batch",
-  ENROLLMENT: "/api/v1/enrollment",
+  SERVICE: "/api/v1/services",
+  BATCH: "/api/v1/batches",
+  ENROLLMENT: "/api/v1/enrollments",
   POST: "/api/v1/posts",
-  MESSAGING: "/api/v1/messaging",
-  NOTIFICATION: "/api/v1/notification",
-  REVIEW: "/api/v1/review",
+  MESSAGING: "/api/v1/chats",
+  NOTIFICATION: "/api/v1/notifications",
+  REVIEW: "/api/v1/reviews",
   EDUCATION: "/api/v1/education",
   SUBSCRIPTION: "/api/v1/subscription",
+  UPLOAD: "/api/v1/upload",
+  PAYMENT: "/api/v1/payment",
 } as const;
 
 /**
