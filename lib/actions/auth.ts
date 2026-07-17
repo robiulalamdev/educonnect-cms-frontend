@@ -330,6 +330,52 @@ export async function uploadAvatarAction(
 }
 
 /**
+ * Change password via server action.
+ */
+export async function changePasswordAction(
+  _prevState: any,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean; message?: string }> {
+  const current_password = formData.get("current_password") as string;
+  const new_password = formData.get("new_password") as string;
+
+  if (!current_password || !new_password) {
+    return { error: "Both fields are required." };
+  }
+
+  if (new_password.length < 8) {
+    return { error: "New password must be at least 8 characters." };
+  }
+
+  try {
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
+
+    const res = await fetch(`${env.API_BASE_URL}/api/v1/auth/me/password`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Cookie: cookieHeader },
+      body: JSON.stringify({ current_password, new_password }),
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      return { error: data.message || "Failed to change password" };
+    }
+
+    // Password changed — cookies cleared by backend, need re-login
+    cookieStore.delete(env.COOKIE_ACCESS_NAME);
+    cookieStore.delete(env.COOKIE_REFRESH_NAME);
+
+    return { success: true, message: data.message };
+  } catch (err: any) {
+    if (err.message === "NEXT_REDIRECT") throw err;
+    return { error: err.message ?? "Failed to change password" };
+  }
+}
+
+/**
  * Update profile via server action.
  */
 export async function updateProfileAction(

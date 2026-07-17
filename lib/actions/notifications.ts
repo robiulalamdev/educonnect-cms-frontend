@@ -56,3 +56,52 @@ export async function deleteNotification(notificationId: string) {
     return { success: false };
   }
 }
+
+export async function getNotificationPreferences() {
+  try {
+    return await serverFetch("/api/v1/notification-preferences");
+  } catch (err: any) {
+    if (err.message === "UNAUTHORIZED") redirect(ROUTES.LOGIN);
+    return { success: false, data: null };
+  }
+}
+
+export async function updateNotificationPreferences(
+  _prevState: any,
+  formData: FormData,
+): Promise<{ error?: string; success?: boolean }> {
+  const in_app_enabled = formData.get("in_app_enabled") === "true";
+  const email_enabled = formData.get("email_enabled") === "true";
+  const push_enabled = formData.get("push_enabled") === "true";
+  const enrollment_notifications = formData.get("enrollment_notifications") === "true";
+  const payment_notifications = formData.get("payment_notifications") === "true";
+  const announcement_notifications = formData.get("announcement_notifications") === "true";
+  const task_notifications = formData.get("task_notifications") === "true";
+  const attendance_notifications = formData.get("attendance_notifications") === "true";
+  const message_notifications = formData.get("message_notifications") === "true";
+  const social_notifications = formData.get("social_notifications") === "true";
+
+  try {
+    await serverFetch("/api/v1/notification-preferences", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        in_app_enabled,
+        email_enabled,
+        push_enabled,
+        enrollment_notifications,
+        payment_notifications,
+        announcement_notifications,
+        task_notifications,
+        attendance_notifications,
+        message_notifications,
+        social_notifications,
+      }),
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    if (err.message === "UNAUTHORIZED") redirect(ROUTES.LOGIN);
+    return { error: err.message ?? "Failed to update preferences" };
+  }
+}
