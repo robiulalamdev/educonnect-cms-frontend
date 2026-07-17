@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ROUTES, SITE } from "@/lib/constants";
+import { ROUTES } from "@/lib/constants";
 import {
   GraduationCap,
   Users,
@@ -13,203 +13,363 @@ import {
   CheckCircle2,
   ArrowRight,
   Star,
-  Zap,
-  Globe,
-  MessageCircle,
-  Bell,
-  ChevronRight,
 } from "lucide-react";
 
 const features = [
-  { icon: BookOpen, title: "Service Management", desc: "Create coaching services with flexible batch scheduling, enrollment, and payment tracking." },
-  { icon: Users, title: "Student Enrollment", desc: "Streamlined enrollment with approval workflows, waitlist management, and real-time notifications." },
-  { icon: Calendar, title: "Attendance & Scheduling", desc: "Mark attendance, manage schedules, and handle overrides with detailed analytics." },
-  { icon: BarChart3, title: "Analytics Dashboard", desc: "Comprehensive insights into student performance, revenue, and engagement metrics." },
-  { icon: Shield, title: "Secure Payments", desc: "Integrated payment system with screenshot verification, transaction tracking, and receipts." },
-  { icon: MessageCircle, title: "Real-time Messaging", desc: "Direct messaging with typing indicators, read receipts, and media sharing." },
+  {
+    icon: BookOpen,
+    title: "Service Management",
+    description:
+      "Create and manage coaching services with flexible batch scheduling and enrollment.",
+  },
+  {
+    icon: Users,
+    title: "Student Enrollment",
+    description:
+      "Streamlined enrollment process with approval workflows and waitlist management.",
+  },
+  {
+    icon: Calendar,
+    title: "Attendance Tracking",
+    description:
+      "Mark and track student attendance with detailed reports and analytics.",
+  },
+  {
+    icon: BarChart3,
+    title: "Analytics & Reports",
+    description:
+      "Comprehensive dashboard with insights into student performance and business metrics.",
+  },
+  {
+    icon: Shield,
+    title: "Secure Payments",
+    description:
+      "Integrated payment system with screenshot verification and transaction tracking.",
+  },
+  {
+    icon: GraduationCap,
+    title: "Multi-Role Support",
+    description:
+      "Dedicated dashboards for teachers, students, and guardians with role-based access.",
+  },
+];
+
+const steps = [
+  {
+    number: "01",
+    title: "Create Your Account",
+    description:
+      "Sign up as a teacher, student, or guardian. Complete your profile and get started in minutes.",
+    items: ["Quick registration", "Email verification", "Profile setup"],
+  },
+  {
+    number: "02",
+    title: "Set Up Services",
+    description:
+      "Teachers create coaching services, define batches, set schedules, and configure payment methods.",
+    items: ["Service creation", "Batch management", "Schedule configuration"],
+  },
+  {
+    number: "03",
+    title: "Connect & Learn",
+    description:
+      "Students enroll in batches, attend classes, submit tasks, and track their learning progress.",
+    items: ["Easy enrollment", "Task submission", "Progress tracking"],
+  },
+];
+
+const roles = [
+  {
+    title: "Teachers",
+    description:
+      "Manage your coaching services, batches, and students from one powerful dashboard.",
+    benefits: [
+      "Create & manage services",
+      "Track attendance",
+      "Assign tasks & notes",
+      "Accept payments",
+    ],
+    icon: BookOpen,
+  },
+  {
+    title: "Students",
+    description:
+      "Access your classes, submit assignments, and track your learning progress.",
+    benefits: [
+      "Join batches",
+      "View schedules",
+      "Submit tasks",
+      "Track progress",
+    ],
+    icon: GraduationCap,
+  },
+  {
+    title: "Guardians",
+    description:
+      "Stay connected with your child's education and monitor their progress.",
+    benefits: [
+      "Link to students",
+      "View attendance",
+      "Track performance",
+      "Monitor payments",
+    ],
+    icon: Users,
+  },
 ];
 
 const stats = [
-  { value: "500+", label: "Active Teachers" },
-  { value: "10K+", label: "Students Enrolled" },
-  { value: "2K+", label: "Batches Running" },
-  { value: "99.9%", label: "Platform Uptime" },
+  { value: "500+", label: "Teachers" },
+  { value: "10K+", label: "Students" },
+  { value: "2K+", label: "Batches" },
+  { value: "99.9%", label: "Uptime" },
 ];
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* ─── Navbar ────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800/50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href={ROUTES.HOME} className="flex items-center gap-2.5">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-[#0066FF] text-white shadow-lg shadow-blue-500/20">
-              <GraduationCap className="size-5" />
-            </div>
-            <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">EduConnect</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">Features</a>
-            <a href="#stats" className="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">About</a>
-            <a href="#cta" className="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">Contact</a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <Link href={ROUTES.LOGIN}>
-              <Button variant="ghost" size="sm" className="rounded-full px-4 text-gray-600 dark:text-gray-400">Log in</Button>
-            </Link>
-            <Link href={ROUTES.REGISTER}>
-              <Button size="sm" className="rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white px-5 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all">Get Started</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+    <div className="flex min-h-screen flex-col">
+      <Header />
 
-      {/* ─── Hero ──────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28 overflow-hidden">
-        {/* Background glow */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-blue-500/8 to-transparent rounded-full blur-3xl" />
-          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 -right-40 w-80 h-80 bg-blue-400/5 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 px-4 py-1.5 text-sm font-medium text-[#0066FF] dark:text-blue-400 mb-8">
-            <Star className="size-3.5 fill-current" />
-            Trusted by 500+ coaching centers
+      <main className="flex-1">
+        {/* ─── Hero ──────────────────────────────────────────── */}
+        <section className="relative overflow-hidden py-28 sm:py-36">
+          {/* Ambient glows */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-blue-500/10 blur-3xl" />
+            <div className="absolute top-1/2 -left-40 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl" />
+            <div className="absolute top-1/2 -right-40 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-gray-900 dark:text-white leading-[1.1]">
-            Coaching Made
-            <span className="block bg-gradient-to-r from-[#0066FF] to-[#60A5FA] bg-clip-text text-transparent mt-2">
-              Effortless
-            </span>
-          </h1>
-
-          <p className="mt-6 text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            The all-in-one platform for coaching centers. Manage services, students, payments, and communication — all in one place.
-          </p>
-
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href={ROUTES.REGISTER}>
-              <Button size="lg" className="rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white px-8 h-13 text-base font-semibold shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:-translate-y-0.5">
-                Start Free Trial
-                <ArrowRight className="ml-2 size-4" />
-              </Button>
-            </Link>
-            <Link href="#features">
-              <Button variant="outline" size="lg" className="rounded-full px-8 h-13 text-base font-semibold border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
-                See Features
-              </Button>
-            </Link>
-          </div>
-
-          {/* Stats */}
-          <div id="stats" className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-8 max-w-3xl mx-auto">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 backdrop-blur-sm border border-white/20 dark:border-white/10 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-8 shadow-sm">
+                <Star className="size-3.5 text-blue-600 fill-blue-600" />
+                Trusted by 500+ coaching centers
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ─── Features ──────────────────────────────────────── */}
-      <section id="features" className="py-20 sm:py-28 bg-gray-50/50 dark:bg-gray-900/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-              Everything you need to run
-              <span className="text-[#0066FF]"> world-class coaching</span>
-            </h2>
-            <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
-              From service management to real-time communication, we have got every feature covered.
-            </p>
-          </div>
+              <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+                <span className="text-gray-900 dark:text-white">Digital Products</span>
+                <br />
+                <span className="text-gray-900 dark:text-white">built to a </span>
+                <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                  Higher
+                </span>
+                <span className="text-gray-900 dark:text-white"> Standard</span>
+              </h1>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f) => (
-              <Card key={f.title} className="group border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-[20px] hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-1 transition-all duration-500">
-                <CardContent className="p-6">
-                  <div className="flex size-12 items-center justify-center rounded-2xl bg-[#0066FF]/10 text-[#0066FF] group-hover:bg-[#0066FF] group-hover:text-white transition-all duration-300">
-                    <f.icon className="size-6" />
-                  </div>
-                  <h3 className="mt-5 text-lg font-semibold text-gray-900 dark:text-white">{f.title}</h3>
-                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{f.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── CTA ───────────────────────────────────────────── */}
-      <section id="cta" className="py-20 sm:py-28">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#0066FF] via-[#2563EB] to-[#3B82F6] px-8 py-16 sm:px-16 sm:py-20 text-center">
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
-              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
-            </div>
-            <div className="relative">
-              <h2 className="text-3xl sm:text-4xl font-bold text-white">
-                Ready to transform your coaching?
-              </h2>
-              <p className="mt-4 text-lg text-blue-100 max-w-lg mx-auto">
-                Join thousands of coaching centers already using EduConnect to manage their business.
+              <p className="mt-6 text-lg leading-8 text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+                A comprehensive platform for coaching and education management.
+                Connect teachers, students, and guardians seamlessly.
               </p>
-              <div className="mt-8">
+
+              <div className="mt-10 flex items-center justify-center gap-4">
                 <Link href={ROUTES.REGISTER}>
-                  <Button size="lg" className="rounded-full bg-white text-[#0066FF] hover:bg-gray-100 px-8 h-13 text-base font-semibold shadow-xl transition-all hover:-translate-y-0.5">
+                  <Button
+                    size="lg"
+                    className="rounded-full bg-blue-600 hover:bg-blue-700 text-white px-8 h-13 font-semibold text-base shadow-xl shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-300 active:scale-[0.98]"
+                  >
                     Get Started Free
                     <ArrowRight className="ml-2 size-4" />
                   </Button>
                 </Link>
+                <Link href="#features">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="rounded-full px-8 h-13 font-semibold text-base border-gray-200/60 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300"
+                  >
+                    See Our Work
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="mt-24 grid grid-cols-2 gap-8 sm:grid-cols-4 max-w-3xl mx-auto">
+              {stats.map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {stat.value}
+                  </p>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Features ──────────────────────────────────────── */}
+        <section id="features" className="relative py-28 sm:py-36">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-96 w-[600px] rounded-full bg-blue-500/5 blur-3xl" />
+          </div>
+
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl text-gray-900 dark:text-white">
+                A Complete <span className="text-blue-600">Product</span> Delivery Process
+              </h2>
+              <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
+                From strategy and UX to ongoing support, we handle
+                the complete digital product lifecycle.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:max-w-none">
+              {features.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="group glass-card-solid p-7 hover:shadow-2xl hover:shadow-blue-900/5 dark:hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-500"
+                >
+                  <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-950 transition-colors duration-300">
+                    <feature.icon className="size-6" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-gray-900 dark:text-white">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── How It Works ──────────────────────────────────── */}
+        <section id="how-it-works" className="relative py-28 sm:py-36">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/2 right-0 h-96 w-96 rounded-full bg-blue-500/5 blur-3xl" />
+          </div>
+
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl text-gray-900 dark:text-white">
+                How it works
+              </h2>
+              <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
+                Get started in three simple steps.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-3 lg:max-w-none">
+              {steps.map((step) => (
+                <div key={step.number} className="relative">
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-blue-600 text-white font-bold text-xl mb-6 shadow-xl shadow-blue-600/25">
+                    {step.number}
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    {step.description}
+                  </p>
+                  <ul className="mt-5 space-y-3">
+                    {step.items.map((item) => (
+                      <li
+                        key={item}
+                        className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"
+                      >
+                        <CheckCircle2 className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Roles ─────────────────────────────────────────── */}
+        <section id="roles" className="relative py-28 sm:py-36">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 h-96 w-[600px] rounded-full bg-indigo-500/5 blur-3xl" />
+          </div>
+
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl text-gray-900 dark:text-white">
+                Built for <span className="text-blue-600">everyone</span>
+              </h2>
+              <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
+                Whether you are a teacher, student, or guardian, we have got you
+                covered.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-3 lg:max-w-none">
+              {roles.map((role) => (
+                <div
+                  key={role.title}
+                  className="group glass-card-solid p-7 hover:shadow-2xl hover:shadow-blue-900/5 dark:hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-500"
+                >
+                  <div className="flex size-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-950 transition-colors duration-300">
+                    <role.icon className="size-6" />
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold text-gray-900 dark:text-white">
+                    {role.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    {role.description}
+                  </p>
+                  <ul className="mt-6 space-y-3">
+                    {role.benefits.map((benefit) => (
+                      <li
+                        key={benefit}
+                        className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"
+                      >
+                        <CheckCircle2 className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── CTA ───────────────────────────────────────────── */}
+        <section className="relative py-28 sm:py-36">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="relative overflow-hidden rounded-[2rem] bg-blue-600 px-8 py-20 sm:px-16 sm:py-24 text-center shadow-2xl shadow-blue-600/20">
+              {/* Decorative elements */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+                <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
+              </div>
+
+              <div className="relative">
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-white">
+                  Let&apos;s build something
+                  <br />
+                  that performs
+                </h2>
+                <p className="mt-4 text-lg text-blue-100 max-w-lg mx-auto">
+                  Ready to transform your website? Get in touch and
+                  we&apos;ll show you what&apos;s possible for your brand.
+                </p>
+                <div className="mt-8">
+                  <Link href={ROUTES.REGISTER}>
+                    <Button
+                      size="lg"
+                      className="rounded-full bg-white text-blue-600 hover:bg-gray-100 px-8 h-13 font-semibold text-base shadow-xl transition-all duration-300 active:scale-[0.98]"
+                    >
+                      Create Your Account
+                      <ArrowRight className="ml-2 size-4" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* ─── Footer ────────────────────────────────────────── */}
-      <footer className="border-t border-gray-100 dark:border-gray-800/50 py-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid sm:grid-cols-4 gap-8">
-            <div className="sm:col-span-2">
-              <Link href={ROUTES.HOME} className="flex items-center gap-2.5 mb-4">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-[#0066FF] text-white">
-                  <GraduationCap className="size-4" />
-                </div>
-                <span className="font-bold text-gray-900 dark:text-white">EduConnect</span>
-              </Link>
-              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed">
-                The all-in-one platform for coaching and education management.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Product</h4>
-              <ul className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-                <li><a href="#features" className="hover:text-gray-900 dark:hover:text-white transition-colors">Features</a></li>
-                <li><Link href={ROUTES.LOGIN} className="hover:text-gray-900 dark:hover:text-white transition-colors">Login</Link></li>
-                <li><Link href={ROUTES.REGISTER} className="hover:text-gray-900 dark:hover:text-white transition-colors">Sign up</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Legal</h4>
-              <ul className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-                <li><span className="cursor-not-allowed">Privacy Policy</span></li>
-                <li><span className="cursor-not-allowed">Terms of Service</span></li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-10 pt-6 border-t border-gray-100 dark:border-gray-800/50 text-center text-sm text-gray-400 dark:text-gray-500">
-            &copy; {new Date().getFullYear()} {SITE.NAME}. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
