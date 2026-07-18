@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, Globe, Building2, Map, Home, Search, Check, ChevronDown } from "lucide-react";
@@ -19,7 +19,6 @@ interface LocationPickerProps {
   onAreaChange?: (value: string) => void;
   onAddressLineChange?: (value: string) => void;
   disabled?: boolean;
-  showAddressLine?: boolean;
   className?: string;
 }
 
@@ -32,7 +31,6 @@ function FieldSelect({
   onChange,
   placeholder,
   disabled = false,
-  loading = false,
 }: {
   label: string;
   icon: any;
@@ -41,16 +39,12 @@ function FieldSelect({
   onChange: (v: string) => void;
   placeholder: string;
   disabled?: boolean;
-  loading?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
-  const filtered = options.filter((o) =>
-    o.toLowerCase().includes(query.toLowerCase())
-  );
-
+  const filtered = options.filter((o) => o.toLowerCase().includes(query.toLowerCase()));
   const displayValue = open ? query : value || "";
 
   useEffect(() => {
@@ -64,59 +58,37 @@ function FieldSelect({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  const selectCls = cn(
+    "flex h-11 w-full items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm cursor-pointer transition-colors",
+    "focus-within:border-[#0066FF] focus-within:ring-2 focus-within:ring-[#0066FF]/20",
+    disabled && "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-900",
+    open && "border-[#0066FF] ring-2 ring-[#0066FF]/20"
+  );
+
   return (
     <div className="space-y-2">
       <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
         <Icon className="size-3.5" /> {label}
       </Label>
       <div ref={ref} className="relative">
-        <div
-          role="combobox"
-          aria-expanded={open}
-          onClick={() => {
-            if (!disabled) {
-              setOpen(!open);
-            }
-          }}
-          className={cn(
-            "flex h-11 w-full items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm cursor-pointer transition-colors",
-            "focus-within:border-[#0066FF] focus-within:ring-2 focus-within:ring-[#0066FF]/20",
-            disabled && "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-900",
-            open && "border-[#0066FF] ring-2 ring-[#0066FF]/20"
-          )}
-        >
-          <span className={cn("truncate", !value && "text-gray-400")}>
-            {value || placeholder}
-          </span>
+        <div role="combobox" aria-expanded={open} onClick={() => !disabled && setOpen(!open)} className={selectCls}>
+          <span className={cn("truncate", !value && "text-gray-400")}>{value || placeholder}</span>
           <ChevronDown className={cn("size-4 shrink-0 text-gray-400 transition-transform", open && "rotate-180")} />
         </div>
-
         {open && (
           <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
             <div className="flex items-center border-b border-gray-100 dark:border-gray-800 px-3">
               <Search className="size-4 shrink-0 text-gray-400" />
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search..."
-                className="h-10 w-full bg-transparent px-2 text-sm outline-none placeholder:text-gray-400"
-              />
+              <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search..." className="h-10 w-full bg-transparent px-2 text-sm outline-none placeholder:text-gray-400" />
             </div>
             <div className="max-h-60 overflow-y-auto p-1">
-              {loading ? (
-                <div className="py-6 text-center text-sm text-gray-400">Loading...</div>
-              ) : filtered.length === 0 ? (
+              {filtered.length === 0 ? (
                 <div className="py-6 text-center text-sm text-gray-400">No results</div>
               ) : (
                 filtered.map((option) => (
                   <div
                     key={option}
-                    onClick={() => {
-                      onChange(option);
-                      setQuery("");
-                      setOpen(false);
-                    }}
+                    onClick={() => { onChange(option); setQuery(""); setOpen(false); }}
                     className={cn(
                       "flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
                       "hover:bg-gray-100 dark:hover:bg-gray-800",
@@ -150,21 +122,18 @@ export function LocationPicker({
   onAreaChange,
   onAddressLineChange,
   disabled = false,
-  showAddressLine = true,
   className,
 }: LocationPickerProps) {
   const countries = LOCATIONS.map((c) => c.name);
   const states = getStatesForCountry(country);
   const cities = getCitiesForState(country, state);
 
-  // When country changes, reset state/city
   const handleCountryChange = (value: string) => {
     onCountryChange?.(value);
     onStateChange?.("");
     onCityChange?.("");
   };
 
-  // When state changes, reset city
   const handleStateChange = (value: string) => {
     onStateChange?.(value);
     onCityChange?.("");
@@ -172,70 +141,30 @@ export function LocationPicker({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Country */}
-      <FieldSelect
-        label="Country"
-        icon={Globe}
-        value={country}
-        options={countries}
-        onChange={handleCountryChange}
-        placeholder="Select country..."
-        disabled={disabled}
-      />
-
-      {/* State */}
-      <FieldSelect
-        label="State / Province / Region"
-        icon={MapPin}
-        value={state}
-        options={states}
-        onChange={handleStateChange}
-        placeholder={country ? "Select state..." : "Select country first"}
-        disabled={disabled || !country}
-      />
-
-      {/* City */}
-      <FieldSelect
-        label="City / District"
-        icon={Building2}
-        value={city}
-        options={cities}
-        onChange={(v) => onCityChange?.(v)}
-        placeholder={state ? "Select city..." : "Select state first"}
-        disabled={disabled || !state}
-      />
-
-      {/* Area */}
-      <div className="space-y-2">
-        <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
-          <Map className="size-3.5" /> Area / Locality
-          <span className="text-gray-400 font-normal">(optional)</span>
-        </Label>
-        <Input
-          value={area}
-          onChange={(e) => onAreaChange?.(e.target.value)}
-          placeholder="Enter area name"
-          disabled={disabled}
-          className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-        />
+      {/* Row 1: Country + State */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FieldSelect label="Country" icon={Globe} value={country} options={countries} onChange={handleCountryChange} placeholder="Select country..." disabled={disabled} />
+        <FieldSelect label="State / Province / Region" icon={MapPin} value={state} options={states} onChange={handleStateChange} placeholder={country ? "Select state..." : "Select country first"} disabled={disabled || !country} />
       </div>
 
-      {/* Address Line */}
-      {showAddressLine && (
+      {/* Row 2: City + Area */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FieldSelect label="City / District" icon={Building2} value={city} options={cities} onChange={(v) => onCityChange?.(v)} placeholder={state ? "Select city..." : "Select state first"} disabled={disabled || !state} />
         <div className="space-y-2">
           <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
-            <Home className="size-3.5" /> Address Line
-            <span className="text-gray-400 font-normal">(optional)</span>
+            <Map className="size-3.5" /> Area / Locality <span className="text-gray-400 font-normal">(optional)</span>
           </Label>
-          <Input
-            value={addressLine}
-            onChange={(e) => onAddressLineChange?.(e.target.value)}
-            placeholder="Street address, building, etc."
-            disabled={disabled}
-            className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-          />
+          <Input value={area} onChange={(e) => onAreaChange?.(e.target.value)} placeholder="Enter area name" disabled={disabled} className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
         </div>
-      )}
+      </div>
+
+      {/* Row 3: Address Line */}
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
+          <Home className="size-3.5" /> Address Line <span className="text-gray-400 font-normal">(optional)</span>
+        </Label>
+        <Input value={addressLine} onChange={(e) => onAddressLineChange?.(e.target.value)} placeholder="Street address, building, etc." disabled={disabled} className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
+      </div>
     </div>
   );
 }
