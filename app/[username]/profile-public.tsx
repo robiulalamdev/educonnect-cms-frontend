@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, CheckCircle, Award, Calendar, MapPin, Mail, Phone, User, Globe, Users, GraduationCap, Hash, Clock, MessageSquare, Bell, Home, Settings, Search, Sun, ChevronRight, FileText } from "lucide-react";
+import { BookOpen, CheckCircle, Award, Calendar, MapPin, Mail, Phone, User, Globe, Users, GraduationCap, Hash, Clock, MessageSquare, Bell, Home, Settings, Search, Sun, ChevronRight, FileText, Crown, Star, TrendingUp, Heart, Lightbulb } from "lucide-react";
 import Link from "next/link";
 
 interface ProfilePublicProps { user: any; posts?: any[]; }
@@ -20,6 +20,9 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
   const initials = getInitials(user.full_name || "U");
   const username = user.email?.split("@")[0] || user.full_name?.toLowerCase().replace(/\s+/g, "") || "user";
   const memberSince = user.created_at ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "";
+
+  const uniqueSubjects = [...new Set(posts.flatMap((p: any) => p.subjects?.map((s: any) => s.subject?.name).filter(Boolean) || []))];
+  const subjectCount = uniqueSubjects.length;
 
   return (
     <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0D0D12]">
@@ -232,27 +235,243 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
         )}
 
         {activeTab === "Academics" && (
-          <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
-            <CardContent className="p-6"><p className="text-gray-500">Academic information will appear here.</p></CardContent>
-          </Card>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                    <GraduationCap className="size-5 text-[#0066FF]" /> Academic Profile
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <InfoItem icon={GraduationCap} label="Current Institution" value="Dhanmondi Govt. College" />
+                    <InfoItem icon={Hash} label="Class / Grade" value="HSC - 2026" />
+                    <InfoItem icon={BookOpen} label="Group / Department" value="Science" />
+                    <InfoItem icon={User} label="Student ID" value="2026-1256" />
+                    <InfoItem icon={FileText} label="Roll Number" value="125678" />
+                    <InfoItem icon={Calendar} label="Session" value="2024-2026" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                    <BookOpen className="size-5 text-[#0066FF]" /> Enrolled Courses
+                  </h3>
+                  {posts.length > 0 ? (
+                    <div className="space-y-3">
+                      {uniqueSubjects.slice(0, 5).map((subject: string, i: number) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                          <div className="flex items-center gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600">
+                              <BookOpen className="size-5" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white">{subject}</p>
+                              <p className="text-xs text-gray-500">Active enrollment</p>
+                            </div>
+                          </div>
+                          <span className="inline-flex items-center rounded-full bg-green-50 dark:bg-green-950/50 px-2.5 py-0.5 text-[11px] font-semibold text-green-600">Enrolled</span>
+                        </div>
+                      ))}
+                      {subjectCount === 0 && (
+                        <p className="text-sm text-gray-400 text-center py-4">No courses enrolled yet</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400 text-center py-4">No course data available</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                    <BarChart3Icon className="size-5 text-[#0066FF]" /> Academic Stats
+                  </h3>
+                  <div className="space-y-4">
+                    <StatItem icon={BookOpen} color="blue" label="Subjects" value={String(subjectCount)} />
+                    <StatItem icon={FileText} color="green" label="Posts Shared" value={posts.length.toString()} />
+                    <StatItem icon={Award} color="amber" label="Completed" value="0" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                    <Calendar className="size-5 text-[#0066FF]" /> Schedule
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">Morning Batch</p>
+                      <p className="text-xs text-gray-500 mt-0.5">8:00 AM - 10:00 AM</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">Evening Batch</p>
+                      <p className="text-xs text-gray-500 mt-0.5">4:00 PM - 6:00 PM</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         )}
 
         {activeTab === "Activity" && (
-          <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
-            <CardContent className="p-6"><p className="text-gray-500">Activity feed will appear here.</p></CardContent>
-          </Card>
+          <div className="space-y-4">
+            {posts.length > 0 ? posts.map((post) => (
+              <Card key={post.id} className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 shrink-0">
+                      <FileText className="size-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Published a post</p>
+                        <span className="text-xs text-gray-400">{new Date(post.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                      </div>
+                      {post.title && <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mt-1">{post.title}</p>}
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-3">{post.content?.replace(/<[^>]*>/g, "").slice(0, 200)}</p>
+                      {post.media?.length > 0 && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-400">
+                          <FileText className="size-3.5" /> {post.media.length} image{post.media.length > 1 ? "s" : ""}
+                        </div>
+                      )}
+                      {post.subjects?.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {post.subjects.map((s: any) => (
+                            <span key={s.subject.id} className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 text-[11px] font-medium text-[#0066FF]">
+                              <Hash className="size-3" />{s.subject.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )) : (
+              <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
+                <CardContent className="p-16 text-center">
+                  <Clock className="size-12 text-gray-300 dark:text-gray-600 mx-auto" />
+                  <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">No activity yet</h3>
+                  <p className="mt-2 text-sm text-gray-500">This user hasn&apos;t posted anything yet.</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
 
         {activeTab === "Achievements" && (
-          <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
-            <CardContent className="p-6"><p className="text-gray-500">Achievements will appear here.</p></CardContent>
-          </Card>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-5">
+                    <Award className="size-5 text-[#0066FF]" /> Achievements & Badges
+                  </h3>
+                  {posts.length >= 1 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      <AchievementBadge icon={FileText} label="First Post" desc="Published first post" color="blue" earned />
+                      {posts.length >= 5 && <AchievementBadge icon={TrendingUpIcon} label="Active Creator" desc="Published 5+ posts" color="green" earned />}
+                      {posts.length >= 10 && <AchievementBadge icon={StarIcon} label="Star Contributor" desc="Published 10+ posts" color="amber" earned />}
+                      <AchievementBadge icon={BookOpen} label="Learner" desc="Enrolled in courses" color="purple" earned={posts.some((p: any) => p.subjects?.length > 0)} />
+                      <AchievementBadge icon={UsersIcon} label="Community Member" desc="Joined the community" color="indigo" earned />
+                      <AchievementBadge icon={AwardIcon} label="Top Performer" desc="Outstanding contribution" color="rose" earned={false} />
+                      <AchievementBadge icon={GraduationCap} label="Scholar" desc="Completed all courses" color="teal" earned={false} />
+                      <AchievementBadge icon={HeartIcon} label="Supporter" desc="Helped 10 students" color="pink" earned={false} />
+                      <AchievementBadge icon={LightBulbIcon} label="Innovator" desc="Shared unique content" color="orange" earned={false} />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400 text-center py-8">No achievements yet. Start posting to earn badges!</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                    <BarChart3Icon className="size-5 text-[#0066FF]" /> Progress
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Profile Complete</span>
+                        <span className="text-sm font-bold text-[#0066FF]">60%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                        <div className="h-full rounded-full bg-[#0066FF] transition-all" style={{ width: "60%" }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Activity Level</span>
+                        <span className="text-sm font-bold text-green-500">{posts.length > 0 ? "Active" : "Inactive"}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                        <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${Math.min(100, posts.length * 20)}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
+                <CardContent className="p-6 text-center">
+                  <Crown className="size-10 text-[#0066FF] mx-auto" />
+                  <h3 className="mt-3 text-[15px] font-bold text-gray-900 dark:text-white">Unlock More</h3>
+                  <p className="mt-1 text-[13px] text-gray-500">Upgrade to Pro for exclusive badges</p>
+                  <Button className="mt-4 w-full rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white h-9 text-[13px] font-semibold">Upgrade Now</Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         )}
 
         {activeTab === "Messages" && (
-          <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
-            <CardContent className="p-6"><p className="text-gray-500">Messages will appear here.</p></CardContent>
-          </Card>
+          <div className="max-w-2xl mx-auto">
+            <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-2">
+                  <MessageSquare className="size-5 text-[#0066FF]" /> Send a Message
+                </h3>
+                <p className="text-sm text-gray-500 mb-5">Send a direct message to {user.full_name}</p>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 shrink-0">
+                      <Mail className="size-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">Email</p>
+                      <p className="text-sm text-gray-500">{user.email || "Not available"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-green-50 dark:bg-green-950/50 text-green-600 shrink-0">
+                      <Phone className="size-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">Phone</p>
+                      <p className="text-sm text-gray-500">{user.phone || "Not available"}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 pt-5 border-t border-gray-100 dark:border-gray-800">
+                  <Link href="/dashboard/messages">
+                    <Button className="w-full rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white h-11 text-[14px] font-semibold shadow-lg shadow-blue-500/20">
+                      <MessageSquare className="mr-2 size-4" /> Open Messages
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
 
@@ -305,3 +524,38 @@ function StatItem({ icon: Icon, color, label, value }: { icon: any; color: strin
 }
 
 function BarChart3Icon(props: any) { return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={props.className}><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>; }
+
+function AchievementBadge({ icon: Icon, label, desc, color, earned }: { icon: any; label: string; desc: string; color: string; earned: boolean }) {
+  const colorMap: Record<string, { bg: string; text: string; ring: string }> = {
+    blue: { bg: "bg-blue-50 dark:bg-blue-950/50", text: "text-blue-600", ring: "ring-blue-200 dark:ring-blue-800" },
+    green: { bg: "bg-green-50 dark:bg-green-950/50", text: "text-green-600", ring: "ring-green-200 dark:ring-green-800" },
+    amber: { bg: "bg-amber-50 dark:bg-amber-950/50", text: "text-amber-600", ring: "ring-amber-200 dark:ring-amber-800" },
+    purple: { bg: "bg-purple-50 dark:bg-purple-950/50", text: "text-purple-600", ring: "ring-purple-200 dark:ring-purple-800" },
+    indigo: { bg: "bg-indigo-50 dark:bg-indigo-950/50", text: "text-indigo-600", ring: "ring-indigo-200 dark:ring-indigo-800" },
+    rose: { bg: "bg-rose-50 dark:bg-rose-950/50", text: "text-rose-600", ring: "ring-rose-200 dark:ring-rose-800" },
+    teal: { bg: "bg-teal-50 dark:bg-teal-950/50", text: "text-teal-600", ring: "ring-teal-200 dark:ring-teal-800" },
+    pink: { bg: "bg-pink-50 dark:bg-pink-950/50", text: "text-pink-600", ring: "ring-pink-200 dark:ring-pink-800" },
+    orange: { bg: "bg-orange-50 dark:bg-orange-950/50", text: "text-orange-600", ring: "ring-orange-200 dark:ring-orange-800" },
+  };
+  const c = colorMap[color] || colorMap.blue;
+  return (
+    <div className={`flex flex-col items-center gap-2.5 p-4 rounded-2xl border transition-all ${earned ? `border-gray-200/80 dark:border-gray-700/80 bg-white dark:bg-[#16161D]` : `border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-gray-900/30 opacity-50`}`}>
+      <div className={`flex size-12 items-center justify-center rounded-2xl ${c.bg} ${c.text} ${earned ? "" : "grayscale"}`}>
+        <Icon className="size-6" />
+      </div>
+      <div className="text-center">
+        <p className="text-[13px] font-bold text-gray-900 dark:text-white">{label}</p>
+        <p className="text-[11px] text-gray-500 mt-0.5">{desc}</p>
+      </div>
+      {earned && <span className="inline-flex items-center gap-1 rounded-full bg-green-50 dark:bg-green-950/50 px-2 py-0.5 text-[10px] font-bold text-green-600"><CheckCircle className="size-3" /> Earned</span>}
+      {!earned && <span className="text-[10px] text-gray-400 font-medium">Locked</span>}
+    </div>
+  );
+}
+
+function TrendingUpIcon(props: any) { return <TrendingUp className={props.className} />; }
+function StarIcon(props: any) { return <Star className={props.className} />; }
+function UsersIcon(props: any) { return <Users className={props.className} />; }
+function AwardIcon(props: any) { return <Award className={props.className} />; }
+function HeartIcon(props: any) { return <Heart className={props.className} />; }
+function LightBulbIcon(props: any) { return <Lightbulb className={props.className} />; }
