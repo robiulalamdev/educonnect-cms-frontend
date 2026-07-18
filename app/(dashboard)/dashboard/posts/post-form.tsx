@@ -4,12 +4,13 @@ import { useActionState, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createPostAction, updatePostAction } from "@/lib/actions/posts";
 import { RichEditor } from "@/components/rich-editor";
+import { LocationPicker } from "@/components/location/location-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTES } from "@/lib/constants";
-import { Loader2, Upload, X, Image as ImageIcon, ArrowLeft } from "lucide-react";
+import { Loader2, Upload, X, Image as ImageIcon, ArrowLeft, MapPin } from "lucide-react";
 import Link from "next/link";
 
 type FormState = { error?: string; success?: boolean; postId?: string; message?: string };
@@ -33,6 +34,12 @@ export function PostForm({ postId, initialData }: PostFormProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showLocation, setShowLocation] = useState(false);
+  const [country, setCountry] = useState("");
+  const [stateVal, setStateVal] = useState("");
+  const [city, setCity] = useState("");
+  const [area, setArea] = useState("");
+  const [addressLine, setAddressLine] = useState("");
 
   const [state, formAction, isPending] = useActionState<FormState, FormData>(
     isEditing
@@ -69,6 +76,12 @@ export function PostForm({ postId, initialData }: PostFormProps) {
     const formData = new FormData(e.currentTarget);
     formData.set("content", content);
     formData.set("type", type);
+
+    formData.set("country", country);
+    formData.set("state", stateVal);
+    formData.set("city", city);
+    formData.set("area", area);
+    formData.set("address_line", addressLine);
 
     for (const file of files) {
       formData.append("media", file);
@@ -152,6 +165,45 @@ export function PostForm({ postId, initialData }: PostFormProps) {
               placeholder="Write your post content here..."
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Location */}
+      <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-[24px] bg-white dark:bg-[#16161D]">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Location <span className="text-gray-400 font-normal">(optional)</span>
+            </Label>
+            <button
+              type="button"
+              onClick={() => setShowLocation(!showLocation)}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium transition-all ${
+                showLocation
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+            >
+              <MapPin className="size-3.5" />
+              {showLocation ? "Location Set" : "Set Location"}
+            </button>
+          </div>
+          {showLocation && (
+            <div className="mt-4 rounded-2xl border border-gray-200/60 dark:border-gray-800/60 p-4">
+              <LocationPicker
+                country={country}
+                state={stateVal}
+                city={city}
+                area={area}
+                addressLine={addressLine}
+                onCountryChange={setCountry}
+                onStateChange={setStateVal}
+                onCityChange={setCity}
+                onAreaChange={setArea}
+                onAddressLineChange={setAddressLine}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

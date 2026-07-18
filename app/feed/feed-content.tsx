@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getPublicFeed, getTrendingFeed } from "@/lib/actions/feed";
+import { getTrendingTopics, getSuggestedUsers } from "@/lib/actions/discover";
 import { LikeButton } from "@/components/social/like-button";
 import { CommentSection } from "@/components/social/comment-section";
 import { StoryBubbles } from "@/components/social/story-bubbles";
@@ -20,16 +21,6 @@ function getInitials(name: string) { return name.split(" ").map((n) => n[0]).joi
 function timeAgo(date: string) { const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000); if (s < 60) return "now"; const m = Math.floor(s / 60); if (m < 60) return `${m}m`; const h = Math.floor(m / 60); if (h < 24) return `${h}h`; return `${Math.floor(h / 24)}d`; }
 function stripHtml(html: string) { return html.replace(/<[^>]*>/g, "").trim(); }
 
-const trendingTopics = [
-  { tag: "#Math Education", posts: "12.4K posts" }, { tag: "#SSC Preparation", posts: "8.7K posts" },
-  { tag: "#Study Tips", posts: "6.1K posts" }, { tag: "#Dhaka Teachers", posts: "5.3K posts" },
-  { tag: "#Online Learning", posts: "4.8K posts" },
-];
-
-const whoToFollow = [
-  { name: "Sarah Khan", handle: "@sarahkhan" }, { name: "Naim Hasan", handle: "@naimhasan" }, { name: "Riya Akter", handle: "@riyaakter" },
-];
-
 export function FeedContent() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +34,8 @@ export function FeedContent() {
   const [showCreateStory, setShowCreateStory] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [imageModal, setImageModal] = useState<string | null>(null);
+  const [trendingTopics, setTrendingTopics] = useState<Array<{ tag: string; posts: string }>>([]);
+  const [whoToFollow, setWhoToFollow] = useState<Array<{ id: string; name: string; handle: string; avatar_key?: string | null }>>([]);
   const observerRef = useRef<HTMLDivElement>(null);
 
   const loadPosts = useCallback(async (p: number, append = false) => {
@@ -64,6 +57,13 @@ export function FeedContent() {
   }, [hasMore, loadingMore, loadPosts]);
 
   useEffect(() => { const h = () => setShowBackToTop(window.scrollY > 500); window.addEventListener("scroll", h); return () => window.removeEventListener("scroll", h); }, []);
+
+  useEffect(() => {
+    Promise.all([getTrendingTopics(), getSuggestedUsers()]).then(([topics, users]) => {
+      if (topics.success) setTrendingTopics(topics.data);
+      if (users.success) setWhoToFollow(users.data);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0D0D12]">
@@ -152,26 +152,32 @@ export function FeedContent() {
           <aside className="hidden xl:block w-[300px] shrink-0">
             <div className="sticky top-[72px] space-y-4">
               <div className="bg-white dark:bg-[#16161D] rounded-2xl border border-gray-200/80 dark:border-gray-800/80 p-5">
-                <div className="flex items-center justify-between mb-4"><h3 className="text-[15px] font-bold text-gray-900 dark:text-white">Trending Topics</h3><button className="text-[12px] font-semibold text-[#0066FF]">View all</button></div>
+                <div className="flex items-center justify-between mb-4"><h3 className="text-[15px] font-bold text-gray-900 dark:text-white">Trending Topics</h3></div>
                 <div className="space-y-3.5">
-                  {trendingTopics.map((topic, i) => (
+                  {trendingTopics.length > 0 ? trendingTopics.map((topic, i) => (
                     <div key={topic.tag} className="flex items-center justify-between cursor-pointer group">
                       <div className="flex items-center gap-3"><span className="text-[12px] font-bold text-gray-300 dark:text-gray-600 w-5">{i + 1}</span><div><p className="text-[14px] font-semibold text-[#0066FF] group-hover:text-[#0052CC]">{topic.tag}</p><p className="text-[12px] text-gray-400">{topic.posts}</p></div></div>
                       <TrendingUp className="size-3.5 text-gray-300" />
                     </div>
-                  ))}
+                  )) : <p className="text-[13px] text-gray-400">No trending topics yet</p>}
                 </div>
               </div>
               <div className="bg-white dark:bg-[#16161D] rounded-2xl border border-gray-200/80 dark:border-gray-800/80 p-5">
-                <div className="flex items-center justify-between mb-4"><h3 className="text-[15px] font-bold text-gray-900 dark:text-white">Who to follow</h3><button className="text-[12px] font-semibold text-[#0066FF]">View all</button></div>
+                <div className="flex items-center justify-between mb-4"><h3 className="text-[15px] font-bold text-gray-900 dark:text-white">Who to follow</h3></div>
                 <div className="space-y-3.5">
-                  {whoToFollow.map((user) => (
-                    <div key={user.handle} className="flex items-center gap-3">
-                      <Avatar className="size-10"><AvatarFallback className="text-[11px] font-bold bg-blue-50 dark:bg-blue-950/50 text-[#0066FF]">{getInitials(user.name)}</AvatarFallback></Avatar>
+                  {whoToFollow.length > 0 ? whoToFollow.map((user) => (
+                    <div key={user.id || user.handle} className="flex items-center gap-3">
+                      <Avatar className="size-10">
+                        {user.avatar_key ? (
+                          <img src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_80,h_80,c_fill/${user.avatar_key}`} alt="" className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          <AvatarFallback className="text-[11px] font-bold bg-blue-50 dark:bg-blue-950/50 text-[#0066FF]">{getInitials(user.name)}</AvatarFallback>
+                        )}
+                      </Avatar>
                       <div className="flex-1 min-w-0"><p className="text-[14px] font-semibold text-gray-900 dark:text-white truncate">{user.name}</p><p className="text-[12px] text-gray-400">{user.handle}</p></div>
                       <Button variant="outline" size="sm" className="rounded-full text-[12px] h-7 px-3.5 border-gray-200 dark:border-gray-700 text-[#0066FF] hover:bg-[#0066FF] hover:text-white hover:border-[#0066FF]">Follow</Button>
                     </div>
-                  ))}
+                  )) : <p className="text-[13px] text-gray-400">No suggestions yet</p>}
                 </div>
               </div>
               <div className="rounded-2xl border border-blue-200/50 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/20 dark:to-[#16161D] p-5">

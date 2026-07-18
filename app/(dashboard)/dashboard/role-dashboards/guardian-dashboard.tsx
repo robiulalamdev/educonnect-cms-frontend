@@ -1,42 +1,92 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { StatCard } from "@/components/charts/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, MessageCircle, CreditCard, Calendar, ArrowUpRight } from "lucide-react";
+import { Users, BookOpen, CreditCard, Calendar, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
+interface ChildInfo {
+  id: string;
+  name: string;
+  enrollments: number;
+  attendance_pct: number;
+  recent_tasks: number;
+}
+
+interface GuardianStats {
+  total_children: number;
+  total_enrollments: number;
+  total_payments: number;
+  children: ChildInfo[];
+}
+
 export function GuardianDashboard() {
+  const [stats, setStats] = useState<GuardianStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/v1/statistics/guardian", { credentials: "include" });
+        const data = await res.json();
+        if (data.success) setStats(data.data);
+      } catch {
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link href="/dashboard/enrollments">
-          <StatCard icon={Users} color="blue" title="Linked Students" value="0" change="+0" up />
+          <StatCard icon={Users} color="blue" label="Children" value={stats?.total_children ?? 0} />
         </Link>
         <Link href="/dashboard/enrollments">
-          <StatCard icon={BookOpen} color="green" title="Active Enrollments" value="0" change="+0" up />
+          <StatCard icon={BookOpen} color="green" label="Enrollments" value={stats?.total_enrollments ?? 0} />
         </Link>
-        <Link href="/dashboard/messages">
-          <StatCard icon={MessageCircle} color="purple" title="Messages" value="0" change="+0" up />
-        </Link>
-        <Link href="/dashboard/enrollments">
-          <StatCard icon={CreditCard} color="yellow" title="Pending Payments" value="$0" change="+0" up />
+        <Link href="/dashboard/payments">
+          <StatCard icon={CreditCard} color="yellow" label="Payments" value={`$${stats?.total_payments ?? 0}`} />
         </Link>
       </div>
 
+      {/* Children Overview */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="border border-gray-100 dark:border-gray-800 rounded-[20px]">
+        <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-[24px] bg-white dark:bg-[#16161D]">
           <CardHeader>
             <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">My Children</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <Users className="size-10 text-gray-300 dark:text-gray-600 mx-auto" />
-              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No linked students</p>
-              <p className="mt-1 text-xs text-gray-400">Link your child to see their progress</p>
-            </div>
+            {stats?.children && stats.children.length > 0 ? (
+              <div className="space-y-3">
+                {stats.children.map((child) => (
+                  <div key={child.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 font-bold text-sm">
+                      {child.name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{child.name}</p>
+                      <p className="text-xs text-gray-500">{child.enrollments} enrollments | {child.attendance_pct}% attendance</p>
+                    </div>
+                    <span className="text-xs text-gray-400">{child.recent_tasks} tasks</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Users className="size-10 text-gray-300 dark:text-gray-600 mx-auto" />
+                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No linked students</p>
+                <p className="mt-1 text-xs text-gray-400">Link your child to see their progress</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card className="border border-gray-100 dark:border-gray-800 rounded-[20px]">
+        <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-[24px] bg-white dark:bg-[#16161D]">
           <CardHeader>
             <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Upcoming Events</CardTitle>
           </CardHeader>
@@ -49,36 +99,5 @@ export function GuardianDashboard() {
         </Card>
       </div>
     </div>
-  );
-}
-
-function StatCard({ icon: Icon, color, title, value, change, up }: {
-  icon: React.ComponentType<{ className?: string }>; color: string; title: string; value: string; change: string; up: boolean;
-}) {
-  const colors: Record<string, string> = {
-    blue: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
-    green: "bg-green-50 dark:bg-green-950/50 text-green-600 dark:text-green-400",
-    yellow: "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
-    purple: "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400",
-  };
-  return (
-    <Card className="border border-gray-100 dark:border-gray-800 rounded-[20px] hover:shadow-md transition-all cursor-pointer group">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400">{title}</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-            <div className="mt-1 flex items-center gap-1 text-[12px]">
-              <ArrowUpRight className="size-3 text-green-500" />
-              <span className="text-green-500">{change}</span>
-              <span className="text-gray-400">this month</span>
-            </div>
-          </div>
-          <div className={`flex size-10 items-center justify-center rounded-xl ${colors[color]} group-hover:scale-110 transition-transform`}>
-            <Icon className="size-5" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }

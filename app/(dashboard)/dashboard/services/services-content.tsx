@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LocationPicker } from "@/components/location/location-picker";
 import {
   Search, Plus, Pencil, Loader2, BookOpen, Globe, MapPin, DollarSign,
   ChevronLeft, ChevronRight, X, Check,
@@ -42,6 +43,12 @@ export function ServicesContent() {
   const [levels, setLevels] = useState<any[]>([]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
+  const [showLocation, setShowLocation] = useState(false);
+  const [country, setCountry] = useState("");
+  const [stateVal, setStateVal] = useState("");
+  const [city, setCity] = useState("");
+  const [area, setArea] = useState("");
+  const [addressLine, setAddressLine] = useState("");
 
   const loadServices = useCallback(async (p: number) => {
     setLoading(true);
@@ -72,9 +79,14 @@ export function ServicesContent() {
     const formData = new FormData(e.currentTarget);
     formData.set("subject_ids", JSON.stringify(selectedSubjects));
     formData.set("level_ids", JSON.stringify(selectedLevels));
+    formData.set("country", country);
+    formData.set("state", stateVal);
+    formData.set("city", city);
+    formData.set("area", area);
+    formData.set("address_line", addressLine);
     const result = await createServiceAction(null, formData);
     setCreating(false);
-    if (result.success) { setShowCreateModal(false); loadServices(1); setPage(1); setSelectedSubjects([]); setSelectedLevels([]); }
+    if (result.success) { setShowCreateModal(false); loadServices(1); setPage(1); setSelectedSubjects([]); setSelectedLevels([]); setShowLocation(false); setCountry(""); setStateVal(""); setCity(""); setArea(""); setAddressLine(""); }
   }
 
   async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
@@ -144,7 +156,15 @@ export function ServicesContent() {
                       </div>
                     )}
                   </div>
-                  <Button variant="ghost" size="icon" className="size-9 rounded-full text-[#9CA3AF] hover:text-[#2563EB] opacity-0 group-hover:opacity-100 transition-all" onClick={() => setEditingService(service)}>
+                  <Button variant="ghost" size="icon" className="size-9 rounded-full text-[#9CA3AF] hover:text-[#2563EB] opacity-0 group-hover:opacity-100 transition-all" onClick={() => {
+                    setEditingService(service);
+                    setCountry(service.country || "");
+                    setStateVal("");
+                    setCity(service.city || "");
+                    setArea(service.area || "");
+                    setAddressLine("");
+                    setShowLocation(!!service.city);
+                  }}>
                     <Pencil className="size-4" />
                   </Button>
                 </div>
@@ -231,6 +251,21 @@ export function ServicesContent() {
                   {levels.length === 0 && <p className="text-sm text-[#9CA3AF]">Loading levels...</p>}
                 </div>
               </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[13px] font-medium text-[#374151] dark:text-gray-300">Location <span className="text-gray-400 font-normal">(optional)</span></Label>
+                  <button type="button" onClick={() => setShowLocation(!showLocation)}
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] font-medium transition-all ${showLocation ? "bg-[#2563EB] text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
+                    <MapPin className="size-3" /> {showLocation ? "Location Set" : "Set Location"}
+                  </button>
+                </div>
+                {showLocation && (
+                  <div className="rounded-2xl border border-[#E5E7EB] dark:border-gray-700 p-4">
+                    <LocationPicker country={country} state={stateVal} city={city} area={area} addressLine={addressLine}
+                      onCountryChange={setCountry} onStateChange={setStateVal} onCityChange={setCity} onAreaChange={setArea} onAddressLineChange={setAddressLine} />
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[13px] font-medium text-[#374151] dark:text-gray-300">Joining Fee</Label>
@@ -281,6 +316,21 @@ export function ServicesContent() {
                   <option value="PAUSED">Paused</option>
                   <option value="CLOSED">Closed</option>
                 </select>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[13px] font-medium">Location <span className="text-gray-400 font-normal">(optional)</span></Label>
+                  <button type="button" onClick={() => setShowLocation(!showLocation)}
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] font-medium transition-all ${showLocation ? "bg-[#2563EB] text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
+                    <MapPin className="size-3" /> {showLocation ? "Location Set" : "Set Location"}
+                  </button>
+                </div>
+                {showLocation && (
+                  <div className="rounded-2xl border border-[#E5E7EB] dark:border-gray-700 p-4">
+                    <LocationPicker country={country} state={stateVal} city={city} area={area} addressLine={addressLine}
+                      onCountryChange={setCountry} onStateChange={setStateVal} onCityChange={setCity} onAreaChange={setArea} onAddressLineChange={setAddressLine} />
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <Button type="button" variant="outline" className="rounded-full px-5" onClick={() => setEditingService(null)}>Cancel</Button>
