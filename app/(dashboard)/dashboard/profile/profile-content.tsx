@@ -108,10 +108,10 @@ export function ProfileContent({ user }: ProfileContentProps) {
 
   return (
     <>
-      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
-        {/* ─── Left — EXACT original design, untouched ─── */}
+      <div className="space-y-6">
+        {/* ─── Top Card — Avatar, Name, Stats, Contact ─── */}
         <Card className="p-0 border border-gray-200/80 dark:border-gray-800/80 rounded-[24px] bg-white dark:bg-[#16161D] overflow-hidden">
-          {/* Avatar with gradient background */}
+          {/* Gradient header */}
           <div className="relative h-24 bg-gradient-to-br from-blue-400 via-indigo-400 to-purple-400">
             <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
               <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
@@ -177,7 +177,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
           </div>
         </Card>
 
-        {/* ─── Right — Form (compact) ─── */}
+        {/* ─── Bottom Card — Personal Information Form ─── */}
         <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-[24px] bg-white dark:bg-[#16161D]">
           <div className="p-6">
             <div className="flex items-center justify-between mb-5">
@@ -194,13 +194,13 @@ export function ProfileContent({ user }: ProfileContentProps) {
 
             <form ref={formRef} onSubmit={handleSave} className="space-y-4">
               {/* Row 1: Name + Username */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label className="text-[12px] font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5"><User className="size-3" /> Full Name</Label>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><User className="size-3.5" /> Full Name</Label>
                   <Input name="full_name" defaultValue={user.full_name} className={inputCls} />
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[12px] font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5"><AtSign className="size-3" /> Username</Label>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><AtSign className="size-3.5" /> Username</Label>
                   <div className="relative">
                     <Input value={username} onChange={(e) => handleUsernameChange(e.target.value)} placeholder="unique-username" className={`${inputCls} pr-10`} />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -209,27 +209,27 @@ export function ProfileContent({ user }: ProfileContentProps) {
                       {usernameStatus === "taken" && <X className="size-4 text-red-500" />}
                     </div>
                   </div>
-                  {usernameStatus === "taken" && <p className="text-[11px] text-red-500">Username already taken</p>}
-                  {usernameStatus === "available" && <p className="text-[11px] text-green-500">Username available</p>}
+                  {usernameStatus === "taken" && <p className="text-xs text-red-500">Username already taken</p>}
+                  {usernameStatus === "available" && <p className="text-xs text-green-500">Username available</p>}
                 </div>
               </div>
 
               {/* Row 2: Email + Phone */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label className="text-[12px] font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5"><Mail className="size-3" /> Email</Label>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><Mail className="size-3.5" /> Email</Label>
                   <Input defaultValue={user.email} disabled className={`${inputCls} opacity-60`} />
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[12px] font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5"><Phone className="size-3" /> Phone</Label>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><Phone className="size-3.5" /> Phone</Label>
                   <Input name="phone" defaultValue={user.phone || ""} placeholder="+880 1XXXXXXXXX" className={inputCls} />
                 </div>
               </div>
 
               {/* Row 3: Bio */}
-              <div className="space-y-1.5">
-                <Label className="text-[12px] font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5"><FileText className="size-3" /> Bio</Label>
-                <textarea name="bio" defaultValue={user.bio || ""} placeholder="Tell us about yourself" rows={2} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 focus:border-[#0066FF] resize-none" />
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><FileText className="size-3.5" /> Bio</Label>
+                <textarea name="bio" defaultValue={user.bio || ""} placeholder="Tell us about yourself" rows={2} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 focus:border-[#0066FF] resize-none" />
               </div>
 
               {/* Location Toggle */}
@@ -238,7 +238,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
                   <MapPin className="size-3.5" />
                   {showLocation ? "Hide Location" : "Set Location"}
                   {!showLocation && (country || stateVal || city) && (
-                    <span className="text-[11px] text-gray-400 font-normal ml-1">
+                    <span className="text-xs text-gray-400 font-normal ml-1">
                       {[country, stateVal, city].filter(Boolean).join(", ")}
                     </span>
                   )}
