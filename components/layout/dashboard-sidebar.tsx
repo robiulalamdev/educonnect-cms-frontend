@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ROUTES } from "@/lib/constants";
+import { useUser } from "@/lib/contexts/user-context";
 import {
   LayoutDashboard,
   User,
@@ -32,30 +33,22 @@ import {
   FolderOpen,
 } from "lucide-react";
 
-interface DashboardSidebarProps {
-  user: {
-    id: string;
-    full_name: string;
-    email: string;
-    role: string;
-  };
-}
-
 const navItems = [
-  { title: "Dashboard", icon: LayoutDashboard, href: ROUTES.USER.DASHBOARD, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
-  { title: "Profile", icon: User, href: ROUTES.USER.PROFILE, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
-  { title: "Media", icon: FolderOpen, href: ROUTES.USER.DASHBOARD + "/media", roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
-  { title: "Posts", icon: FileText, href: ROUTES.USER.DASHBOARD + "/posts", roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
-  { title: "Services", icon: BookOpen, href: ROUTES.USER.SERVICES, roles: ["TEACHER"] },
-  { title: "Batches", icon: GraduationCap, href: ROUTES.USER.BATCHES, roles: ["TEACHER"] },
-  { title: "Enrollments", icon: CreditCard, href: ROUTES.USER.ENROLLMENTS, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
-  { title: "Payments", icon: CreditCard, href: ROUTES.USER.PAYMENTS, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
-  { title: "Messages", icon: MessageSquare, href: ROUTES.USER.MESSAGES, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
-  { title: "Notifications", icon: Bell, href: ROUTES.USER.NOTIFICATIONS, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
-  { title: "Settings", icon: Settings, href: ROUTES.USER.SETTINGS, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
+  { title: "Dashboard", icon: LayoutDashboard, href: ROUTES.USER.DASHBOARD },
+  { title: "Profile", icon: User, href: ROUTES.USER.PROFILE },
+  { title: "Media", icon: FolderOpen, href: ROUTES.USER.DASHBOARD + "/media" },
+  { title: "Posts", icon: FileText, href: ROUTES.USER.DASHBOARD + "/posts" },
+  { title: "Services", icon: BookOpen, href: ROUTES.USER.SERVICES, teacherOnly: true },
+  { title: "Batches", icon: GraduationCap, href: ROUTES.USER.BATCHES, teacherOnly: true },
+  { title: "Enrollments", icon: CreditCard, href: ROUTES.USER.ENROLLMENTS },
+  { title: "Payments", icon: CreditCard, href: ROUTES.USER.PAYMENTS },
+  { title: "Messages", icon: MessageSquare, href: ROUTES.USER.MESSAGES },
+  { title: "Notifications", icon: Bell, href: ROUTES.USER.NOTIFICATIONS },
+  { title: "Settings", icon: Settings, href: ROUTES.USER.SETTINGS },
 ];
 
-export function DashboardSidebar({ user }: DashboardSidebarProps) {
+export function DashboardSidebar() {
+  const user = useUser()!;
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
   const initials = user.full_name
@@ -64,6 +57,10 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  const visibleItems = navItems.filter(
+    (item) => !item.teacherOnly || user.role === "TEACHER",
+  );
 
   return (
     <Sidebar className="border-r-0">
@@ -99,7 +96,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {navItems.filter((item) => item.roles.includes(user.role)).map((item) => {
+              {visibleItems.map((item) => {
                 const isActive =
                   item.href === ROUTES.USER.DASHBOARD
                     ? pathname === item.href
