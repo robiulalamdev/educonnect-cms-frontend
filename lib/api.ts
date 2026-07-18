@@ -160,7 +160,7 @@ export async function apiPost<T = any>(
     ...fetchOpts,
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      ...(body ? { "Content-Type": "application/json" } : {}),
       Cookie: cookieHeader,
       ...fetchOpts.headers,
     },
