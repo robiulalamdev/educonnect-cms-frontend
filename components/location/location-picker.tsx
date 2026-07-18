@@ -141,29 +141,27 @@ export function LocationPicker({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Row 1: Country + State */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* Row 1: Country + State + City (3 columns) */}
+      <div className="grid gap-4 sm:grid-cols-3">
         <FieldSelect label="Country" icon={Globe} value={country} options={countries} onChange={handleCountryChange} placeholder="Select country..." disabled={disabled} />
         <FieldSelect label="State / Province / Region" icon={MapPin} value={state} options={states} onChange={handleStateChange} placeholder={country ? "Select state..." : "Select country first"} disabled={disabled || !country} />
+        <FieldSelect label="City / District" icon={Building2} value={city} options={cities} onChange={(v) => onCityChange?.(v)} placeholder={state ? "Select city..." : "Select state first"} disabled={disabled || !state} />
       </div>
 
-      {/* Row 2: City + Area */}
+      {/* Row 2: Area + Address Line */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <FieldSelect label="City / District" icon={Building2} value={city} options={cities} onChange={(v) => onCityChange?.(v)} placeholder={state ? "Select city..." : "Select state first"} disabled={disabled || !state} />
         <div className="space-y-2">
           <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
             <Map className="size-3.5" /> Area / Locality <span className="text-gray-400 font-normal">(optional)</span>
           </Label>
           <Input value={area} onChange={(e) => onAreaChange?.(e.target.value)} placeholder="Enter area name" disabled={disabled} className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
         </div>
-      </div>
-
-      {/* Row 3: Address Line */}
-      <div className="space-y-2">
-        <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
-          <Home className="size-3.5" /> Address Line <span className="text-gray-400 font-normal">(optional)</span>
-        </Label>
-        <Input value={addressLine} onChange={(e) => onAddressLineChange?.(e.target.value)} placeholder="Street address, building, etc." disabled={disabled} className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
+            <Home className="size-3.5" /> Address Line <span className="text-gray-400 font-normal">(optional)</span>
+          </Label>
+          <Input value={addressLine} onChange={(e) => onAddressLineChange?.(e.target.value)} placeholder="Street address, building, etc." disabled={disabled} className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
+        </div>
       </div>
     </div>
   );
