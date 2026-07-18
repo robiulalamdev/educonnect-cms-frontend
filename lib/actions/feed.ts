@@ -1,67 +1,65 @@
 "use server";
 
-import env from "@/config/.env";
-
-const API_BASE = env.API_BASE_URL;
+import { apiGet } from "@/lib/api";
 
 /**
- * Get public post feed (no auth required).
+ * Get public post feed (unauthenticated).
  */
-export async function getPublicFeed(page = 1, limit = 10, type?: string) {
+export async function getPublicFeed(
+  page = 1,
+  limit = 10,
+  type?: string,
+) {
   try {
-    let url = `${API_BASE}/api/v1/posts/?page=${page}&limit=${limit}`;
-    if (type) url += `&type=${type}`;
-
-    const res = await fetch(url, { cache: "no-store" });
-    const data = await res.json();
-    return data;
-  } catch (err: any) {
-    return { success: false, data: [], meta: { total: 0, page, limit, total_pages: 0 } };
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (type) params.set("type", type);
+    return await apiGet(`/api/v1/posts/?${params}`);
+  } catch {
+    return { success: false, data: [], meta: { total: 0, total_pages: 0 } };
   }
 }
 
 /**
- * Get trending posts (sorted by engagement).
- * Since there's no dedicated trending endpoint, we fetch recent posts
- * and sort by media count and content length as a proxy for engagement.
+ * Get trending feed — fetches all posts and scores client-side.
  */
 export async function getTrendingFeed(page = 1, limit = 10) {
   try {
-    const res = await fetch(
-      `${API_BASE}/api/v1/posts/?page=1&limit=50`,
-      { cache: "no-store" },
+    const data = await apiGet<{ success: boolean; data: any[]; meta: any }>(
+      `/api/v1/posts/?page=1&limit=100`,
     );
-    const data = await res.json();
 
-    if (!data.success) return { success: false, data: [], meta: { total: 0, page, limit, total_pages: 0 } };
+    if (!data.success || !data.data) {
+      return { success: true, data: [], meta: { total: 0, total_pages: 0 } };
+    }
 
-    // Simple trending algorithm: score by media count + content length + recency
+    // Score and sort
     const scored = data.data.map((post: any) => {
-      const mediaScore = (post.media?.length || 0) * 2;
-      const contentScore = Math.min((post.content?.length || 0) / 500, 5);
-      const hoursAgo = (Date.now() - new Date(post.created_at).getTime()) / (1000 * 60 * 60);
-      const recencyScore = Math.max(0, 10 - hoursAgo / 24);
-      const totalScore = mediaScore + contentScore + recencyScore;
-      return { ...post, _score: totalScore };
+      const mediaCount = post.media?.length || 0;
+      const contentLength = (post.content || "").length;
+      const likes = post.likes_count || 0;
+      const comments = post.comments_count || 0;
+      const age = (Date.now() - new Date(post.created_at).getTime()) / 3600000;
+      const recency = Math.max(0, 24 - age);
+      const score = mediaCount * 2 + contentLength / 50 + likes * 3 + comments * 2 + recency;
+      return { ...post, _score: score };
     });
 
     scored.sort((a: any, b: any) => b._score - a._score);
 
-    // Paginate the sorted results
     const start = (page - 1) * limit;
-    const paginated = scored.slice(start, start + limit);
+    const paged = scored.slice(start, start + limit);
 
     return {
       success: true,
-      data: paginated,
+      data: paged,
       meta: {
         total: scored.length,
+        total_pages: Math.ceil(scored.length / limit),
         page,
         limit,
-        total_pages: Math.ceil(scored.length / limit),
       },
     };
-  } catch (err: any) {
-    return { success: false, data: [], meta: { total: 0, page, limit, total_pages: 0 } };
+  } catch {
+    return { success: true, data: [], meta: { total: 0, total_pages: 0 } };
   }
 }

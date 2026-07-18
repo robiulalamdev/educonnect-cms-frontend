@@ -1,21 +1,27 @@
 "use server";
 
-import env from "@/config/.env";
+import { apiGet } from "@/lib/api";
 
-const API_BASE = env.API_BASE_URL;
-
+/**
+ * Get public education subjects (unauthenticated).
+ */
 export async function getSubjects() {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/education/subjects`, { cache: "no-store" });
-    const data = await res.json();
-    return data.success ? data.data : [];
-  } catch { return []; }
+    const data = await apiGet<{ success: boolean; data: any[] }>("/api/v1/education/subjects");
+    return data.data || [];
+  } catch {
+    return [];
+  }
 }
 
+/**
+ * Get public education levels (unauthenticated).
+ */
 export async function getLevels() {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/education/levels`, { cache: "no-store" });
-    const data = await res.json();
-    return data.success ? data.data : [];
-  } catch { return []; }
+    const data = await apiGet<{ success: boolean; data: any[] }>("/api/v1/education/levels");
+    return data.data || [];
+  } catch {
+    return [];
+  }
 }

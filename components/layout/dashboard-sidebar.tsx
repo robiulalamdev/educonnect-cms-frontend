@@ -31,6 +31,11 @@ import {
   X,
   FileText,
   FolderOpen,
+  ClipboardCheck,
+  ListChecks,
+  StickyNote,
+  Megaphone,
+  Star,
 } from "lucide-react";
 
 const navItems = [
@@ -41,6 +46,11 @@ const navItems = [
   { title: "Services", icon: BookOpen, href: ROUTES.USER.SERVICES, teacherOnly: true },
   { title: "Batches", icon: GraduationCap, href: ROUTES.USER.BATCHES, teacherOnly: true },
   { title: "Enrollments", icon: CreditCard, href: ROUTES.USER.ENROLLMENTS },
+  { title: "Attendance", icon: ClipboardCheck, href: ROUTES.USER.DASHBOARD + "/attendance" },
+  { title: "Tasks", icon: ListChecks, href: ROUTES.USER.DASHBOARD + "/tasks" },
+  { title: "Daily Notes", icon: StickyNote, href: ROUTES.USER.DASHBOARD + "/notes" },
+  { title: "Announcements", icon: Megaphone, href: ROUTES.USER.DASHBOARD + "/announcements" },
+  { title: "Reviews", icon: Star, href: ROUTES.USER.DASHBOARD + "/reviews" },
   { title: "Payments", icon: CreditCard, href: ROUTES.USER.PAYMENTS },
   { title: "Messages", icon: MessageSquare, href: ROUTES.USER.MESSAGES },
   { title: "Notifications", icon: Bell, href: ROUTES.USER.NOTIFICATIONS },
