@@ -42,17 +42,17 @@ interface DashboardSidebarProps {
 }
 
 const navItems = [
-  { title: "Dashboard", icon: LayoutDashboard, href: ROUTES.USER.DASHBOARD },
-  { title: "Profile", icon: User, href: ROUTES.USER.PROFILE },
-  { title: "Media", icon: FolderOpen, href: ROUTES.USER.DASHBOARD + "/media" },
-  { title: "Posts", icon: FileText, href: ROUTES.USER.DASHBOARD + "/posts" },
-  { title: "Services", icon: BookOpen, href: ROUTES.USER.SERVICES },
-  { title: "Batches", icon: GraduationCap, href: ROUTES.USER.BATCHES },
-  { title: "Enrollments", icon: CreditCard, href: ROUTES.USER.ENROLLMENTS },
-  { title: "Payments", icon: CreditCard, href: ROUTES.USER.PAYMENTS },
-  { title: "Messages", icon: MessageSquare, href: ROUTES.USER.MESSAGES },
-  { title: "Notifications", icon: Bell, href: ROUTES.USER.NOTIFICATIONS },
-  { title: "Settings", icon: Settings, href: ROUTES.USER.SETTINGS },
+  { title: "Dashboard", icon: LayoutDashboard, href: ROUTES.USER.DASHBOARD, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
+  { title: "Profile", icon: User, href: ROUTES.USER.PROFILE, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
+  { title: "Media", icon: FolderOpen, href: ROUTES.USER.DASHBOARD + "/media", roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
+  { title: "Posts", icon: FileText, href: ROUTES.USER.DASHBOARD + "/posts", roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
+  { title: "Services", icon: BookOpen, href: ROUTES.USER.SERVICES, roles: ["TEACHER"] },
+  { title: "Batches", icon: GraduationCap, href: ROUTES.USER.BATCHES, roles: ["TEACHER"] },
+  { title: "Enrollments", icon: CreditCard, href: ROUTES.USER.ENROLLMENTS, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
+  { title: "Payments", icon: CreditCard, href: ROUTES.USER.PAYMENTS, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
+  { title: "Messages", icon: MessageSquare, href: ROUTES.USER.MESSAGES, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
+  { title: "Notifications", icon: Bell, href: ROUTES.USER.NOTIFICATIONS, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
+  { title: "Settings", icon: Settings, href: ROUTES.USER.SETTINGS, roles: ["TEACHER", "STUDENT", "GUARDIAN"] },
 ];
 
 export function DashboardSidebar({ user }: DashboardSidebarProps) {
@@ -99,7 +99,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {navItems.map((item) => {
+              {navItems.filter((item) => item.roles.includes(user.role)).map((item) => {
                 const isActive =
                   item.href === ROUTES.USER.DASHBOARD
                     ? pathname === item.href
