@@ -7,13 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageCropModal } from "@/components/social/image-crop-modal";
 import { uploadAvatarAction, updateProfileAction } from "@/lib/actions/auth";
+import { LocationPicker } from "@/components/location/location-picker";
 import {
   Loader2,
   Camera,
   User,
   Mail,
   Phone,
-  MapPin,
   FileText,
   AtSign,
   Check,
@@ -44,6 +44,13 @@ export function ProfileContent({ user }: ProfileContentProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Location state
+  const [country, setCountry] = useState(user.country || "");
+  const [stateVal, setStateVal] = useState(user.state || "");
+  const [city, setCity] = useState(user.city || "");
+  const [area, setArea] = useState(user.area || "");
+  const [addressLine, setAddressLine] = useState(user.address_line || "");
   const formRef = useRef<HTMLFormElement>(null);
   const initials = user.full_name
     ?.split(" ")
@@ -90,6 +97,12 @@ export function ProfileContent({ user }: ProfileContentProps) {
     const form = formRef.current;
     if (!form) return;
     const formData = new FormData(form);
+    // Add location fields
+    formData.set("country", country);
+    formData.set("state", stateVal);
+    formData.set("city", city);
+    formData.set("area", area);
+    formData.set("address_line", addressLine);
     startSaveTransition(async () => {
       const result = await updateProfileAction(null, formData);
       if (result?.success) {
@@ -368,40 +381,21 @@ export function ProfileContent({ user }: ProfileContentProps) {
                 />
               </div>
 
-              <div className="grid gap-5 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
-                    <MapPin className="size-3.5" /> City
-                  </Label>
-                  <Input
-                    name="city"
-                    defaultValue={user.city || ""}
-                    placeholder="Dhaka"
-                    className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[13px] font-medium text-gray-600 dark:text-gray-400">
-                    Area
-                  </Label>
-                  <Input
-                    name="area"
-                    defaultValue={user.area || ""}
-                    placeholder="Dhanmondi"
-                    className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[13px] font-medium text-gray-600 dark:text-gray-400">
-                    Country
-                  </Label>
-                  <Input
-                    name="country"
-                    defaultValue={user.country || ""}
-                    placeholder="Bangladesh"
-                    className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-                  />
-                </div>
+              {/* Location Section */}
+              <div>
+                <Label className="text-sm font-semibold text-gray-900 dark:text-white mb-3 block">Location</Label>
+                <LocationPicker
+                  country={country}
+                  state={stateVal}
+                  city={city}
+                  area={area}
+                  addressLine={addressLine}
+                  onCountryChange={setCountry}
+                  onStateChange={setStateVal}
+                  onCityChange={setCity}
+                  onAreaChange={setArea}
+                  onAddressLineChange={setAddressLine}
+                />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">

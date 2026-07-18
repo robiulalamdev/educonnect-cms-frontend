@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { SearchableSelect } from "./searchable-select";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Globe, Building2, Map, Home, Loader2 } from "lucide-react";
+import { MapPin, Globe, Building2, Map, Home, Search, Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { COUNTRIES, searchCountries, type Country } from "@/lib/data/countries";
+import { LOCATIONS, getStatesForCountry, getCitiesForState } from "@/lib/data/locations";
 
 interface LocationPickerProps {
   country?: string;
@@ -14,25 +13,130 @@ interface LocationPickerProps {
   city?: string;
   area?: string;
   addressLine?: string;
-  onCountryChange?: (value: string, countryCode?: string) => void;
+  onCountryChange?: (value: string) => void;
   onStateChange?: (value: string) => void;
   onCityChange?: (value: string) => void;
   onAreaChange?: (value: string) => void;
   onAddressLineChange?: (value: string) => void;
   disabled?: boolean;
   showAddressLine?: boolean;
-  compact?: boolean;
   className?: string;
 }
 
-interface GeoSuggestion {
-  description: string;
-  place_id: string;
-  structured_formatting?: {
-    main_text: string;
-    secondary_text: string;
-  };
+// ── Reusable searchable dropdown ────────────────────────────────
+function FieldSelect({
+  label,
+  icon: Icon,
+  value,
+  options,
+  onChange,
+  placeholder,
+  disabled = false,
+  loading = false,
+}: {
+  label: string;
+  icon: any;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+  placeholder: string;
+  disabled?: boolean;
+  loading?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  const filtered = options.filter((o) =>
+    o.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const displayValue = open ? query : value || "";
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  return (
+    <div className="space-y-2">
+      <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
+        <Icon className="size-3.5" /> {label}
+      </Label>
+      <div ref={ref} className="relative">
+        <div
+          role="combobox"
+          aria-expanded={open}
+          onClick={() => {
+            if (!disabled) {
+              setOpen(!open);
+            }
+          }}
+          className={cn(
+            "flex h-11 w-full items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm cursor-pointer transition-colors",
+            "focus-within:border-[#0066FF] focus-within:ring-2 focus-within:ring-[#0066FF]/20",
+            disabled && "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-900",
+            open && "border-[#0066FF] ring-2 ring-[#0066FF]/20"
+          )}
+        >
+          <span className={cn("truncate", !value && "text-gray-400")}>
+            {value || placeholder}
+          </span>
+          <ChevronDown className={cn("size-4 shrink-0 text-gray-400 transition-transform", open && "rotate-180")} />
+        </div>
+
+        {open && (
+          <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
+            <div className="flex items-center border-b border-gray-100 dark:border-gray-800 px-3">
+              <Search className="size-4 shrink-0 text-gray-400" />
+              <input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search..."
+                className="h-10 w-full bg-transparent px-2 text-sm outline-none placeholder:text-gray-400"
+              />
+            </div>
+            <div className="max-h-60 overflow-y-auto p-1">
+              {loading ? (
+                <div className="py-6 text-center text-sm text-gray-400">Loading...</div>
+              ) : filtered.length === 0 ? (
+                <div className="py-6 text-center text-sm text-gray-400">No results</div>
+              ) : (
+                filtered.map((option) => (
+                  <div
+                    key={option}
+                    onClick={() => {
+                      onChange(option);
+                      setQuery("");
+                      setOpen(false);
+                    }}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
+                      "hover:bg-gray-100 dark:hover:bg-gray-800",
+                      option === value && "bg-[#0066FF]/10 text-[#0066FF] font-medium"
+                    )}
+                  >
+                    <span className="flex-1 truncate">{option}</span>
+                    {option === value && <Check className="size-4 shrink-0 text-[#0066FF]" />}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
+
+// ── Main LocationPicker ────────────────────────────────────────
 
 export function LocationPicker({
   country = "",
@@ -47,257 +151,59 @@ export function LocationPicker({
   onAddressLineChange,
   disabled = false,
   showAddressLine = true,
-  compact = false,
   className,
 }: LocationPickerProps) {
-  const [countryCode, setCountryCode] = useState("");
-  const [stateQuery, setStateQuery] = useState("");
-  const [cityQuery, setCityQuery] = useState("");
-  const [areaQuery, setAreaQuery] = useState("");
-  const [stateSuggestions, setStateSuggestions] = useState<GeoSuggestion[]>([]);
-  const [citySuggestions, setCitySuggestions] = useState<GeoSuggestion[]>([]);
-  const [loadingStates, setLoadingStates] = useState(false);
-  const [loadingCities, setLoadingCities] = useState(false);
-  const [stateFocused, setStateFocused] = useState(false);
-  const [cityFocused, setCityFocused] = useState(false);
-  const [areaFocused, setAreaFocused] = useState(false);
+  const countries = LOCATIONS.map((c) => c.name);
+  const states = getStatesForCountry(country);
+  const cities = getCitiesForState(country, state);
 
-  const stateInputRef = useRef<HTMLInputElement>(null);
-  const cityInputRef = useRef<HTMLInputElement>(null);
-  const areaInputRef = useRef<HTMLInputElement>(null);
+  // When country changes, reset state/city
+  const handleCountryChange = (value: string) => {
+    onCountryChange?.(value);
+    onStateChange?.("");
+    onCityChange?.("");
+  };
 
-  const hasGoogleMaps = !!(
-    typeof window !== "undefined" &&
-    (window as any).google?.maps?.places
-  );
-
-  // When country changes, reset state/city/area
-  const handleCountryChange = useCallback(
-    (value: string) => {
-      const country = COUNTRIES.find((c) => c.name === value);
-      setCountryCode(country?.code || "");
-      onCountryChange?.(value, country?.code);
-      onStateChange?.("");
-      onCityChange?.("");
-      onAreaChange?.("");
-      setStateQuery("");
-      setCityQuery("");
-      setAreaQuery("");
-    },
-    [onCountryChange, onStateChange, onCityChange, onAreaChange]
-  );
-
-  // Google Places Autocomplete for states
-  const fetchStateSuggestions = useCallback(
-    async (query: string) => {
-      if (!query || query.length < 2 || !countryCode || !hasGoogleMaps) return;
-      setLoadingStates(true);
-      try {
-        const service = new (window as any).google.maps.places.AutocompleteService();
-        service.getPlacePredictions(
-          {
-            input: query,
-            types: ["(regions)"],
-            componentRestrictions: { country: countryCode.toLowerCase() },
-          },
-          (predictions: GeoSuggestion[] | null) => {
-            setStateSuggestions(predictions || []);
-            setLoadingStates(false);
-          }
-        );
-      } catch {
-        setLoadingStates(false);
-      }
-    },
-    [countryCode, hasGoogleMaps]
-  );
-
-  // Google Places Autocomplete for cities
-  const fetchCitySuggestions = useCallback(
-    async (query: string) => {
-      if (!query || query.length < 2 || !countryCode || !hasGoogleMaps) return;
-      setLoadingCities(true);
-      try {
-        const service = new (window as any).google.maps.places.AutocompleteService();
-        const params: any = {
-          input: query,
-          types: ["(cities)"],
-          componentRestrictions: { country: countryCode.toLowerCase() },
-        };
-        service.getPlacePredictions(
-          params,
-          (predictions: GeoSuggestion[] | null) => {
-            setCitySuggestions(predictions || []);
-            setLoadingCities(false);
-          }
-        );
-      } catch {
-        setLoadingCities(false);
-      }
-    },
-    [countryCode, hasGoogleMaps]
-  );
-
-  // Debounced state search
-  useEffect(() => {
-    const timer = setTimeout(() => fetchStateSuggestions(stateQuery), 300);
-    return () => clearTimeout(timer);
-  }, [stateQuery, fetchStateSuggestions]);
-
-  // Debounced city search
-  useEffect(() => {
-    const timer = setTimeout(() => fetchCitySuggestions(cityQuery), 300);
-    return () => clearTimeout(timer);
-  }, [cityQuery, fetchCitySuggestions]);
-
-  const countryOptions = COUNTRIES.map((c) => ({
-    label: c.name,
-    value: c.name,
-  }));
-
-  const stateOptions = hasGoogleMaps
-    ? stateSuggestions.map((s) => ({
-        label: s.structured_formatting?.main_text || s.description,
-        value: s.structured_formatting?.main_text || s.description,
-      }))
-    : [];
-
-  const cityOptions = hasGoogleMaps
-    ? citySuggestions.map((s) => ({
-        label: s.structured_formatting?.main_text || s.description,
-        value: s.structured_formatting?.main_text || s.description,
-      }))
-    : [];
+  // When state changes, reset city
+  const handleStateChange = (value: string) => {
+    onStateChange?.(value);
+    onCityChange?.("");
+  };
 
   return (
     <div className={cn("space-y-4", className)}>
       {/* Country */}
-      <div className="space-y-2">
-        <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
-          <Globe className="size-3.5" /> Country
-        </Label>
-        <SearchableSelect
-          value={country}
-          onValueChange={handleCountryChange}
-          options={countryOptions}
-          placeholder="Select country..."
-          disabled={disabled}
-        />
-      </div>
+      <FieldSelect
+        label="Country"
+        icon={Globe}
+        value={country}
+        options={countries}
+        onChange={handleCountryChange}
+        placeholder="Select country..."
+        disabled={disabled}
+      />
 
       {/* State */}
-      <div className="space-y-2">
-        <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
-          <MapPin className="size-3.5" /> State / Province / Region
-        </Label>
-        {hasGoogleMaps ? (
-          <div className="relative">
-            <Input
-              ref={stateInputRef}
-              value={state || stateQuery}
-              onChange={(e) => {
-                setStateQuery(e.target.value);
-                onStateChange?.("");
-              }}
-              onFocus={() => setStateFocused(true)}
-              onBlur={() => setTimeout(() => setStateFocused(false), 200)}
-              placeholder={country ? `Search state in ${country}...` : "Select country first"}
-              disabled={disabled || !country}
-              className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-            />
-            {stateFocused && stateQuery && stateSuggestions.length > 0 && (
-              <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl max-h-60 overflow-y-auto">
-                {loadingStates && (
-                  <div className="flex items-center justify-center gap-2 py-3 text-sm text-gray-400">
-                    <Loader2 className="size-4 animate-spin" /> Searching...
-                  </div>
-                )}
-                {stateSuggestions.map((s, i) => (
-                  <div
-                    key={s.place_id || i}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      const val = s.structured_formatting?.main_text || s.description;
-                      setStateQuery("");
-                      onStateChange?.(val);
-                      onCityChange?.("");
-                      setCityQuery("");
-                    }}
-                    className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <MapPin className="size-3.5 shrink-0 text-gray-400" />
-                    <span className="truncate">{s.description}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <Input
-            value={state}
-            onChange={(e) => onStateChange?.(e.target.value)}
-            placeholder={country ? "Enter state/province" : "Select country first"}
-            disabled={disabled || !country}
-            className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-          />
-        )}
-      </div>
+      <FieldSelect
+        label="State / Province / Region"
+        icon={MapPin}
+        value={state}
+        options={states}
+        onChange={handleStateChange}
+        placeholder={country ? "Select state..." : "Select country first"}
+        disabled={disabled || !country}
+      />
 
       {/* City */}
-      <div className="space-y-2">
-        <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
-          <Building2 className="size-3.5" /> City / District
-        </Label>
-        {hasGoogleMaps ? (
-          <div className="relative">
-            <Input
-              ref={cityInputRef}
-              value={city || cityQuery}
-              onChange={(e) => {
-                setCityQuery(e.target.value);
-                onCityChange?.("");
-              }}
-              onFocus={() => setCityFocused(true)}
-              onBlur={() => setTimeout(() => setCityFocused(false), 200)}
-              placeholder={state ? `Search city in ${state}...` : "Select state first"}
-              disabled={disabled || !state}
-              className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-            />
-            {cityFocused && cityQuery && citySuggestions.length > 0 && (
-              <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl max-h-60 overflow-y-auto">
-                {loadingCities && (
-                  <div className="flex items-center justify-center gap-2 py-3 text-sm text-gray-400">
-                    <Loader2 className="size-4 animate-spin" /> Searching...
-                  </div>
-                )}
-                {citySuggestions.map((s, i) => (
-                  <div
-                    key={s.place_id || i}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      const val = s.structured_formatting?.main_text || s.description;
-                      setCityQuery("");
-                      onCityChange?.(val);
-                    }}
-                    className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <Building2 className="size-3.5 shrink-0 text-gray-400" />
-                    <span className="truncate">{s.description}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <Input
-            value={city}
-            onChange={(e) => onCityChange?.(e.target.value)}
-            placeholder={state ? "Enter city/district" : "Select state first"}
-            disabled={disabled || !state}
-            className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-          />
-        )}
-      </div>
+      <FieldSelect
+        label="City / District"
+        icon={Building2}
+        value={city}
+        options={cities}
+        onChange={(v) => onCityChange?.(v)}
+        placeholder={state ? "Select city..." : "Select state first"}
+        disabled={disabled || !state}
+      />
 
       {/* Area */}
       <div className="space-y-2">
@@ -305,31 +211,13 @@ export function LocationPicker({
           <Map className="size-3.5" /> Area / Locality
           <span className="text-gray-400 font-normal">(optional)</span>
         </Label>
-        {hasGoogleMaps ? (
-          <div className="relative">
-            <Input
-              ref={areaInputRef}
-              value={area || areaQuery}
-              onChange={(e) => {
-                setAreaQuery(e.target.value);
-                onAreaChange?.("");
-              }}
-              onFocus={() => setAreaFocused(true)}
-              onBlur={() => setTimeout(() => setAreaFocused(false), 200)}
-              placeholder={city ? `Search area in ${city}...` : "Enter area name"}
-              disabled={disabled || !city}
-              className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-            />
-          </div>
-        ) : (
-          <Input
-            value={area}
-            onChange={(e) => onAreaChange?.(e.target.value)}
-            placeholder="Enter area/locality"
-            disabled={disabled}
-            className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
-          />
-        )}
+        <Input
+          value={area}
+          onChange={(e) => onAreaChange?.(e.target.value)}
+          placeholder="Enter area name"
+          disabled={disabled}
+          className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20"
+        />
       </div>
 
       {/* Address Line */}
