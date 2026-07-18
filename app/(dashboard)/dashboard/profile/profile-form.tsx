@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageCropModal } from "@/components/social/image-crop-modal";
 import { uploadAvatarAction, updateProfileAction } from "@/lib/actions/auth";
-import { Loader2, Camera, User, Mail, Phone, MapPin, FileText, AtSign, Check, X, Save } from "lucide-react";
+import { LocationPicker } from "@/components/location/location-picker";
+import { Loader2, Camera, User, Mail, Phone, FileText, AtSign, Check, X, Save } from "lucide-react";
 
 interface ProfileFormProps { user: any; }
 
@@ -25,6 +26,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const initials = user.full_name?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+
+  // Location state
+  const [country, setCountry] = useState(user.country || "");
+  const [state, setState] = useState(user.state || "");
+  const [city, setCity] = useState(user.city || "");
+  const [area, setArea] = useState(user.area || "");
+  const [addressLine, setAddressLine] = useState(user.address_line || "");
 
   const avatarUrl = avatarPreview || (user.avatar?.key
     ? `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_192,h_192,c_fill/${user.avatar.key}`
@@ -55,6 +63,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
     const form = formRef.current;
     if (!form) return;
     const formData = new FormData(form);
+    // Add location fields
+    formData.set("country", country);
+    formData.set("state", state);
+    formData.set("city", city);
+    formData.set("area", area);
+    formData.set("address_line", addressLine);
 
     startSaveTransition(async () => {
       const result = await updateProfileAction(null, formData);
@@ -128,11 +142,24 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 <div className="space-y-2"><Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><Phone className="size-3.5" /> Phone</Label><Input name="phone" defaultValue={user.phone || ""} placeholder="+880 1XXXXXXXXX" className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" /></div>
               </div>
               <div className="space-y-2"><Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><FileText className="size-3.5" /> Bio</Label><textarea name="bio" defaultValue={user.bio || ""} placeholder="Tell us about yourself" rows={3} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 focus:border-[#0066FF] resize-none" /></div>
-              <div className="grid gap-5 sm:grid-cols-3">
-                <div className="space-y-2"><Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400"><MapPin className="size-3.5" /> City</Label><Input name="city" defaultValue={user.city || ""} placeholder="Dhaka" className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" /></div>
-                <div className="space-y-2"><Label className="text-[13px] font-medium text-gray-600 dark:text-gray-400">Area</Label><Input name="area" defaultValue={user.area || ""} placeholder="Dhanmondi" className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" /></div>
-                <div className="space-y-2"><Label className="text-[13px] font-medium text-gray-600 dark:text-gray-400">Country</Label><Input name="country" defaultValue={user.country || ""} placeholder="Bangladesh" className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" /></div>
+
+              {/* Location Section */}
+              <div className="pt-2">
+                <Label className="text-sm font-semibold text-gray-900 dark:text-white mb-3 block">Location</Label>
+                <LocationPicker
+                  country={country}
+                  state={state}
+                  city={city}
+                  area={area}
+                  addressLine={addressLine}
+                  onCountryChange={setCountry}
+                  onStateChange={setState}
+                  onCityChange={setCity}
+                  onAreaChange={setArea}
+                  onAddressLineChange={setAddressLine}
+                />
               </div>
+
               <div className="flex justify-end pt-2">
                 <Button type="submit" className="rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white px-8 h-11 shadow-lg shadow-blue-500/20 disabled:opacity-50" disabled={isSaving}>
                   {isSaving ? <Loader2 className="mr-2 size-4 animate-spin" /> : saved ? <Check className="mr-2 size-4" /> : <Save className="mr-2 size-4" />}

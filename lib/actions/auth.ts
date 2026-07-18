@@ -268,16 +268,20 @@ export async function updateProfileAction(
     const full_name = formData.get("full_name") as string;
     const phone = formData.get("phone") as string;
     const bio = formData.get("bio") as string;
+    const country = formData.get("country") as string;
+    const state = formData.get("state") as string;
     const city = formData.get("city") as string;
     const area = formData.get("area") as string;
-    const country = formData.get("country") as string;
+    const address_line = formData.get("address_line") as string;
 
     if (full_name) submitData.append("full_name", full_name);
     if (phone) submitData.append("phone", phone);
     if (bio) submitData.append("bio", bio);
+    if (country) submitData.append("country", country);
+    if (state) submitData.append("state", state);
     if (city) submitData.append("city", city);
     if (area) submitData.append("area", area);
-    if (country) submitData.append("country", country);
+    if (address_line) submitData.append("address_line", address_line);
 
     await apiPatchFormData(API.AUTH.ME, submitData);
     return { success: true };
