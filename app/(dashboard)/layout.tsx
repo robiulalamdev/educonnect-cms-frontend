@@ -22,9 +22,9 @@ export default async function DashboardLayout({
     <UserProvider user={user}>
       <SidebarProvider>
         <DashboardSidebar />
-        <SidebarInset>
+        <SidebarInset className="bg-[#f0f5ff]/60 dark:bg-gray-950">
           <DashboardHeader user={user} />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          <main className="flex-1 p-5 sm:p-6 lg:p-8">
             <RoleGate role={user.role}>{children}</RoleGate>
           </main>
         </SidebarInset>

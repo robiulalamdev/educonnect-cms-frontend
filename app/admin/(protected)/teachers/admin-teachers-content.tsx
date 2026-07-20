@@ -62,7 +62,7 @@ export function AdminTeachersContent() {
         toast.success("Teacher approved successfully");
         load(page);
       } else {
-        toast.error(data.message || "Failed to approve teacher");
+        toast.error(res.error || res.message || "Failed to approve teacher");
       }
     } catch {
       toast.error("Failed to approve teacher");

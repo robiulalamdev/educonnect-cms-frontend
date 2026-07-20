@@ -262,6 +262,19 @@ export async function getAuditLogs(params: string) {
   }
 }
 
+// ── Class Room (Admin Batches) ──────────────────────────────
+export async function getAdminBatches(params: string) {
+  try {
+    const data = await apiGet<{ success: boolean; data: any; meta: any }>(
+      `/api/v1/batches/dashboard?${params}`,
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, data: null, error: err.message };
+  }
+}
+
 // ── Guardian-Student Links ───────────────────────────────
 
 export async function getGuardianLinks(params: string) {
