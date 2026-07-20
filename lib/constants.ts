@@ -27,14 +27,20 @@ export const ROUTES = {
   ADMIN: {
     LOGIN: "/admin/login",
     DASHBOARD: "/admin/dashboard",
+    ADMINS: "/admin/admins",
     USERS: "/admin/users",
     TEACHERS: "/admin/teachers",
     SERVICES: "/admin/services",
+    EDUCATION: "/admin/education",
     ENROLLMENTS: "/admin/enrollments",
     REVIEWS: "/admin/reviews",
     POSTS: "/admin/posts",
     SUBSCRIPTIONS: "/admin/subscriptions",
+    AUDIT_LOGS: "/admin/audit-logs",
+    GUARDIAN_LINKS: "/admin/guardian-links",
     SETTINGS: "/admin/settings",
+    BATCHES: "/admin/batches",
+    PAYMENTS: "/admin/payments",
   },
 } as const;
 
