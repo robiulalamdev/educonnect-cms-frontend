@@ -15,10 +15,10 @@ export function Footer() {
               <div className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
                 <GraduationCap className="size-4.5" />
               </div>
-              <span className="text-gray-900 dark:text-white">CMS</span>
+              <span className="text-gray-900 dark:text-white">EduConnect BD</span>
             </Link>
             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed">
-              A comprehensive platform for coaching and education management.
+              The premier coaching management platform for Bangladesh.
               Connect teachers, students, and guardians seamlessly.
             </p>
           </div>

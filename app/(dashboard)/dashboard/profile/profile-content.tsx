@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageCropModal } from "@/components/social/image-crop-modal";
 import { uploadAvatarAction, updateProfileAction } from "@/lib/actions/auth";
+import { searchUsersAction } from "@/lib/actions/users";
 import { LocationPicker } from "@/components/location/location-picker";
 import {
   Loader2,
@@ -132,14 +133,15 @@ export function ProfileContent({ user }: ProfileContentProps) {
     clearTimeout((window as any).__usernameTimeout);
     (window as any).__usernameTimeout = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/v1/user/?search=${clean}`, {
-          credentials: "include",
-        });
-        const data = await res.json();
-        const taken = data.data?.some(
-          (u: any) => u.email?.split("@")[0] === clean && u.id !== user.id,
-        );
-        setUsernameStatus(taken ? "taken" : "available");
+        const res = await searchUsersAction(clean);
+        if (res.success) {
+          const taken = res.data?.some(
+            (u: any) => u.email?.split("@")[0] === clean && u.id !== user.id,
+          );
+          setUsernameStatus(taken ? "taken" : "available");
+        } else {
+          setUsernameStatus("idle");
+        }
       } catch {
         setUsernameStatus("idle");
       }

@@ -1,304 +1,160 @@
-// Worldwide static location data — Country → States → Cities
-// No Google API needed. Expand as needed.
+// Bangladesh-only location data — Division → District → Areas
+// No Google API needed. Complete BD coverage.
 
-export interface StateData {
+export interface DivisionData {
   name: string;
-  cities: string[];
+  bn: string; // Bangla name
+  districts: DistrictData[];
 }
 
-export interface CountryData {
-  code: string;
+export interface DistrictData {
   name: string;
-  states: StateData[];
+  bn: string;
+  areas: string[];
 }
 
-export const LOCATIONS: CountryData[] = [
+export const DIVISIONS: DivisionData[] = [
   {
-    code: "BD", name: "Bangladesh", states: [
-      { name: "Dhaka Division", cities: ["Dhaka", "Gazipur", "Narayanganj", "Mymensingh", "Tangail", "Kishoreganj", "Manikganj", "Munshiganj", "Faridpur", "Gopalganj", "Madaripur", "Rajbari", "Shariatpur"] },
-      { name: "Chittagong Division", cities: ["Chittagong", "Cox's Bazar", "Comilla", "Brahmanbaria", "Chandpur", "Lakshmipur", "Noakhali", "Feni", "Khagrachhari", "Bandarban", "Rangamati"] },
-      { name: "Rajshahi Division", cities: ["Rajshahi", "Bogura", "Joypurhat", "Naogaon", "Natore", "Chapainawabganj", "Pabna", "Sirajganj"] },
-      { name: "Khulna Division", cities: ["Khulna", "Bagerhat", "Satkhira", "Jashore", "Magura", "Narail", "Kushtia", "Chuadanga", "Meherpur"] },
-      { name: "Barishal Division", cities: ["Barishal", "Bhola", "Patuakhali", "Pirojpur", "Jhalokati", "Barguna"] },
-      { name: "Sylhet Division", cities: ["Sylhet", "Moulvibazar", "Habiganj", "Sunamganj"] },
-      { name: "Rangpur Division", cities: ["Rangpur", "Dinajpur", "Thakurgaon", "Panchagarh", "Kurigram", "Lalmonirhat", "Nilphamari", "Gaibandha"] },
-      { name: "Mymensingh Division", cities: ["Mymensingh", "Jamalpur", "Sherpur", "Netrokona"] },
+    name: "Dhaka", bn: "ঢাকা", districts: [
+      { name: "Dhaka", bn: "ঢাকা", areas: ["Dhanmondi", "Gulshan", "Banani", "Mirpur", "Uttara", "Mohammadpur", "Tejgaon", "Motijheel", "Ramna", "Lalbagh", "Wari", "Badda", "Khilgaon", "Rampura", "Bashundhara", "Cantonment", "Pallabi", "Kafrul", "Shyamoli", "Kalabagan"] },
+      { name: "Gazipur", bn: "গাজীপুর", areas: ["Tongi", "Gazipur Sadar", "Kaliakair", "Kaliganj", "Kapasia", "Sreepur"] },
+      { name: "Narayanganj", bn: "নারায়ণগঞ্জ", areas: ["Narayanganj Sadar", "Sonargaon", "Araihazar", "Rupganj", "Bandar"] },
+      { name: "Tangail", bn: "টাঙ্গাইল", areas: ["Tangail Sadar", "Madhupur", "Gopalpur", "Mirzapur", "Kalihati", "Ghatail", "Sakhipur", "Basail", "Delduar", "Nagarpur", "Bhuapur", "Dhanbari"] },
+      { name: "Kishoreganj", bn: "কিশোরগঞ্জ", areas: ["Kishoreganj Sadar", "Bhairab", "Kuliarchar", "Hossainpur", "Pakundia", "Karimganj", "Katiadi", "Tarail", "Itna", "Mithamain", "Austagram", "Nikli", "Bajitpur"] },
+      { name: "Manikganj", bn: "মানিকগঞ্জ", areas: ["Manikganj Sadar", "Singair", "Saturia", "Harirampur", "Ghior", "Shibalaya", "Daulatpur"] },
+      { name: "Munshiganj", bn: "মুন্সিগঞ্জ", areas: ["Munshiganj Sadar", "Sreenagar", "Sirajdikhan", "Lohajang", "Gazaria", "Tongibari"] },
+      { name: "Narsingdi", bn: "নরসিংদী", areas: ["Narsingdi Sadar", "Shibpur", "Raipura", "Belabo", "Monohardi", "Palash"] },
+      { name: "Faridpur", bn: "ফরিদপুর", areas: ["Faridpur Sadar", "Boalmari", "Alfadanga", "Madhukhali", "Bhanga", "Nagarkanda", "Sadarpur", "Charbhadrasan", "Saltha"] },
+      { name: "Gopalganj", bn: "গোপালগঞ্জ", areas: ["Gopalganj Sadar", "Kashiani", "Kotalipara", "Muksudpur", "Tungipara"] },
+      { name: "Madaripur", bn: "মাদারীপুর", areas: ["Madaripur Sadar", "Kalkini", "Rajoir", "Shibchar"] },
+      { name: "Rajbari", bn: "রাজবাড়ী", areas: ["Rajbari Sadar", "Goalandaghat", "Pangsha", "Baliakandi", "Kalukhali"] },
+      { name: "Shariatpur", bn: "শরীয়তপুর", areas: ["Shariatpur Sadar", "Naria", "Zajira", "Gosairhat", "Bhedarganj", "Damudya"] },
     ],
   },
   {
-    code: "IN", name: "India", states: [
-      { name: "Andhra Pradesh", cities: ["Visakhapatnam", "Vijayawada", "Guntur", "Tirupati", "Nellore", "Kurnool", "Rajahmundry"] },
-      { name: "Bihar", cities: ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga", "Arrah"] },
-      { name: "Delhi", cities: ["New Delhi", "Noida", "Gurgaon", "Faridabad", "Ghaziabad"] },
-      { name: "Gujarat", cities: ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Gandhinagar", "Jamnagar"] },
-      { name: "Karnataka", cities: ["Bengaluru", "Mysuru", "Hubli", "Mangaluru", "Belgaum", "Gulbarga"] },
-      { name: "Kerala", cities: ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kollam", "Kottayam"] },
-      { name: "Madhya Pradesh", cities: ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Ujjain", "Satna"] },
-      { name: "Maharashtra", cities: ["Mumbai", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad", "Solapur"] },
-      { name: "Odisha", cities: ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur"] },
-      { name: "Punjab", cities: ["Chandigarh", "Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda"] },
-      { name: "Rajasthan", cities: ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer", "Bikaner"] },
-      { name: "Tamil Nadu", cities: ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli"] },
-      { name: "Telangana", cities: ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam"] },
-      { name: "Uttar Pradesh", cities: ["Lucknow", "Kanpur", "Agra", "Varanasi", "Meerut", "Prayagraj", "Noida"] },
-      { name: "West Bengal", cities: ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri", "Bardhaman"] },
+    name: "Chattogram", bn: "চট্টগ্রাম", districts: [
+      { name: "Chattogram", bn: "চট্টগ্রাম", areas: ["Agrabad", "GEC", "Nasirabad", "Halishahar", "Pahartali", "Patenga", "Kotwali", "Double Mooring", "Chandgaon", "Bayazid Bostami", "Bakalia", "Chawkbazar", "Karnaphuli", "Sitakunda", "Mirsharai", "Sandwip", "Patiya", "Raozan", "Rangunia"] },
+      { name: "Cox's Bazar", bn: "কক্সবাজার", areas: ["Cox's Bazar Sadar", "Teknaf", "Ukhia", "Ramu", "Maheshkhali", "Kutubdia", "Chakaria", "Pekua"] },
+      { name: "Comilla", bn: "কুমিল্লা", areas: ["Comilla Sadar", "Debidwar", "Barura", "Chandina", "Chauddagram", "Daudkandi", "Homna", "Laksam", "Muradnagar", "Nangalkot", "Brahmanpara", "Meghna", "Monoharganj", "Titas", "Burichang", "Lalmai"] },
+      { name: "Brahmanbaria", bn: "ব্রাহ্মণবাড়িয়া", areas: ["Brahmanbaria Sadar", "Ashuganj", "Nabinagar", "Bancharampur", "Kasba", "Akhaura", "Nasirnagar", "Sarail", "Bijoynagar"] },
+      { name: "Chandpur", bn: "চাঁদপুর", areas: ["Chandpur Sadar", "Faridganj", "Haimchar", "Haziganj", "Kachua", "Matlab North", "Matlab South", "Shahrasti"] },
+      { name: "Lakshmipur", bn: "লক্ষ্মীপুর", areas: ["Lakshmipur Sadar", "Raipur", "Ramganj", "Ramgati", "Kamalnagar"] },
+      { name: "Noakhali", bn: "নোয়াখালী", areas: ["Noakhali Sadar", "Begumganj", "Chatkhil", "Companiganj", "Hatiya", "Kabir Hat", "Senbagh", "Sonaimuri", "Subarnachar"] },
+      { name: "Feni", bn: "ফেনী", areas: ["Feni Sadar", "Chhagalnaiya", "Daganbhuiyan", "Parshuram", "Sonagazi", "Fulgazi"] },
+      { name: "Khagrachhari", bn: "খাগড়াছড়ি", areas: ["Khagrachhari Sadar", "Dighinala", "Panchhari", "Lakshmichhari", "Mahalchhari", "Manikchari", "Matiranga", "Ramgarh", "Guimara"] },
+      { name: "Rangamati", bn: "রাঙ্গামাটি", areas: ["Rangamati Sadar", "Kaptai", "Kawkhali", "Bagaichhari", "Barkal", "Langadu", "Rajasthali", "Belaichhari", "Juraichhari", "Naniarchar"] },
+      { name: "Bandarban", bn: "বান্দরবান", areas: ["Bandarban Sadar", "Thanchi", "Ruma", "Rowangchhari", "Lama", "Ali Kadam", "Naikhongchhari"] },
     ],
   },
   {
-    code: "US", name: "United States", states: [
-      { name: "California", cities: ["Los Angeles", "San Francisco", "San Diego", "San Jose", "Sacramento", "Fresno"] },
-      { name: "New York", cities: ["New York City", "Buffalo", "Rochester", "Syracuse", "Albany"] },
-      { name: "Texas", cities: ["Houston", "Dallas", "San Antonio", "Austin", "Fort Worth", "El Paso"] },
-      { name: "Florida", cities: ["Miami", "Orlando", "Tampa", "Jacksonville", "Fort Lauderdale"] },
-      { name: "Illinois", cities: ["Chicago", "Springfield", "Naperville", "Aurora", "Peoria"] },
-      { name: "Pennsylvania", cities: ["Philadelphia", "Pittsburgh", "Allentown", "Erie", "Reading"] },
-      { name: "Ohio", cities: ["Columbus", "Cleveland", "Cincinnati", "Toledo", "Akron"] },
-      { name: "Georgia", cities: ["Atlanta", "Augusta", "Savannah", "Athens", "Macon"] },
-      { name: "Washington", cities: ["Seattle", "Spokane", "Tacoma", "Bellevue", "Vancouver"] },
-      { name: "Massachusetts", cities: ["Boston", "Cambridge", "Worcester", "Springfield", "Lowell"] },
+    name: "Rajshahi", bn: "রাজশাহী", districts: [
+      { name: "Rajshahi", bn: "রাজশাহী", areas: ["Rajshahi City", "Boalia", "Rajpara", "Motihar", "Shah Makhdum", "Godagari", "Tanore", "Bagmara", "Puthia", "Durgapur", "Bagha", "Charghat", "Mohanpur", "Paba"] },
+      { name: "Bogura", bn: "বগুড়া", areas: ["Bogura Sadar", "Gabtali", "Sherpur", "Shajahanpur", "Kahaloo", "Dupchanchia", "Adamdighi", "Nandigram", "Sonatala", "Shibganj", "Sariakandi", "Dhunat"] },
+      { name: "Joypurhat", bn: "জয়পুরহাট", areas: ["Joypurhat Sadar", "Akkelpur", "Kalai", "Khetlal", "Panchbibi"] },
+      { name: "Naogaon", bn: "নওগাঁ", areas: ["Naogaon Sadar", "Manda", "Niamatpur", "Atrai", "Raninagar", "Patnitala", "Dhamoirhat", "Mohadevpur", "Badalgachhi", "Porsha", "Sapahar"] },
+      { name: "Natore", bn: "নাটোর", areas: ["Natore Sadar", "Bagatipara", "Baraigram", "Gurudaspur", "Lalpur", "Singra", "Naldanga"] },
+      { name: "Chapainawabganj", bn: "চাঁপাইনবাবগঞ্জ", areas: ["Chapainawabganj Sadar", "Shibganj", "Gomostapur", "Nachole", "Bholahat"] },
+      { name: "Pabna", bn: "পাবনা", areas: ["Pabna Sadar", "Ishwardi", "Bera", "Bhangura", "Chatmohar", "Faridpur", "Atgharia", "Santhia", "Sujanagar"] },
+      { name: "Sirajganj", bn: "সিরাজগঞ্জ", areas: ["Sirajganj Sadar", "Belkuchi", "Chauhali", "Kamarkhanda", "Kazipur", "Raiganj", "Shahjadpur", "Tarash", "Ullahpara"] },
     ],
   },
   {
-    code: "GB", name: "United Kingdom", states: [
-      { name: "England", cities: ["London", "Manchester", "Birmingham", "Liverpool", "Leeds", "Bristol", "Sheffield", "Cambridge", "Oxford"] },
-      { name: "Scotland", cities: ["Edinburgh", "Glasgow", "Aberdeen", "Dundee", "Inverness"] },
-      { name: "Wales", cities: ["Cardiff", "Swansea", "Newport", "Bangor"] },
-      { name: "Northern Ireland", cities: ["Belfast", "Derry", "Lisburn", "Newry"] },
+    name: "Khulna", bn: "খুলনা", districts: [
+      { name: "Khulna", bn: "খুলনা", areas: ["Khulna City", "Sonadanga", "Khalishpur", "Boyra", "Daulatpur", "Dumuria", "Phultala", "Batiaghata", "Dakop", "Koyra", "Paikgachha", "Terokhada", "Rupsa", "Dighalia"] },
+      { name: "Bagerhat", bn: "বাগেরহাট", areas: ["Bagerhat Sadar", "Chitalmari", "Fakirhat", "Kachua", "Mollahat", "Mongla", "Morrelganj", "Rampal", "Sarankhola"] },
+      { name: "Satkhira", bn: "সাতক্ষীরা", areas: ["Satkhira Sadar", "Assasuni", "Debhata", "Kalaroa", "Kaliganj", "Shyamnagar", "Tala"] },
+      { name: "Jashore", bn: "যশোর", areas: ["Jashore Sadar", "Abhaynagar", "Bagherpara", "Chaugachha", "Jhikargachha", "Keshabpur", "Manirampur", "Sharsha"] },
+      { name: "Magura", bn: "মাগুরা", areas: ["Magura Sadar", "Mohammadpur", "Shalikha", "Sreepur"] },
+      { name: "Narail", bn: "নড়াইল", areas: ["Narail Sadar", "Kalia", "Lohagara"] },
+      { name: "Kushtia", bn: "কুষ্টিয়া", areas: ["Kushtia Sadar", "Kumarkhali", "Khoksa", "Mirpur", "Bheramara", "Daulatpur"] },
+      { name: "Chuadanga", bn: "চুয়াডাঙ্গা", areas: ["Chuadanga Sadar", "Alamdanga", "Damurhuda", "Jibannagar"] },
+      { name: "Meherpur", bn: "মেহেরপুর", areas: ["Meherpur Sadar", "Gangni", "Mujibnagar"] },
+      { name: "Jhenaidah", bn: "ঝিনাইদহ", areas: ["Jhenaidah Sadar", "Harinakunda", "Kaliganj", "Kotchandpur", "Maheshpur", "Shailkupa"] },
     ],
   },
   {
-    code: "AU", name: "Australia", states: [
-      { name: "New South Wales", cities: ["Sydney", "Newcastle", "Wollongong", "Canberra"] },
-      { name: "Victoria", cities: ["Melbourne", "Geelong", "Ballarat", "Bendigo"] },
-      { name: "Queensland", cities: ["Brisbane", "Gold Coast", "Cairns", "Townsville"] },
-      { name: "Western Australia", cities: ["Perth", "Fremantle", "Bunbury"] },
-      { name: "South Australia", cities: ["Adelaide", "Mount Gambier", "Whyalla"] },
+    name: "Barishal", bn: "বরিশাল", districts: [
+      { name: "Barishal", bn: "বরিশাল", areas: ["Barishal City", "Bakerganj", "Babuganj", "Wazirpur", "Banaripara", "Gournadi", "Agailjhara", "Mehendiganj", "Muladi", "Hizla"] },
+      { name: "Bhola", bn: "ভোলা", areas: ["Bhola Sadar", "Borhanuddin", "Charfasson", "Daulatkhan", "Lalmohan", "Manpura", "Tazumuddin"] },
+      { name: "Patuakhali", bn: "পটুয়াখালী", areas: ["Patuakhali Sadar", "Bauphal", "Dashmina", "Dumki", "Galachipa", "Kalapara", "Mirzaganj", "Rangabali"] },
+      { name: "Pirojpur", bn: "পিরোজপুর", areas: ["Pirojpur Sadar", "Bhandaria", "Kawkhali", "Mathbaria", "Nazirpur", "Nesarabad", "Zianagar"] },
+      { name: "Jhalokati", bn: "ঝালকাঠি", areas: ["Jhalokati Sadar", "Kathalia", "Nalchity", "Rajapur"] },
+      { name: "Barguna", bn: "বরগুনা", areas: ["Barguna Sadar", "Amtali", "Bamna", "Betagi", "Patharghata", "Taltali"] },
     ],
   },
   {
-    code: "CA", name: "Canada", states: [
-      { name: "Ontario", cities: ["Toronto", "Ottawa", "Hamilton", "London", "Mississauga"] },
-      { name: "Quebec", cities: ["Montreal", "Quebec City", "Laval", "Gatineau"] },
-      { name: "British Columbia", cities: ["Vancouver", "Victoria", "Kelowna", "Surrey"] },
-      { name: "Alberta", cities: ["Calgary", "Edmonton", "Red Deer", "Lethbridge"] },
+    name: "Sylhet", bn: "সিলেট", districts: [
+      { name: "Sylhet", bn: "সিলেট", areas: ["Sylhet City", "Zindabazar", "Amberkhana", "Subid Bazar", "Tilagarh", "Balaganj", "Beanibazar", "Bishwanath", "Companiganj", "Fenchuganj", "Golapganj", "Gowainghat", "Jaintiapur", "Kanaighat", "South Surma", "Zakiganj", "Dakshin Surma", "Osmaninagar"] },
+      { name: "Moulvibazar", bn: "মৌলভীবাজার", areas: ["Moulvibazar Sadar", "Barlekha", "Juri", "Kamalganj", "Kulaura", "Rajnagar", "Sreemangal"] },
+      { name: "Habiganj", bn: "হবিগঞ্জ", areas: ["Habiganj Sadar", "Ajmiriganj", "Bahubal", "Baniachong", "Chunarughat", "Lakhai", "Madhabpur", "Nabiganj", "Sayestaganj"] },
+      { name: "Sunamganj", bn: "সুনামগঞ্জ", areas: ["Sunamganj Sadar", "Bishwamvarpur", "Chhatak", "Derai", "Dharampasha", "Dowarabazar", "Jagannathpur", "Jamalganj", "Sulla", "Tahirpur", "Shantiganj"] },
     ],
   },
   {
-    code: "PK", name: "Pakistan", states: [
-      { name: "Punjab", cities: ["Lahore", "Faisalabad", "Rawalpindi", "Multan", "Gujranwala", "Sialkot"] },
-      { name: "Sindh", cities: ["Karachi", "Hyderabad", "Sukkur", "Larkana"] },
-      { name: "Khyber Pakhtunkhwa", cities: ["Peshawar", "Mardan", "Abbottabad", "Swat"] },
-      { name: "Balochistan", cities: ["Quetta", "Gwadar", "Turbat"] },
-      { name: "Islamabad Capital", cities: ["Islamabad"] },
+    name: "Rangpur", bn: "রংপুর", districts: [
+      { name: "Rangpur", bn: "রংপুর", areas: ["Rangpur City", "Badarganj", "Gangachara", "Kaunia", "Mithapukur", "Pirgachha", "Pirganj", "Taraganj"] },
+      { name: "Dinajpur", bn: "দিনাজপুর", areas: ["Dinajpur Sadar", "Birampur", "Birganj", "Biral", "Bochaganj", "Chirirbandar", "Fulbari", "Ghoraghat", "Hakimpur", "Kaharole", "Khansama", "Nawabganj", "Parbatipur"] },
+      { name: "Thakurgaon", bn: "ঠাকুরগাঁও", areas: ["Thakurgaon Sadar", "Baliadangi", "Haripur", "Pirganj", "Ranisankail"] },
+      { name: "Panchagarh", bn: "পঞ্চগড়", areas: ["Panchagarh Sadar", "Atwari", "Boda", "Debiganj", "Tetulia"] },
+      { name: "Kurigram", bn: "কুড়িগ্রাম", areas: ["Kurigram Sadar", "Bhurungamari", "Char Rajibpur", "Chilmari", "Nageshwari", "Phulbari", "Rajarhat", "Raumari", "Ulipur"] },
+      { name: "Lalmonirhat", bn: "লালমনিরহাট", areas: ["Lalmonirhat Sadar", "Aditmari", "Hatibandha", "Kaliganj", "Patgram"] },
+      { name: "Nilphamari", bn: "নীলফামারী", areas: ["Nilphamari Sadar", "Dimla", "Domar", "Jaldhaka", "Kishoreganj", "Saidpur"] },
+      { name: "Gaibandha", bn: "গাইবান্ধা", areas: ["Gaibandha Sadar", "Fulchhari", "Gobindaganj", "Palashbari", "Sadullapur", "Saghata", "Sundarganj"] },
     ],
   },
   {
-    code: "AE", name: "United Arab Emirates", states: [
-      { name: "Dubai", cities: ["Dubai"] },
-      { name: "Abu Dhabi", cities: ["Abu Dhabi"] },
-      { name: "Sharjah", cities: ["Sharjah"] },
-      { name: "Ajman", cities: ["Ajman"] },
-      { name: "Ras Al Khaimah", cities: ["Ras Al Khaimah"] },
-      { name: "Fujairah", cities: ["Fujairah"] },
-      { name: "Umm Al Quwain", cities: ["Umm Al Quwain"] },
-    ],
-  },
-  {
-    code: "SA", name: "Saudi Arabia", states: [
-      { name: "Riyadh", cities: ["Riyadh"] },
-      { name: "Makkah", cities: ["Mecca", "Jeddah", "Taif"] },
-      { name: "Eastern Province", cities: ["Dammam", "Dhahran", "Khobar"] },
-      { name: "Madinah", cities: ["Medina"] },
-      { name: "Asir", cities: ["Abha"] },
-    ],
-  },
-  {
-    code: "SG", name: "Singapore", states: [
-      { name: "Central Region", cities: ["Singapore"] },
-    ],
-  },
-  {
-    code: "MY", name: "Malaysia", states: [
-      { name: "Kuala Lumpur", cities: ["Kuala Lumpur"] },
-      { name: "Selangor", cities: ["Shah Alam", "Petaling Jaya", "Subang Jaya"] },
-      { name: "Penang", cities: ["George Town", "Butterworth"] },
-      { name: "Johor", cities: ["Johor Bahru", "Iskandar Puteri"] },
-      { name: "Sarawak", cities: ["Kuching"] },
-      { name: "Sabah", cities: ["Kota Kinabalu"] },
-    ],
-  },
-  {
-    code: "NP", name: "Nepal", states: [
-      { name: "Bagmati", cities: ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur"] },
-      { name: "Gandaki", cities: ["Pokhara", "Gorkha"] },
-      { name: "Lumbini", cities: ["Bhairahawa", "Butwal"] },
-      { name: "Koshi", cities: ["Biratnagar", "Dharan"] },
-      { name: "Madhesh", cities: ["Janakpur", "Birgunj"] },
-    ],
-  },
-  {
-    code: "LK", name: "Sri Lanka", states: [
-      { name: "Western", cities: ["Colombo", "Gampaha", "Kalutara"] },
-      { name: "Central", cities: ["Kandy", "Matale", "Nuwara Eliya"] },
-      { name: "Southern", cities: ["Galle", "Matara", "Hambantota"] },
-      { name: "Northern", cities: ["Jaffna", "Kilinochchi"] },
-      { name: "Eastern", cities: ["Trincomalee", "Batticaloa"] },
-    ],
-  },
-  {
-    code: "PH", name: "Philippines", states: [
-      { name: "NCR", cities: ["Manila", "Quezon City", "Makati", "Pasig"] },
-      { name: "Cebu", cities: ["Cebu City", "Mandaue", "Lapu-Lapu"] },
-      { name: "Davao", cities: ["Davao City"] },
-      { name: "Pampanga", cities: ["Angeles", "San Fernando"] },
-    ],
-  },
-  {
-    code: "ID", name: "Indonesia", states: [
-      { name: "DKI Jakarta", cities: ["Jakarta"] },
-      { name: "West Java", cities: ["Bandung", "Bekasi", "Bogor", "Depok"] },
-      { name: "East Java", cities: ["Surabaya", "Malang", "Madiun"] },
-      { name: "Central Java", cities: ["Semarang", "Solo", "Yogyakarta"] },
-      { name: "Bali", cities: ["Denpasar"] },
-    ],
-  },
-  {
-    code: "TH", name: "Thailand", states: [
-      { name: "Bangkok", cities: ["Bangkok"] },
-      { name: "Chiang Mai", cities: ["Chiang Mai"] },
-      { name: "Phuket", cities: ["Phuket"] },
-      { name: "Nonthaburi", cities: ["Nonthaburi"] },
-      { name: "Pattaya", cities: ["Pattaya"] },
-    ],
-  },
-  {
-    code: "VN", name: "Vietnam", states: [
-      { name: "Ho Chi Minh City", cities: ["Ho Chi Minh City"] },
-      { name: "Hanoi", cities: ["Hanoi"] },
-      { name: "Da Nang", cities: ["Da Nang"] },
-      { name: "Hai Phong", cities: ["Hai Phong"] },
-      { name: "Can Tho", cities: ["Can Tho"] },
-    ],
-  },
-  {
-    code: "EG", name: "Egypt", states: [
-      { name: "Cairo", cities: ["Cairo"] },
-      { name: "Alexandria", cities: ["Alexandria"] },
-      { name: "Giza", cities: ["Giza"] },
-      { name: "Aswan", cities: ["Aswan"] },
-    ],
-  },
-  {
-    code: "TR", name: "Turkey", states: [
-      { name: "Istanbul", cities: ["Istanbul"] },
-      { name: "Ankara", cities: ["Ankara"] },
-      { name: "Izmir", cities: ["Izmir"] },
-      { name: "Bursa", cities: ["Bursa"] },
-      { name: "Antalya", cities: ["Antalya"] },
-    ],
-  },
-  {
-    code: "NG", name: "Nigeria", states: [
-      { name: "Lagos", cities: ["Lagos", "Ikeja", "Victoria Island"] },
-      { name: "Abuja", cities: ["Abuja"] },
-      { name: "Kano", cities: ["Kano"] },
-      { name: "Rivers", cities: ["Port Harcourt"] },
-    ],
-  },
-  {
-    code: "ZA", name: "South Africa", states: [
-      { name: "Gauteng", cities: ["Johannesburg", "Pretoria", "Sandton"] },
-      { name: "Western Cape", cities: ["Cape Town"] },
-      { name: "KwaZulu-Natal", cities: ["Durban", "Pietermaritzburg"] },
-    ],
-  },
-  {
-    code: "KE", name: "Kenya", states: [
-      { name: "Nairobi", cities: ["Nairobi"] },
-      { name: "Mombasa", cities: ["Mombasa"] },
-      { name: "Kisumu", cities: ["Kisumu"] },
-    ],
-  },
-  {
-    code: "GH", name: "Ghana", states: [
-      { name: "Greater Accra", cities: ["Accra", "Tema"] },
-      { name: "Ashanti", cities: ["Kumasi"] },
-      { name: "Western", cities: ["Takoradi"] },
-    ],
-  },
-  {
-    code: "DE", name: "Germany", states: [
-      { name: "Bavaria", cities: ["Munich", "Nuremberg", "Augsburg"] },
-      { name: "Berlin", cities: ["Berlin"] },
-      { name: "Hamburg", cities: ["Hamburg"] },
-      { name: "North Rhine-Westphalia", cities: ["Cologne", "Düsseldorf", "Dortmund"] },
-      { name: "Hesse", cities: ["Frankfurt", "Wiesbaden"] },
-    ],
-  },
-  {
-    code: "FR", name: "France", states: [
-      { name: "Île-de-France", cities: ["Paris", "Boulogne-Billancourt", "Saint-Denis"] },
-      { name: "Provence-Alpes-Côte d'Azur", cities: ["Marseille", "Nice", "Cannes"] },
-      { name: "Auvergne-Rhône-Alpes", cities: ["Lyon", "Grenoble", "Saint-Étienne"] },
-    ],
-  },
-  {
-    code: "JP", name: "Japan", states: [
-      { name: "Tokyo", cities: ["Tokyo"] },
-      { name: "Osaka", cities: ["Osaka", "Sakai"] },
-      { name: "Kyoto", cities: ["Kyoto"] },
-      { name: "Kanagawa", cities: ["Yokohama", "Kawasaki"] },
-    ],
-  },
-  {
-    code: "KR", name: "South Korea", states: [
-      { name: "Seoul", cities: ["Seoul"] },
-      { name: "Busan", cities: ["Busan"] },
-      { name: "Incheon", cities: ["Incheon"] },
-      { name: "Daegu", cities: ["Daegu"] },
-    ],
-  },
-  {
-    code: "CN", name: "China", states: [
-      { name: "Beijing", cities: ["Beijing"] },
-      { name: "Shanghai", cities: ["Shanghai"] },
-      { name: "Guangdong", cities: ["Guangzhou", "Shenzhen", "Dongguan"] },
-      { name: "Zhejiang", cities: ["Hangzhou", "Ningbo", "Wenzhou"] },
-      { name: "Sichuan", cities: ["Chengdu"] },
-    ],
-  },
-  {
-    code: "BR", name: "Brazil", states: [
-      { name: "São Paulo", cities: ["São Paulo", "Campinas", "Santos"] },
-      { name: "Rio de Janeiro", cities: ["Rio de Janeiro", "Niterói"] },
-      { name: "Minas Gerais", cities: ["Belo Horizonte"] },
-      { name: "Bahia", cities: ["Salvador"] },
+    name: "Mymensingh", bn: "ময়মনসিংহ", districts: [
+      { name: "Mymensingh", bn: "ময়মনসিংহ", areas: ["Mymensingh City", "Bhaluka", "Dhobaura", "Fulbaria", "Gaffargaon", "Gauripur", "Haluaghat", "Ishwarganj", "Muktagachha", "Nandail", "Phulpur", "Trishal", "Tarakanda"] },
+      { name: "Jamalpur", bn: "জামালপুর", areas: ["Jamalpur Sadar", "Bakshiganj", "Dewanganj", "Islampur", "Madarganj", "Melandaha", "Sarishabari"] },
+      { name: "Sherpur", bn: "শেরপুর", areas: ["Sherpur Sadar", "Jhenaigati", "Nakla", "Nalitabari", "Sreebardi"] },
+      { name: "Netrokona", bn: "নেত্রকোণা", areas: ["Netrokona Sadar", "Atpara", "Barhatta", "Durgapur", "Kalmakanda", "Kendua", "Khaliajuri", "Madan", "Mohanganj", "Purbadhala"] },
     ],
   },
 ];
 
 /**
- * Get states for a given country name.
+ * Get all division names.
  */
-export function getStatesForCountry(countryName: string): string[] {
-  const country = LOCATIONS.find(
-    (c) => c.name.toLowerCase() === countryName.toLowerCase()
-  );
-  if (!country) return [];
-  return country.states.map((s) => s.name);
+export function getDivisions(): string[] {
+  return DIVISIONS.map((d) => d.name);
 }
 
 /**
- * Get cities for a given country + state.
+ * Get districts for a given division.
  */
-export function getCitiesForState(countryName: string, stateName: string): string[] {
-  const country = LOCATIONS.find(
-    (c) => c.name.toLowerCase() === countryName.toLowerCase()
+export function getDistricts(divisionName: string): string[] {
+  const division = DIVISIONS.find(
+    (d) => d.name.toLowerCase() === divisionName.toLowerCase()
   );
-  if (!country) return [];
-  const state = country.states.find(
-    (s) => s.name.toLowerCase() === stateName.toLowerCase()
+  if (!division) return [];
+  return division.districts.map((d) => d.name);
+}
+
+/**
+ * Get areas/upazilas for a given division + district.
+ */
+export function getAreas(divisionName: string, districtName: string): string[] {
+  const division = DIVISIONS.find(
+    (d) => d.name.toLowerCase() === divisionName.toLowerCase()
   );
-  if (!state) return [];
-  return state.cities;
+  if (!division) return [];
+  const district = division.districts.find(
+    (d) => d.name.toLowerCase() === districtName.toLowerCase()
+  );
+  if (!district) return [];
+  return district.areas;
+}
+
+// ── Legacy compatibility (for backend fields: country / state / city) ──
+// country = "Bangladesh" (always)
+// state = division name
+// city = district name
+// area = area/upazila name
+
+export function getStatesForCountry(_countryName: string): string[] {
+  return getDivisions();
+}
+
+export function getCitiesForState(_countryName: string, stateName: string): string[] {
+  return getDistricts(stateName);
 }

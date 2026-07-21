@@ -1,23 +1,25 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProfilePublic } from "./profile-public";
+import { searchPosts } from "@/lib/actions/discover";
+import env from "@/config/.env";
 
 export const metadata: Metadata = {
   title: "Profile",
   description: "View user profile and posts",
 };
 
-export default async function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {
-  const { username } = await params;
-  const API_BASE = process.env.API_BASE_URL || "http://localhost:9000";
+export default async function PublicProfilePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const API_BASE = env.API_BASE_URL || "http://localhost:9000"; // Can be removed later if not needed
 
   let posts: any[] = [];
   let user: any = null;
 
   try {
-    const res = await fetch(`${API_BASE}/api/v1/posts/?page=1&limit=50`, { cache: "no-store" });
-    const data = await res.json();
-    if (data.success && data.data.length > 0) {
+    const data = await searchPosts({ page: 1, limit: 50 });
+    
+    if (data.success && data.data && data.data.length > 0) {
       // Get unique authors
       const authors = new Map<string, any>();
       for (const post of data.data) {
@@ -27,10 +29,10 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       }
 
       // Match username to author by full_name slug
-      const slug = username.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const searchSlug = slug.toLowerCase().replace(/[^a-z0-9]/g, "");
       for (const [id, author] of authors) {
         const nameSlug = (author.full_name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-        if (nameSlug.includes(slug) || slug.includes(nameSlug) || nameSlug === slug) {
+        if (nameSlug.includes(searchSlug) || searchSlug.includes(nameSlug) || nameSlug === searchSlug) {
           user = author;
           break;
         }

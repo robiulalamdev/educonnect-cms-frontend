@@ -250,6 +250,24 @@ export async function deleteAdminAction(id: string) {
   }
 }
 
+export async function updateAdminAction(id: string, input: {
+  full_name?: string;
+  email?: string;
+  role?: string;
+  status?: string;
+}) {
+  try {
+    const data = await apiPatch<{ success: boolean; data: any; message: string }>(
+      `/api/v1/admin/dashboard/admins/${id}`,
+      input,
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 export async function getAuditLogs(params: string) {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(

@@ -9,10 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTES } from "@/lib/constants";
 import { Lock, ArrowLeft, CheckCircle } from "lucide-react";
+import { resetPasswordAction } from "@/lib/actions/auth";
 
 export function ResetPasswordForm() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const token = searchParams.get("token") || "";
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,32 +22,25 @@ export function ResetPasswordForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+    if (!token) {
+      setError("Invalid or missing reset token.");
       return;
     }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
 
     setLoading(true);
+    setError("");
 
     try {
-      const res = await fetch("/api/v1/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, new_password: password }),
-      });
+      const res = await resetPasswordAction(token, password);
 
-      const data = await res.json();
-      if (data.success) {
+      if (res.success) {
         setSuccess(true);
       } else {
-        setError(data.message || "Something went wrong");
+        setError(res.error || "Something went wrong");
       }
     } catch {
       setError("Network error. Please try again.");

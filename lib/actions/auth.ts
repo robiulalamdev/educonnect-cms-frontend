@@ -289,3 +289,40 @@ export async function updateProfileAction(
     return { error: err.message ?? "Failed to update profile" };
   }
 }
+
+/**
+ * Forgot password action.
+ */
+export async function forgotPasswordAction(
+  email: string
+): Promise<{ error?: string; success?: boolean; message?: string }> {
+  try {
+    const { apiPublicPost } = await import("@/lib/api");
+    const data = await apiPublicPost<{ success: boolean; message?: string }>(
+      API.AUTH.FORGOT_PASSWORD,
+      { email }
+    );
+    return { success: true, message: data.message };
+  } catch (err: any) {
+    return { error: err.message ?? "Something went wrong. Please try again." };
+  }
+}
+
+/**
+ * Reset password action.
+ */
+export async function resetPasswordAction(
+  token: string,
+  password: string
+): Promise<{ error?: string; success?: boolean; message?: string }> {
+  try {
+    const { apiPublicPost } = await import("@/lib/api");
+    const data = await apiPublicPost<{ success: boolean; message?: string }>(
+      API.AUTH.RESET_PASSWORD,
+      { token, password }
+    );
+    return { success: true, message: data.message };
+  } catch (err: any) {
+    return { error: err.message ?? "Something went wrong. Please try again." };
+  }
+}

@@ -8,7 +8,7 @@ import {
   X, Loader2, Upload, Eye, EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getAdminAdmins, registerAdminAction, deleteAdminAction } from "@/lib/actions/admin";
+import { getAdminAdmins, registerAdminAction, deleteAdminAction, updateAdminAction } from "@/lib/actions/admin";
 
 interface Admin {
   id: string;
@@ -48,6 +48,15 @@ export function AdminAdminsContent() {
   const [formRole, setFormRole] = useState("MODERATOR");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Edit Admin state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editAdmin, setEditAdmin] = useState<Admin | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editRole, setEditRole] = useState("");
+  const [editStatus, setEditStatus] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
 
   const load = useCallback(async (p: number) => {
     setLoading(true);

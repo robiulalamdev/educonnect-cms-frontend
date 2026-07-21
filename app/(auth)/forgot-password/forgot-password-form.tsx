@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTES } from "@/lib/constants";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { forgotPasswordAction } from "@/lib/actions/auth";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -21,17 +22,12 @@ export function ForgotPasswordForm() {
     setError("");
 
     try {
-      const res = await fetch("/api/v1/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const res = await forgotPasswordAction(email);
 
-      const data = await res.json();
-      if (data.success) {
+      if (res.success) {
         setSent(true);
       } else {
-        setError(data.message || "Something went wrong");
+        setError(res.error || "Something went wrong");
       }
     } catch {
       setError("Network error. Please try again.");

@@ -63,3 +63,37 @@ export async function getSuggestedUsers() {
     return { success: true, data: [] };
   }
 }
+
+/**
+ * Perform a dynamic search for Services.
+ */
+export async function searchServices(params: Record<string, string | number | undefined>) {
+  try {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") {
+        searchParams.append(key, String(value));
+      }
+    });
+    return await apiGet<{ success: boolean; data: any[]; meta: any }>(`/api/v1/services?${searchParams.toString()}`);
+  } catch {
+    return { success: false, data: [], meta: { total: 0 } };
+  }
+}
+
+/**
+ * Perform a dynamic search for Posts.
+ */
+export async function searchPosts(params: Record<string, string | number | undefined>) {
+  try {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") {
+        searchParams.append(key, String(value));
+      }
+    });
+    return await apiGet<{ success: boolean; data: any[]; meta: any }>(`/api/v1/posts?${searchParams.toString()}`);
+  } catch {
+    return { success: false, data: [], meta: { total: 0 } };
+  }
+}

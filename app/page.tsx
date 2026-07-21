@@ -147,18 +147,17 @@ export default function HomePage() {
               </div>
 
               <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
-                <span className="text-gray-900 dark:text-white">Digital Products</span>
-                <br />
-                <span className="text-gray-900 dark:text-white">built to a </span>
+                <span className="text-gray-900 dark:text-white">EduConnect</span>
                 <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-                  Higher
+                  {" "}Bangladesh
                 </span>
-                <span className="text-gray-900 dark:text-white"> Standard</span>
+                <br />
+                <span className="text-gray-900 dark:text-white">Premier Coaching Platform</span>
               </h1>
 
               <p className="mt-6 text-lg leading-8 text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-                A comprehensive platform for coaching and education management.
-                Connect teachers, students, and guardians seamlessly.
+                The ultimate platform for SSC, HSC, and University admission coaching. 
+                Connect teachers, students, and guardians seamlessly across the country.
               </p>
 
               <div className="mt-10 flex items-center justify-center gap-4">
@@ -208,11 +207,11 @@ export default function HomePage() {
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl text-gray-900 dark:text-white">
-                A Complete <span className="text-blue-600">Product</span> Delivery Process
+                Everything you need to <span className="text-blue-600">manage coaching</span>
               </h2>
               <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
-                From strategy and UX to ongoing support, we handle
-                the complete digital product lifecycle.
+                From batch management and student enrollments to attendance and fees, 
+                EduConnect BD handles it all.
               </p>
             </div>
 
@@ -344,13 +343,12 @@ export default function HomePage() {
 
               <div className="relative">
                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-white">
-                  Let&apos;s build something
+                  Ready to transform your
                   <br />
-                  that performs
+                  coaching center?
                 </h2>
                 <p className="mt-4 text-lg text-blue-100 max-w-lg mx-auto">
-                  Ready to transform your website? Get in touch and
-                  we&apos;ll show you what&apos;s possible for your brand.
+                  Join thousands of teachers and students across Bangladesh already using EduConnect BD.
                 </p>
                 <div className="mt-8">
                   <Link href={ROUTES.REGISTER}>

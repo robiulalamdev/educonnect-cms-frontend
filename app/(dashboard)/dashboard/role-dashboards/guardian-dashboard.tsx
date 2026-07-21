@@ -21,16 +21,17 @@ interface GuardianStats {
   children: ChildInfo[];
 }
 
+import { getGuardianStats } from "@/lib/actions/dashboard";
+
 export function GuardianDashboard() {
-  const [stats, setStats] = useState<GuardianStats | null>(null);
+  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/v1/statistics/guardian", { credentials: "include" });
-        const data = await res.json();
-        if (data.success) setStats(data.data);
+        const res = await getGuardianStats();
+        if (res.success) setStats(res.data);
       } catch {
       } finally {
         setLoading(false);

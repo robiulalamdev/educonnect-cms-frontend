@@ -17,16 +17,17 @@ interface TeacherStats {
   revenue_trend: Array<{ month: string; revenue: number }>;
 }
 
+import { getTeacherStats } from "@/lib/actions/dashboard";
+
 export function TeacherDashboard() {
-  const [stats, setStats] = useState<TeacherStats | null>(null);
+  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/v1/statistics/teacher", { credentials: "include" });
-        const data = await res.json();
-        if (data.success) setStats(data.data);
+        const res = await getTeacherStats();
+        if (res.success) setStats(res.data);
       } catch {
       } finally {
         setLoading(false);

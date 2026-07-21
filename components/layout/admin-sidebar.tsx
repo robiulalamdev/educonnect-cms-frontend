@@ -81,7 +81,7 @@ function useNavGroups(badges: Record<string, number>) {
       label: "Platform",
       items: [
         { title: "Courses", icon: BookOpen, href: ROUTES.ADMIN.EDUCATION, roles: ["SUPER_ADMIN", "ADMIN"] },
-        { title: "Classes", icon: ClipboardList, href: "/admin/batches", roles: ["SUPER_ADMIN", "ADMIN"] },
+        { title: "Class Room", icon: ClipboardList, href: "/admin/class-room", roles: ["SUPER_ADMIN", "ADMIN"] },
         { title: "Posts", icon: FileText, href: ROUTES.ADMIN.POSTS },
         { title: "Reviews", icon: Star, href: ROUTES.ADMIN.REVIEWS },
         { title: "Subscriptions", icon: DollarSign, href: ROUTES.ADMIN.SUBSCRIPTIONS, roles: ["SUPER_ADMIN", "ADMIN"] },

@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Globe, Building2, Map, Home, Search, Check, ChevronDown } from "lucide-react";
+import { MapPin, Building2, Map, Home, Search, Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LOCATIONS, getStatesForCountry, getCitiesForState } from "@/lib/data/locations";
+import { getDivisions, getDistricts, getAreas } from "@/lib/data/locations";
 
 interface LocationPickerProps {
   country?: string;
@@ -124,44 +124,73 @@ export function LocationPicker({
   disabled = false,
   className,
 }: LocationPickerProps) {
-  const countries = LOCATIONS.map((c) => c.name);
-  const states = getStatesForCountry(country);
-  const cities = getCitiesForState(country, state);
+  // Always set country to Bangladesh if not set (or even if set, we enforce it for BD-only)
+  useEffect(() => {
+    if (country !== "Bangladesh") {
+      onCountryChange?.("Bangladesh");
+    }
+  }, [country, onCountryChange]);
 
-  const handleCountryChange = (value: string) => {
-    onCountryChange?.(value);
-    onStateChange?.("");
-    onCityChange?.("");
-  };
+  const divisions = getDivisions();
+  const districts = getDistricts(state);
+  const areas = getAreas(state, city);
 
   const handleStateChange = (value: string) => {
     onStateChange?.(value);
     onCityChange?.("");
+    onAreaChange?.("");
+  };
+
+  const handleCityChange = (value: string) => {
+    onCityChange?.(value);
+    onAreaChange?.("");
   };
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Row 1: Country + State + City (3 columns) */}
+      {/* Row 1: Division + District + Area (3 columns) */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <FieldSelect label="Country" icon={Globe} value={country} options={countries} onChange={handleCountryChange} placeholder="Select country..." disabled={disabled} />
-        <FieldSelect label="State / Province / Region" icon={MapPin} value={state} options={states} onChange={handleStateChange} placeholder={country ? "Select state..." : "Select country first"} disabled={disabled || !country} />
-        <FieldSelect label="City / District" icon={Building2} value={city} options={cities} onChange={(v) => onCityChange?.(v)} placeholder={state ? "Select city..." : "Select state first"} disabled={disabled || !state} />
+        <FieldSelect 
+          label="Division" 
+          icon={MapPin} 
+          value={state} 
+          options={divisions} 
+          onChange={handleStateChange} 
+          placeholder="Select division..." 
+          disabled={disabled} 
+        />
+        <FieldSelect 
+          label="District" 
+          icon={Building2} 
+          value={city} 
+          options={districts} 
+          onChange={handleCityChange} 
+          placeholder={state ? "Select district..." : "Select division first"} 
+          disabled={disabled || !state} 
+        />
+        <FieldSelect 
+          label="Area / Upazila" 
+          icon={Map} 
+          value={area} 
+          options={areas} 
+          onChange={(v) => onAreaChange?.(v)} 
+          placeholder={city ? "Select area..." : "Select district first"} 
+          disabled={disabled || !city} 
+        />
       </div>
 
-      {/* Row 2: Area + Address Line */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
-            <Map className="size-3.5" /> Area / Locality <span className="text-gray-400 font-normal">(optional)</span>
-          </Label>
-          <Input value={area} onChange={(e) => onAreaChange?.(e.target.value)} placeholder="Enter area name" disabled={disabled} className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
-        </div>
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
-            <Home className="size-3.5" /> Address Line <span className="text-gray-400 font-normal">(optional)</span>
-          </Label>
-          <Input value={addressLine} onChange={(e) => onAddressLineChange?.(e.target.value)} placeholder="Street address, building, etc." disabled={disabled} className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
-        </div>
+      {/* Row 2: Address Line */}
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2 text-[13px] font-medium text-gray-600 dark:text-gray-400">
+          <Home className="size-3.5" /> Address Line <span className="text-gray-400 font-normal">(optional)</span>
+        </Label>
+        <Input 
+          value={addressLine} 
+          onChange={(e) => onAddressLineChange?.(e.target.value)} 
+          placeholder="Street address, building, etc." 
+          disabled={disabled} 
+          className="rounded-xl h-11 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" 
+        />
       </div>
     </div>
   );

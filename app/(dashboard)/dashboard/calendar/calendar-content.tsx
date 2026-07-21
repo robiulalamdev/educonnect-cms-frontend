@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useUser } from "@/lib/contexts/user-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getCalendarEventsAction } from "@/lib/actions/calendar";
+import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Calendar, Loader2, Clock, MapPin, Video } from "lucide-react";
 
 interface CalendarEvent {
@@ -49,12 +51,15 @@ export function CalendarContent() {
     try {
       const startDate = new Date(year, month, 1).toISOString().split("T")[0];
       const endDate = new Date(year, month + 1, 0).toISOString().split("T")[0];
-      const res = await fetch(`/api/v1/batches/calendar?start=${startDate}&end=${endDate}`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.success) setEvents(data.data || []);
+      
+      const res = await getCalendarEventsAction(startDate, endDate);
+      if (res.success) {
+        setEvents(res.data || []);
+      } else {
+        toast.error(res.error || "Failed to load calendar events");
+      }
     } catch {
+      toast.error("Failed to load calendar events");
     } finally {
       setLoading(false);
     }

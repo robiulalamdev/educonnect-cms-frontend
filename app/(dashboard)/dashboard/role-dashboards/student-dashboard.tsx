@@ -13,16 +13,17 @@ interface StudentStats {
   upcoming_classes: Array<{ id: string; batch_name: string; date: string; time: string }>;
 }
 
+import { getStudentStats } from "@/lib/actions/dashboard";
+
 export function StudentDashboard() {
-  const [stats, setStats] = useState<StudentStats | null>(null);
+  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/v1/statistics/student", { credentials: "include" });
-        const data = await res.json();
-        if (data.success) setStats(data.data);
+        const res = await getStudentStats();
+        if (res.success) setStats(res.data);
       } catch {
       } finally {
         setLoading(false);

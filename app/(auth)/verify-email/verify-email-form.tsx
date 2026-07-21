@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -26,6 +26,64 @@ export function VerifyEmailForm() {
     {},
   );
   const [verified, setVerified] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const fullOtpToken = otp.join("");
+
+  const handleOtpChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    if (!value) {
+      const newOtp = [...otp];
+      newOtp[index] = "";
+      setOtp(newOtp);
+      return;
+    }
+    
+    // Handle paste in a single box
+    if (value.length > 1) {
+      const chars = value.split("").slice(0, 6);
+      const newOtp = [...otp];
+      chars.forEach((char, i) => {
+        if (index + i < 6) newOtp[index + i] = char;
+      });
+      setOtp(newOtp);
+      const nextFocus = Math.min(index + chars.length, 5);
+      inputRefs.current[nextFocus]?.focus();
+      return;
+    }
+    
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (index < 5 && value) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    } else if (e.key === "ArrowRight" && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 6);
+    if (pastedData) {
+      const newOtp = [...otp];
+      pastedData.split("").forEach((char, i) => {
+        if (i < 6) newOtp[i] = char;
+      });
+      setOtp(newOtp);
+      const nextFocus = Math.min(pastedData.length, 5);
+      inputRefs.current[nextFocus]?.focus();
+    }
+  };
 
   if (verified || verifyState.success) {
     return (
@@ -106,19 +164,30 @@ export function VerifyEmailForm() {
       {/* Verification Code Form */}
       <form action={verifyFormAction} className="space-y-4">
         <input type="hidden" name="email" value={email} />
-        <div className="space-y-2">
-          <Label htmlFor="token" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className="space-y-4">
+          <Label htmlFor="token" className="text-sm font-medium text-gray-700 dark:text-gray-300 block text-center">
             Verification code
           </Label>
-          <Input
-            id="token"
-            name="token"
-            placeholder="Paste your verification code here"
-            required
-            disabled={isVerifying}
-            className="h-12 rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm text-center text-base tracking-wider"
-          />
-          <p className="text-xs text-gray-400 dark:text-gray-500">
+          
+          <div className="flex justify-center gap-2 sm:gap-3" onPaste={handleOtpPaste}>
+            {otp.map((digit, index) => (
+              <Input
+                key={index}
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={digit}
+                ref={(el) => { inputRefs.current[index] = el; }}
+                onChange={(e) => handleOtpChange(index, e)}
+                onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                disabled={isVerifying}
+                className="w-12 h-14 sm:w-14 sm:h-16 text-center text-xl font-semibold rounded-2xl bg-white/50 dark:bg-white/5 border-gray-200/60 dark:border-white/10 backdrop-blur-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
+              />
+            ))}
+          </div>
+          <input type="hidden" name="token" value={fullOtpToken} />
+
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
             Check your email inbox (and spam folder) for the verification code.
           </p>
         </div>
@@ -126,7 +195,7 @@ export function VerifyEmailForm() {
         <Button
           type="submit"
           className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-base shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-300"
-          disabled={isVerifying || !email}
+          disabled={isVerifying || !email || fullOtpToken.length !== 6}
         >
           {isVerifying ? (
             <>

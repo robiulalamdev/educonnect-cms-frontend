@@ -82,6 +82,14 @@ export function EnrollmentsContent() {
                       )}
                     </div>
                   </div>
+                  {e.status === "APPROVED" && e.batch?.id && (
+                    <a
+                      href={`/dashboard/batches/${e.batch.id}`}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0066FF] text-white text-xs font-semibold hover:bg-blue-600 transition-colors shrink-0"
+                    >
+                      <BookOpen className="size-3.5" /> Open Classroom
+                    </a>
+                  )}
                 </div>
               </CardContent>
             </Card>
