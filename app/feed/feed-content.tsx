@@ -39,6 +39,9 @@ export function FeedContent() {
   const [trendingTopics, setTrendingTopics] = useState<Array<{ tag: string; posts: string }>>([]);
   const [whoToFollow, setWhoToFollow] = useState<Array<{ id: string; name: string; handle: string; avatar_key?: string | null }>>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const observerRef = useRef<HTMLDivElement>(null);
 
   const loadPosts = useCallback(async (p: number, append = false) => {
@@ -67,6 +70,31 @@ export function FeedContent() {
     }).catch(() => {});
   }, []);
 
+  const handleSearch = useCallback(() => {
+    if (!searchQuery.trim()) {
+      setFilteredPosts([]);
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
+    const q = searchQuery.toLowerCase();
+    const filtered = posts.filter(
+      (post) =>
+        post.title?.toLowerCase().includes(q) ||
+        post.content?.toLowerCase().includes(q) ||
+        post.author?.full_name?.toLowerCase().includes(q)
+    );
+    setFilteredPosts(filtered);
+  }, [searchQuery, posts]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    setFilteredPosts([]);
+    setIsSearching(false);
+  }, []);
+
+  const displayPosts = isSearching ? filteredPosts : posts;
+
   useEffect(() => {
     Promise.all([getTrendingTopics(), getSuggestedUsers()]).then(([topics, users]) => {
       if (topics.success) setTrendingTopics(topics.data);
@@ -91,11 +119,11 @@ export function FeedContent() {
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative hidden sm:block"><Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-gray-400" /><Input placeholder="Search posts, people, or topics..." className="pl-10 h-9 w-56 lg:w-72 rounded-full bg-gray-100 dark:bg-gray-800/80 border-0 text-[13px]" /></div>
+            <div className="relative hidden sm:block"><Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-gray-400" /><Input placeholder="Search posts, people, or topics..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }} className="pl-10 pr-9 h-9 w-56 lg:w-72 rounded-full bg-gray-100 dark:bg-gray-800/80 border-0 text-[13px]" />{searchQuery && <button onClick={handleClearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="size-3.5" /></button>}</div>
             <button onClick={() => document.documentElement.classList.toggle("dark")} className="size-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors text-[15px]">🌙</button>
-            <button className="relative size-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors">
+            <Link href="/dashboard/notifications" className="relative size-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors">
               <Bell className="size-[18px] text-gray-500 dark:text-gray-400" />
-            </button>
+            </Link>
             <button className="flex items-center gap-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1.5 transition-colors">
               <Avatar className="size-8">
                 {currentUser?.avatar?.key ? (
@@ -153,8 +181,8 @@ export function FeedContent() {
             </div>
 
             {loading ? <div className="space-y-4">{Array.from({ length: 3 }).map((_, i) => <PostSkeleton key={i} />)}</div>
-            : posts.length === 0 ? <EmptyState />
-            : <div className="space-y-4">{posts.map((post) => <PostCard key={post.id} post={post} expandedComments={expandedComments} setExpandedComments={setExpandedComments} expandedPost={expandedPost} setExpandedPost={setExpandedPost} onImageClick={setImageModal} />)}</div>}
+            : displayPosts.length === 0 ? (isSearching ? <div className="bg-white dark:bg-[#16161D] rounded-2xl border border-gray-200/80 dark:border-gray-800/80 p-16 text-center"><div className="size-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto"><Search className="size-6 text-gray-300 dark:text-gray-600" /></div><h3 className="mt-4 text-[16px] font-bold text-gray-900 dark:text-white">No results found</h3><p className="mt-1.5 text-[14px] text-gray-500">Try a different search query.</p><button onClick={handleClearSearch} className="mt-3 text-[13px] font-semibold text-[#0066FF] hover:underline">Clear search</button></div> : <EmptyState />)
+            : <div className="space-y-4">{displayPosts.map((post) => <PostCard key={post.id} post={post} expandedComments={expandedComments} setExpandedComments={setExpandedComments} expandedPost={expandedPost} setExpandedPost={setExpandedPost} onImageClick={setImageModal} />)}</div>}
 
             <div ref={observerRef} className="h-4" />
             {loadingMore && <div className="flex justify-center py-8"><Loader2 className="size-6 text-[#0066FF] animate-spin" /></div>}

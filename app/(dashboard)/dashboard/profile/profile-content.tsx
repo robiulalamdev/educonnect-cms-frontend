@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useTransition } from "react";
+import { useState, useRef, useCallback, useTransition, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,8 +47,17 @@ export function ProfileContent({ user }: ProfileContentProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
+  const [stats, setStats] = useState({ courses: 0, completed: 0, certificates: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    import("@/lib/actions/enrollment").then(({ getMyStudentEnrollments }) => {
+      getMyStudentEnrollments(1, 1).then((res: any) => {
+        if (res.success) setStats(prev => ({ ...prev, courses: res.meta?.total || 0 }));
+      });
+    });
+  }, []);
 
   // Location state
   const [country, setCountry] = useState(user.country || "");
@@ -220,7 +229,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
                 <BookOpen className="size-4 text-blue-600 dark:text-blue-400" />
               </div>
               <p className="text-lg font-bold text-gray-900 dark:text-white">
-                12
+                {stats.courses}
               </p>
               <p className="text-[11px] text-gray-500">Courses</p>
             </div>
@@ -229,7 +238,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
                 <CheckCircle className="size-4 text-green-600 dark:text-green-400" />
               </div>
               <p className="text-lg font-bold text-gray-900 dark:text-white">
-                28
+                {stats.completed}
               </p>
               <p className="text-[11px] text-gray-500">Completed</p>
             </div>
@@ -238,7 +247,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
                 <Award className="size-4 text-amber-600 dark:text-amber-400" />
               </div>
               <p className="text-lg font-bold text-gray-900 dark:text-white">
-                8
+                {stats.certificates}
               </p>
               <p className="text-[11px] text-gray-500">Certificates</p>
             </div>

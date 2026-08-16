@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   FileImage,
-  Heart,
   MessageCircle,
   Share2,
   Loader2,
   BookOpen,
   Pencil,
 } from "lucide-react";
+import { LikeButton } from "@/components/social/like-button";
+import { CommentSection } from "@/components/social/comment-section";
 import Link from "next/link";
 import { getCloudinaryUrl } from "@/lib/utils";
 
@@ -157,7 +158,7 @@ export function DashboardFeed({ userId }: DashboardFeedProps) {
             Create your first post or browse the feed.
           </p>
           <div className="mt-4 flex justify-center gap-3">
-            <Link href={`${ROUTES.USER.DASHBOARD}/posts/new}`}>
+            <Link href={`${ROUTES.USER.DASHBOARD}/posts/new`}>
               <Button className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
                 <Pencil className="mr-2 size-4" />
                 Create Post
@@ -243,10 +244,7 @@ export function DashboardFeed({ userId }: DashboardFeedProps) {
             )}
 
             <div className="flex items-center gap-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-              <Button variant="ghost" size="sm" className="flex-1 text-gray-500 dark:text-gray-400 hover:text-red-500 rounded-lg h-8 text-xs">
-                <Heart className="mr-1 size-3.5" />
-                Like
-              </Button>
+              <LikeButton postId={post.id} />
               <Button variant="ghost" size="sm" className="flex-1 text-gray-500 dark:text-gray-400 hover:text-blue-500 rounded-lg h-8 text-xs">
                 <MessageCircle className="mr-1 size-3.5" />
                 Comment

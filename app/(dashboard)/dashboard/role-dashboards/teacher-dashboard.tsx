@@ -18,10 +18,12 @@ interface TeacherStats {
 }
 
 import { getTeacherStats } from "@/lib/actions/dashboard";
+import { getMyBatches } from "@/lib/actions/batches";
 
 export function TeacherDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [upcomingBatches, setUpcomingBatches] = useState<any[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -34,6 +36,12 @@ export function TeacherDashboard() {
       }
     }
     load();
+  }, []);
+
+  useEffect(() => {
+    getMyBatches(1, 10).then((res: any) => {
+      if (res.success && res.data) setUpcomingBatches(res.data);
+    }).catch(() => {});
   }, []);
 
   return (
@@ -87,10 +95,29 @@ export function TeacherDashboard() {
             <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Upcoming Classes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <Calendar className="size-10 text-gray-300 dark:text-gray-600 mx-auto" />
-              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No upcoming classes scheduled</p>
-            </div>
+            {upcomingBatches.length > 0 ? (
+              <div className="space-y-3">
+                {upcomingBatches.slice(0, 5).map((batch: any) => (
+                  <div key={batch.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600">
+                      <Calendar className="size-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{batch.name || batch.title || "Untitled Batch"}</p>
+                      <p className="text-xs text-gray-500">{batch.subject?.name || batch.service?.name || "No subject"}</p>
+                    </div>
+                    {batch.start_date && (
+                      <span className="text-xs text-gray-400">{new Date(batch.start_date).toLocaleDateString()}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Calendar className="size-10 text-gray-300 dark:text-gray-600 mx-auto" />
+                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No upcoming classes scheduled</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -28,8 +28,16 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ user }: DashboardHeaderProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    import("@/lib/actions/notifications").then(({ getNotifications }) => {
+      getNotifications(1, 1).then((res: any) => {
+        if (res.success && res.meta) setUnreadCount(res.meta.total || 0);
+      });
+    });
+  }, []);
 
   const initials = user.full_name
     .split(" ")
@@ -58,9 +66,9 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
       <div className="flex-1" />
 
       {/* Search */}
-      <button className="flex size-9 items-center justify-center rounded-xl text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+      <Link href="/feed" className="flex size-9 items-center justify-center rounded-xl text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
         <Search className="size-[18px]" />
-      </button>
+      </Link>
 
       {/* Theme Toggle */}
       <button
@@ -71,10 +79,10 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
       </button>
 
       {/* Notifications */}
-      <button className="relative flex size-9 items-center justify-center rounded-xl text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+      <Link href="/dashboard/notifications" className="relative flex size-9 items-center justify-center rounded-xl text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
         <Bell className="size-[18px]" />
-        <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-gray-950" />
-      </button>
+        {unreadCount > 0 && <span className="absolute top-1 right-1 size-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-gray-950" />}
+      </Link>
 
       {/* Avatar Dropdown */}
       <DropdownMenu>

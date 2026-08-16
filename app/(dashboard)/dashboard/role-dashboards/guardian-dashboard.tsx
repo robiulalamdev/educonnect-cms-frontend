@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { StatCard } from "@/components/charts/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, CreditCard, Calendar, ArrowUpRight } from "lucide-react";
+import { Users, BookOpen, CreditCard, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 interface ChildInfo {
@@ -92,10 +92,7 @@ export function GuardianDashboard() {
             <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">Upcoming Events</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <Calendar className="size-10 text-gray-300 dark:text-gray-600 mx-auto" />
-              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No upcoming events</p>
-            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No events to display</p>
           </CardContent>
         </Card>
       </div>

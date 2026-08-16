@@ -54,9 +54,9 @@ export function AdminHeader() {
       <div className="flex-1" />
 
       {/* Search */}
-      <button className="flex size-9 items-center justify-center rounded-xl text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+      <Link href="/admin/users" className="flex size-9 items-center justify-center rounded-xl text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
         <Search className="size-[18px]" />
-      </button>
+      </Link>
 
       {/* Theme Toggle */}
       <button
@@ -67,9 +67,8 @@ export function AdminHeader() {
       </button>
 
       {/* Notifications */}
-      <button className="relative flex size-9 items-center justify-center rounded-xl text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+      <button title="No new notifications" className="relative flex size-9 items-center justify-center rounded-xl text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
         <Bell className="size-[18px]" />
-        <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-gray-950" />
       </button>
 
       {/* Avatar Dropdown */}
