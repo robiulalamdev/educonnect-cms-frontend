@@ -86,6 +86,19 @@ export const API = {
   SUBSCRIPTION: "/api/v1/subscription",
   UPLOAD: "/api/v1/upload",
   PAYMENT: "/api/v1/payment",
+  STATISTICS: "/api/v1/statistics",
+  TEACHER: "/api/v1/teacher",
+  STUDENT: "/api/v1/student",
+  GUARDIAN: "/api/v1/guardian",
+  DEVICE: "/api/v1/devices",
+  STORY: "/api/v1/stories",
+  ATTENDANCE: "/api/v1/attendance",
+  TASK: "/api/v1/tasks",
+  DAILY_NOTE: "/api/v1/daily-notes",
+  ANNOUNCEMENT: "/api/v1/announcements",
+  BLOCK: "/api/v1/blocks",
+  FOLLOW: "/api/v1/follows",
+  NOTIFICATION_PREFERENCE: "/api/v1/notification-preferences",
 } as const;
 
 /**

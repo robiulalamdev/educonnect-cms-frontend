@@ -358,6 +358,19 @@ export async function removePostAction(id: string): Promise<{ success: boolean; 
   }
 }
 
+// ── Admin Services ───────────────────────────────────────
+export async function getAdminServices(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
+  try {
+    const data = await apiGet<{ success: boolean; data: any; meta: any }>(
+      `/api/v1/services?${params}`,
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, data: null, error: err.message };
+  }
+}
+
 // ── Admin Payments ────────────────────────────────────────
 export async function getAdminPayments(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {

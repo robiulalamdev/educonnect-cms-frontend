@@ -26,6 +26,7 @@ const adminProtected = [
   "/admin/audit-logs",
   "/admin/guardian-links",
   "/admin/class-room",
+  "/admin/batches",
   "/admin/education",
   "/admin/settings",
 ];
