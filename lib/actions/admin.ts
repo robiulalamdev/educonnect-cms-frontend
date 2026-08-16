@@ -382,3 +382,124 @@ export async function getPaymentStats(): Promise<{ success: boolean; data?: any;
     return { success: false, data: null, error: err.message };
   }
 }
+
+// ── Subscription Admin ─────────────────────────────────────
+
+export async function createSubscriptionPackage(input: {
+  name: string;
+  slug?: string;
+  description?: string;
+  price_monthly?: number;
+  price_quarterly?: number;
+  price_yearly?: number;
+  price_lifetime?: number;
+  currency?: string;
+  max_services?: number;
+  max_batches_per_service?: number;
+  max_students_per_batch?: number;
+  can_use_analytics?: boolean;
+  can_export_data?: boolean;
+  badge_label?: string;
+}): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
+  try {
+    const data = await apiPost<{ success: boolean; data: any; message: string }>(
+      "/api/v1/subscription/admin/packages",
+      input,
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateSubscriptionPackage(
+  packageId: string,
+  input: Record<string, any>
+): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
+  try {
+    const data = await apiPatch<{ success: boolean; data: any; message: string }>(
+      `/api/v1/subscription/admin/packages/${packageId}`,
+      input,
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function archiveSubscriptionPackage(packageId: string): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
+  try {
+    const data = await apiPatch<{ success: boolean; data: any; message: string }>(
+      `/api/v1/subscription/admin/packages/${packageId}/archive`,
+      {},
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function addPackageFeature(
+  packageId: string,
+  input: { label: string; is_included?: boolean; sort_order?: number }
+): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
+  try {
+    const data = await apiPost<{ success: boolean; data: any; message: string }>(
+      `/api/v1/subscription/admin/packages/${packageId}/features`,
+      input,
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deletePackageFeature(
+  packageId: string,
+  featureId: string
+): Promise<{ success: boolean; message?: string; error?: any }> {
+  try {
+    const data = await apiDelete<{ success: boolean; message: string }>(
+      `/api/v1/subscription/admin/packages/${packageId}/features/${featureId}`,
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function grantSubscription(input: {
+  user_id: string;
+  package_id: string;
+  billing_cycle: string;
+  expires_at?: string;
+}): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
+  try {
+    const data = await apiPost<{ success: boolean; data: any; message: string }>(
+      "/api/v1/subscription/admin/grant",
+      input,
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function revokeSubscription(userId: string): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
+  try {
+    const data = await apiPatch<{ success: boolean; data: any; message: string }>(
+      `/api/v1/subscription/admin/revoke/${userId}`,
+      {},
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
