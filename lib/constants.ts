@@ -36,6 +36,7 @@ export const ROUTES = {
     REVIEWS: "/admin/reviews",
     POSTS: "/admin/posts",
     SUBSCRIPTIONS: "/admin/subscriptions",
+    MODERATION: "/admin/moderation",
     AUDIT_LOGS: "/admin/audit-logs",
     GUARDIAN_LINKS: "/admin/guardian-links",
     SETTINGS: "/admin/settings",

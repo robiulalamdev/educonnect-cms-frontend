@@ -331,3 +331,29 @@ export async function removeGuardianLink(linkId: string) {
     return { success: false, error: err.message };
   }
 }
+
+// ── Moderation ────────────────────────────────────────────
+export async function getModerationItems(params: string) {
+  try {
+    const data = await apiGet<{ success: boolean; data: any; meta: any }>(
+      `/api/v1/admin/dashboard/moderation?${params}`,
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, data: null, error: err.message };
+  }
+}
+
+export async function removePostAction(id: string) {
+  try {
+    const data = await apiPatch<{ success: boolean; message: string }>(
+      `/api/v1/admin/dashboard/posts/${id}/remove`,
+      {},
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}

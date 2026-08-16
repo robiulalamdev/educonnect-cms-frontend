@@ -21,8 +21,8 @@ import { ROUTES } from "@/lib/constants";
 import { useAdmin } from "@/lib/contexts/admin-context";
 import {
   LayoutDashboard, Users, GraduationCap, ShieldCheck, BookOpen,
-  FileText, Star, DollarSign, ScrollText, Settings, X, Shield, Link2,
-  MoreVertical, CreditCard, ClipboardList,
+  FileText, Star, DollarSign, ScrollText, Settings, Shield, Link2,
+  MoreVertical, CreditCard, ClipboardList, ShieldAlert,
 } from "lucide-react";
 
 interface NavItem {
@@ -84,6 +84,7 @@ function useNavGroups(badges: Record<string, number>) {
         { title: "Class Room", icon: ClipboardList, href: "/admin/class-room", roles: ["SUPER_ADMIN", "ADMIN"] },
         { title: "Posts", icon: FileText, href: ROUTES.ADMIN.POSTS },
         { title: "Reviews", icon: Star, href: ROUTES.ADMIN.REVIEWS },
+        { title: "Moderation", icon: ShieldAlert, href: ROUTES.ADMIN.MODERATION, roles: ["SUPER_ADMIN", "ADMIN", "MODERATOR"] },
         { title: "Subscriptions", icon: DollarSign, href: ROUTES.ADMIN.SUBSCRIPTIONS, roles: ["SUPER_ADMIN", "ADMIN"] },
         { title: "Payments", icon: CreditCard, href: "/admin/payments", roles: ["SUPER_ADMIN", "ADMIN"] },
       ],
