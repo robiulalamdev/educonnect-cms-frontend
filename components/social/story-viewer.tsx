@@ -5,6 +5,7 @@ import { viewStory, getStoryViewers } from "@/lib/actions/stories";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { X, ChevronLeft, ChevronRight, Heart, Send, Eye, Pause, Play } from "lucide-react";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 interface StoryGroup {
   user: { id: string; full_name: string; avatar?: { key: string } | null };
@@ -25,11 +26,14 @@ function getInitials(name: string) {
 }
 
 function getMediaUrl(key: string) {
-  return `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_1080/${key}`;
+  const base = process.env.NEXT_PUBLIC_CLOUDINARY_URL || "https://res.cloudinary.com/dmlu7hni7/image/upload";
+  return `${base}/f_auto,q_auto,w_1080/${key}`;
 }
 
 function getVideoUrl(key: string) {
-  return `https://res.cloudinary.com/dmlu7hni7/video/upload/${key}`;
+  const base = process.env.NEXT_PUBLIC_CLOUDINARY_URL || "https://res.cloudinary.com/dmlu7hni7/image/upload";
+  const videoBase = base.replace("/image/upload", "/video/upload");
+  return `${videoBase}/${key}`;
 }
 
 interface StoryViewerProps {
@@ -187,7 +191,7 @@ export function StoryViewer({
           <Avatar className="size-8">
             {currentGroup.user.avatar ? (
               <img
-                src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_64,h_64,c_fill/${currentGroup.user.avatar.key}`}
+                src={getCloudinaryUrl(currentGroup.user.avatar.key, { w: 64, h: 64 })}
                 alt=""
                 className="w-full h-full object-cover"
               />
@@ -283,7 +287,7 @@ export function StoryViewer({
                   <Avatar className="size-10">
                     {v.user.avatar ? (
                       <img
-                        src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_80,h_80,c_fill/${v.user.avatar.key}`}
+                        src={getCloudinaryUrl(v.user.avatar.key, { w: 80, h: 80 })}
                         alt=""
                         className="w-full h-full object-cover"
                       />

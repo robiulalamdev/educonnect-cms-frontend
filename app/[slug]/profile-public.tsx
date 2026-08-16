@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, CheckCircle, Award, Calendar, MapPin, Mail, Phone, User, Globe, Users, GraduationCap, Hash, Clock, MessageSquare, Bell, Home, Settings, Search, Sun, ChevronRight, FileText, Crown, Star, TrendingUp, Heart, Lightbulb } from "lucide-react";
 import Link from "next/link";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 interface ProfilePublicProps { user: any; posts?: any[]; }
 
@@ -15,7 +16,7 @@ const tabs = ["Overview", "Academics", "Activity", "Achievements", "Messages"];
 export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
   const [activeTab, setActiveTab] = useState("Overview");
   const avatarUrl = user.avatar?.key
-    ? `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_192,h_192,c_fill/${user.avatar.key}`
+    ? getCloudinaryUrl(user.avatar.key, { w: 192, h: 192 })
     : null;
   const initials = getInitials(user.full_name || "U");
   const username = user.email?.split("@")[0] || user.full_name?.toLowerCase().replace(/\s+/g, "") || "user";
@@ -34,8 +35,13 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
             <span className="text-[17px] font-bold text-gray-900 dark:text-white tracking-tight">EduConnect</span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">
-            {["Home", "Courses", "Schools", "About"].map((tab, i) => (
-              <a key={tab} href="#" className={`px-4 py-2 rounded-lg text-[14px] font-medium transition-all ${i === 0 ? "text-[#0066FF] bg-[#0066FF]/8" : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"}`}>{tab}</a>
+            {[
+              { label: "Home", href: "/" },
+              { label: "Courses", href: "/feed" },
+              { label: "Schools", href: "/discover" },
+              { label: "About", href: "/#features" },
+            ].map((tab, i) => (
+              <Link key={tab.label} href={tab.href} className={`px-4 py-2 rounded-lg text-[14px] font-medium transition-all ${i === 0 ? "text-[#0066FF] bg-[#0066FF]/8" : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"}`}>{tab.label}</Link>
             ))}
           </nav>
           <div className="flex items-center gap-2">
@@ -85,7 +91,7 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                     <span className="flex items-center gap-1.5"><Mail className="size-3.5" />{user.email || "Contact via message"}</span>
-                    <span className="flex items-center gap-1.5"><Phone className="size-3.5" />{user.phone || "01751299132"}</span>
+                    <span className="flex items-center gap-1.5"><Phone className="size-3.5" />{user.phone || "Not available"}</span>
                     <span className="flex items-center gap-1.5"><MapPin className="size-3.5" />{user.city ? `${user.city}, ${user.country || "Bangladesh"}` : "Dhaka, Bangladesh"}</span>
                   </div>
                 </div>
@@ -94,7 +100,7 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                 <div className="shrink-0 bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200/80 dark:border-gray-700/80 p-4 space-y-3">
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="size-4 text-gray-400" />
-                    <div><p className="text-xs text-gray-500">Member Since</p><p className="font-semibold text-gray-900 dark:text-white">{memberSince || "April 2024"}</p></div>
+                    <div><p className="text-xs text-gray-500">Member Since</p><p className="font-semibold text-gray-900 dark:text-white">{memberSince || "N/A"}</p></div>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <User className="size-4 text-gray-400" />
@@ -137,15 +143,12 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                     <User className="size-5 text-[#0066FF]" /> About Me
                   </h3>
                   <p className="text-[15px] text-gray-600 dark:text-gray-300 leading-relaxed">
-                    Hi! I&apos;m {user.full_name}, a passionate learner who loves to explore new things and improve every day. Currently focusing on my studies and building skills for the future.
+                    {user.bio || "No bio provided"}
                   </p>
                   <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <InfoItem icon={Calendar} label="Date of Birth" value="Jan 15, 2004" />
-                    <InfoItem icon={User} label="Gender" value={user.gender || "Male"} />
-                    <InfoItem icon={Globe} label="Nationality" value={user.country || "Bangladeshi"} />
-                    <InfoItem icon={Users} label="Guardian" value="Abdul Kalam" />
-                    <InfoItem icon={Phone} label="Guardian Phone" value="01700000000" />
-                    <InfoItem icon={Users} label="Relationship" value="Father" />
+                    {user.dob && <InfoItem icon={Calendar} label="Date of Birth" value={new Date(user.dob).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} />}
+                    {user.gender && <InfoItem icon={User} label="Gender" value={user.gender} />}
+                    {user.country && <InfoItem icon={Globe} label="Nationality" value={user.country} />}
                   </div>
                 </CardContent>
               </Card>
@@ -157,12 +160,12 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                     <GraduationCap className="size-5 text-[#0066FF]" /> Academic Information
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <InfoItem icon={GraduationCap} label="Current Institution" value="Dhanmondi Govt. College" />
-                    <InfoItem icon={Hash} label="Class / Grade" value="HSC - 2026" />
-                    <InfoItem icon={BookOpen} label="Group / Department" value="Science" />
-                    <InfoItem icon={User} label="Student ID" value="2026-1256" />
-                    <InfoItem icon={FileText} label="Roll Number" value="125678" />
-                    <InfoItem icon={Calendar} label="Session" value="2024-2026" />
+                    {user.institution_name && <InfoItem icon={GraduationCap} label="Current Institution" value={user.institution_name} />}
+                    {user.education_level?.name && <InfoItem icon={Hash} label="Class / Grade" value={user.education_level.name} />}
+                    {user.roll_number && <InfoItem icon={FileText} label="Roll Number" value={user.roll_number} />}
+                    {!user.institution_name && !user.education_level?.name && !user.roll_number && (
+                      <p className="text-sm text-gray-400 col-span-full text-center py-4">No academic information available</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -217,15 +220,15 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
                       <div className="flex size-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 shrink-0"><Mail className="size-4" /></div>
-                      <div><p className="text-xs text-gray-500">Email</p><p className="text-sm font-medium text-gray-900 dark:text-white">{user.email || "robiulalamdev@gmail.com"}</p></div>
+                      <div><p className="text-xs text-gray-500">Email</p><p className="text-sm font-medium text-gray-900 dark:text-white">{user.email || "Not available"}</p></div>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="flex size-8 items-center justify-center rounded-lg bg-green-50 dark:bg-green-950/50 text-green-600 shrink-0"><Phone className="size-4" /></div>
-                      <div><p className="text-xs text-gray-500">Phone</p><p className="text-sm font-medium text-gray-900 dark:text-white">{user.phone || "01751299132"}</p></div>
+                      <div><p className="text-xs text-gray-500">Phone</p><p className="text-sm font-medium text-gray-900 dark:text-white">{user.phone || "Not available"}</p></div>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="flex size-8 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-600 shrink-0"><MapPin className="size-4" /></div>
-                      <div><p className="text-xs text-gray-500">Address</p><p className="text-sm font-medium text-gray-900 dark:text-white">{user.area ? `${user.area}, ${user.city || "Dhaka"}, ${user.country || "Bangladesh"}` : "Dhanmondi, Dhaka, Bangladesh"}</p></div>
+                      <div><p className="text-xs text-gray-500">Address</p><p className="text-sm font-medium text-gray-900 dark:text-white">{user.area ? `${user.area}, ${user.city || "Dhaka"}, ${user.country || "Bangladesh"}` : "Not available"}</p></div>
                     </div>
                   </div>
                 </CardContent>
@@ -243,12 +246,12 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                     <GraduationCap className="size-5 text-[#0066FF]" /> Academic Profile
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <InfoItem icon={GraduationCap} label="Current Institution" value="Dhanmondi Govt. College" />
-                    <InfoItem icon={Hash} label="Class / Grade" value="HSC - 2026" />
-                    <InfoItem icon={BookOpen} label="Group / Department" value="Science" />
-                    <InfoItem icon={User} label="Student ID" value="2026-1256" />
-                    <InfoItem icon={FileText} label="Roll Number" value="125678" />
-                    <InfoItem icon={Calendar} label="Session" value="2024-2026" />
+                    {user.institution_name && <InfoItem icon={GraduationCap} label="Current Institution" value={user.institution_name} />}
+                    {user.education_level?.name && <InfoItem icon={Hash} label="Class / Grade" value={user.education_level.name} />}
+                    {user.roll_number && <InfoItem icon={FileText} label="Roll Number" value={user.roll_number} />}
+                    {!user.institution_name && !user.education_level?.name && !user.roll_number && (
+                      <p className="text-sm text-gray-400 col-span-full text-center py-4">No academic information available</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -304,16 +307,7 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
                     <Calendar className="size-5 text-[#0066FF]" /> Schedule
                   </h3>
-                  <div className="space-y-3">
-                    <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">Morning Batch</p>
-                      <p className="text-xs text-gray-500 mt-0.5">8:00 AM - 10:00 AM</p>
-                    </div>
-                    <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">Evening Batch</p>
-                      <p className="text-xs text-gray-500 mt-0.5">4:00 PM - 6:00 PM</p>
-                    </div>
-                  </div>
+                  <p className="text-sm text-gray-400 text-center py-4">No schedule information available</p>
                 </CardContent>
               </Card>
             </div>
@@ -403,10 +397,17 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Profile Complete</span>
-                        <span className="text-sm font-bold text-[#0066FF]">60%</span>
+                        <span className="text-sm font-bold text-[#0066FF]">
+                          {[user.avatar, user.bio, user.phone, user.city].filter(Boolean).length > 0
+                            ? `${Math.round(([user.avatar, user.bio, user.phone, user.city].filter(Boolean).length / 4) * 100)}%`
+                            : "0%"}
+                        </span>
                       </div>
                       <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
-                        <div className="h-full rounded-full bg-[#0066FF] transition-all" style={{ width: "60%" }} />
+                        <div
+                          className="h-full rounded-full bg-[#0066FF] transition-all"
+                          style={{ width: `${([user.avatar, user.bio, user.phone, user.city].filter(Boolean).length / 4) * 100}%` }}
+                        />
                       </div>
                     </div>
                     <div>
@@ -478,7 +479,7 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
       {/* Footer */}
       <footer className="border-t border-gray-200/80 dark:border-gray-800/80 mt-8">
         <div className="max-w-[1280px] mx-auto px-4 py-6 flex items-center justify-between text-xs text-gray-400">
-          <span>&copy; 2024 EduConnect. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} EduConnect. All rights reserved.</span>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-gray-600 transition-colors">Privacy</a>
             <a href="#" className="hover:text-gray-600 transition-colors">Terms of Service</a>

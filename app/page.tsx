@@ -12,7 +12,6 @@ import {
   Shield,
   CheckCircle2,
   ArrowRight,
-  Star,
 } from "lucide-react";
 
 const features = [
@@ -117,12 +116,6 @@ const roles = [
   },
 ];
 
-const stats = [
-  { value: "500+", label: "Teachers" },
-  { value: "10K+", label: "Students" },
-  { value: "2K+", label: "Batches" },
-  { value: "99.9%", label: "Uptime" },
-];
 
 export default function HomePage() {
   return (
@@ -141,10 +134,6 @@ export default function HomePage() {
 
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 backdrop-blur-sm border border-white/20 dark:border-white/10 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-8 shadow-sm">
-                <Star className="size-3.5 text-blue-600 fill-blue-600" />
-                Trusted by 500+ coaching centers
-              </div>
 
               <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
                 <span className="text-gray-900 dark:text-white">EduConnect</span>
@@ -182,19 +171,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="mt-24 grid grid-cols-2 gap-8 sm:grid-cols-4 max-w-3xl mx-auto">
-              {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {stat.value}
-                  </p>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
+
           </div>
         </section>
 

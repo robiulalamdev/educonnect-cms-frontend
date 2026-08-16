@@ -28,7 +28,7 @@ export function RegisterForm() {
         <Input
           id="full_name"
           name="full_name"
-          placeholder="John Doe"
+          placeholder="Enter your full name"
           required
           autoComplete="name"
           disabled={isPending}

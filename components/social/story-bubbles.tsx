@@ -5,6 +5,7 @@ import { getStoriesFeed } from "@/lib/actions/stories";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Plus } from "lucide-react";
 import { StoryViewer } from "./story-viewer";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 interface StoryGroup {
   user: { id: string; full_name: string; avatar?: { key: string } | null };
@@ -77,7 +78,7 @@ export function StoryBubbles({ currentUserId, onCreateStory }: StoryBubblesProps
               <div className={`rounded-full p-[3px] ${group.has_unviewed ? "bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500" : "bg-gray-200 dark:bg-gray-700"}`}>
                 <div className="size-[66px] rounded-full overflow-hidden ring-[3px] ring-white dark:ring-[#16161D]">
                   {group.user.avatar ? (
-                    <img src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_132,h_132,c_fill/${group.user.avatar.key}`} alt={displayName} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={getCloudinaryUrl(group.user.avatar.key, { w: 132, h: 132 })} alt={displayName} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
                       <span className="text-sm font-bold text-white">{getInitials(displayName)}</span>

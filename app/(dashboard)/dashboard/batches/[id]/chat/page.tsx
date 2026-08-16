@@ -7,6 +7,7 @@ import { useUser } from "@/lib/contexts/user-context";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 export default function BatchChatTab() {
   const { id } = useParams<{ id: string }>();
@@ -113,7 +114,7 @@ export default function BatchChatTab() {
                   {!isMe && (
                     msg.sender?.avatar?.key ? (
                       <img
-                        src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_32,h_32,c_fill/${msg.sender.avatar.key}`}
+                        src={getCloudinaryUrl(msg.sender.avatar.key, { w: 32, h: 32 })}
                         className="size-7 rounded-full object-cover shrink-0 mt-1"
                         alt=""
                       />

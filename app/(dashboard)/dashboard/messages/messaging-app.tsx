@@ -21,6 +21,7 @@ import {
   Loader2,
   MessageSquare,
 } from "lucide-react";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 interface Chat {
   id: string;
@@ -237,7 +238,7 @@ export function MessagingApp({ currentUserId }: MessagingAppProps) {
                   <Avatar className="size-12 shrink-0">
                     {other?.avatar ? (
                       <img
-                        src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_96,h_96,c_fill/${other.avatar.key}`}
+                        src={getCloudinaryUrl(other.avatar.key, { w: 96, h: 96 })}
                         alt={other.full_name}
                         className="w-full h-full object-cover"
                         loading="lazy"
@@ -285,7 +286,7 @@ export function MessagingApp({ currentUserId }: MessagingAppProps) {
               <Avatar className="size-10">
                 {getOtherParticipant(activeChat)?.avatar ? (
                   <img
-                    src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_80,h_80,c_fill/${getOtherParticipant(activeChat)?.avatar?.key}`}
+                    src={getCloudinaryUrl(getOtherParticipant(activeChat)?.avatar?.key!, { w: 80, h: 80 })}
                     alt=""
                     className="w-full h-full object-cover"
                   />
@@ -329,7 +330,7 @@ export function MessagingApp({ currentUserId }: MessagingAppProps) {
                   <Avatar className="size-16 mb-4">
                     {getOtherParticipant(activeChat)?.avatar ? (
                       <img
-                        src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_128,h_128,c_fill/${getOtherParticipant(activeChat)?.avatar?.key}`}
+                        src={getCloudinaryUrl(getOtherParticipant(activeChat)?.avatar?.key!, { w: 128, h: 128 })}
                         alt=""
                         className="w-full h-full object-cover"
                       />
@@ -356,7 +357,7 @@ export function MessagingApp({ currentUserId }: MessagingAppProps) {
                         <Avatar className="size-8 mt-auto shrink-0">
                           {msg.sender.avatar ? (
                             <img
-                              src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto/w_64,h_64,c_fill/${msg.sender.avatar.key}`}
+                              src={getCloudinaryUrl(msg.sender.avatar.key, { w: 64, h: 64 })}
                               alt=""
                               className="w-full h-full object-cover"
                               loading="lazy"

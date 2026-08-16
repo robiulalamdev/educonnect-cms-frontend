@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Heart, MessageCircle, Trash2, ChevronDown, ChevronUp, Send } from "lucide-react";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 interface Comment {
   id: string;
@@ -232,7 +233,7 @@ function CommentItem({
         <Avatar className="size-8 shrink-0">
           {comment.author.avatar ? (
             <img
-              src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_64,h_64,c_fill/${comment.author.avatar.key}`}
+              src={getCloudinaryUrl(comment.author.avatar.key, { w: 64, h: 64 })}
               alt={comment.author.full_name}
               className="w-full h-full object-cover"
               loading="lazy"

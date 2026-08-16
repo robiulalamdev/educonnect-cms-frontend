@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ROUTES } from "@/lib/constants";
 import { Loader2, Upload, X, Image as ImageIcon, ArrowLeft, MapPin } from "lucide-react";
 import Link from "next/link";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 type FormState = { error?: string; success?: boolean; postId?: string; message?: string };
 
@@ -223,7 +224,7 @@ export function PostForm({ postId, initialData }: PostFormProps) {
                 >
                   {m.mime_type.startsWith("image/") ? (
                     <img
-                      src={`https://res.cloudinary.com/dmlu7hni7/image/upload/${m.key}`}
+                      src={getCloudinaryUrl(m.key)}
                       alt={m.filename}
                       className="w-full h-full object-cover"
                     />

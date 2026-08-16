@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getBatchDetails, getBatchEnrollments } from "@/lib/actions/classroom";
 import { Calendar, Clock, MapPin, Users, Loader2 } from "lucide-react";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 const DAY_LABELS: Record<string, string> = {
   SATURDAY: "Sat", SUNDAY: "Sun", MONDAY: "Mon", TUESDAY: "Tue",
@@ -89,7 +90,7 @@ export default function BatchOverviewTab() {
               <div key={enrollment.id} className="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-gray-800 p-3 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                 {enrollment.student?.user?.avatar?.key ? (
                   <img
-                    src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_40,h_40,c_fill/${enrollment.student.user.avatar.key}`}
+                    src={getCloudinaryUrl(enrollment.student.user.avatar.key, { w: 40, h: 40 })}
                     className="size-9 rounded-full object-cover"
                     alt=""
                   />

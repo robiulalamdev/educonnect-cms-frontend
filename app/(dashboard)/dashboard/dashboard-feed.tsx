@@ -16,6 +16,7 @@ import {
   Pencil,
 } from "lucide-react";
 import Link from "next/link";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 interface Post {
   id: string;
@@ -31,7 +32,7 @@ interface Post {
 }
 
 function getMediaThumbUrl(key: string) {
-  return `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_400,h_300,c_fill/${key}`;
+  return getCloudinaryUrl(key, { w: 400, h: 300 });
 }
 
 function getInitials(name: string) {
@@ -182,7 +183,7 @@ export function DashboardFeed({ userId }: DashboardFeedProps) {
               <Avatar className="size-9">
                 {post.author?.avatar ? (
                   <img
-                    src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_80,h_80,c_fill/${post.author.avatar.key}`}
+                    src={getCloudinaryUrl(post.author.avatar.key, { w: 80, h: 80 })}
                     alt={post.author.full_name}
                     className="w-full h-full object-cover"
                     loading="lazy"

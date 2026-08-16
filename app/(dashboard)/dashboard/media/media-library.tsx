@@ -20,6 +20,7 @@ import {
   Calendar,
   HardDrive,
 } from "lucide-react";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 interface MediaItem {
   id: string;
@@ -47,11 +48,11 @@ function getMediaIcon(mimeType: string) {
 }
 
 function getMediaUrl(key: string) {
-  return `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_800/${key}`;
+  return getCloudinaryUrl(key, { w: 800 });
 }
 
 function getMediaThumbUrl(key: string) {
-  return `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_200,h_200,c_fill/${key}`;
+  return getCloudinaryUrl(key, { w: 200, h: 200 });
 }
 
 function formatFileSize(bytes?: number) {

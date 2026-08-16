@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, Loader2, BookOpen, User } from "lucide-react";
 import Link from "next/link";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 export function DiscoverContent() {
   const [tab, setTab] = useState<"services" | "students">("services");
@@ -191,7 +192,7 @@ function ServiceCard({ service }: { service: any }) {
       <div className="mt-auto pt-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {service.teacher?.avatar ? (
-            <img src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_40,h_40,c_fill/${service.teacher.avatar.key}`} alt="" className="size-6 rounded-full object-cover" />
+            <img src={getCloudinaryUrl(service.teacher.avatar.key, { w: 40, h: 40 })} alt="" className="size-6 rounded-full object-cover" />
           ) : (
              <div className="size-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-[10px] font-bold">T</div>
           )}
@@ -233,7 +234,7 @@ function StudentRequestCard({ post }: { post: any }) {
       <div className="mt-auto pt-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {post.author?.avatar ? (
-             <img src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_40,h_40,c_fill/${post.author.avatar.key}`} alt="" className="size-6 rounded-full object-cover" />
+             <img src={getCloudinaryUrl(post.author.avatar.key, { w: 40, h: 40 })} alt="" className="size-6 rounded-full object-cover" />
           ) : (
              <div className="size-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 text-[10px] font-bold">S</div>
           )}

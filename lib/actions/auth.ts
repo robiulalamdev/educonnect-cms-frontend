@@ -12,6 +12,7 @@ import {
   apiLogin,
   clearAuthCookies,
 } from "@/lib/api";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 /**
  * Register a new user.
@@ -211,7 +212,7 @@ export async function uploadAvatarAction(
     return {
       success: true,
       avatarUrl: avatarKey
-        ? `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_192,h_192,c_fill/${avatarKey}`
+        ? getCloudinaryUrl(avatarKey, { w: 192, h: 192 })
         : undefined,
     };
   } catch (err: any) {

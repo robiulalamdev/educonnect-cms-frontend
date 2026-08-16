@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getPublicFeed, getTrendingFeed } from "@/lib/actions/feed";
 import { getTrendingTopics, getSuggestedUsers } from "@/lib/actions/discover";
+import { getCurrentUser } from "@/lib/auth";
 import { LikeButton } from "@/components/social/like-button";
 import { CommentSection } from "@/components/social/comment-section";
 import { StoryBubbles } from "@/components/social/story-bubbles";
@@ -13,10 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Home, Search, Bell, MessageSquare, Bookmark, User, Settings, MoreHorizontal, Share2, Plus, Crown, ArrowUp, Hash, Loader2, X, ChevronDown, TrendingUp } from "lucide-react";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 interface Post { id: string; title: string; content: string; type: string; created_at: string; author: { id: string; full_name: string; avatar?: { key: string } | null }; media: Array<{ id: string; key: string; filename: string; mime_type: string }>; subjects: Array<{ subject: { id: string; name: string } }>; }
 
-function getMediaUrl(key: string) { return `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_680/${key}`; }
+function getMediaUrl(key: string) { return getCloudinaryUrl(key, { w: 680 }); }
 function getInitials(name: string) { return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2); }
 function timeAgo(date: string) { const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000); if (s < 60) return "now"; const m = Math.floor(s / 60); if (m < 60) return `${m}m`; const h = Math.floor(m / 60); if (h < 24) return `${h}h`; return `${Math.floor(h / 24)}d`; }
 function stripHtml(html: string) { return html.replace(/<[^>]*>/g, "").trim(); }
@@ -36,6 +38,7 @@ export function FeedContent() {
   const [imageModal, setImageModal] = useState<string | null>(null);
   const [trendingTopics, setTrendingTopics] = useState<Array<{ tag: string; posts: string }>>([]);
   const [whoToFollow, setWhoToFollow] = useState<Array<{ id: string; name: string; handle: string; avatar_key?: string | null }>>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const observerRef = useRef<HTMLDivElement>(null);
 
   const loadPosts = useCallback(async (p: number, append = false) => {
@@ -59,6 +62,12 @@ export function FeedContent() {
   useEffect(() => { const h = () => setShowBackToTop(window.scrollY > 500); window.addEventListener("scroll", h); return () => window.removeEventListener("scroll", h); }, []);
 
   useEffect(() => {
+    getCurrentUser().then((res: any) => {
+      if (res?.data) setCurrentUser(res.data);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     Promise.all([getTrendingTopics(), getSuggestedUsers()]).then(([topics, users]) => {
       if (topics.success) setTrendingTopics(topics.data);
       if (users.success) setWhoToFollow(users.data);
@@ -77,8 +86,8 @@ export function FeedContent() {
             </Link>
           </div>
           <div className="hidden md:flex items-center gap-0.5">
-            {["Home", "Discover", "Communities"].map((tab, i) => (
-              <a key={tab} href="#" className={`px-4 py-2 rounded-lg text-[14px] font-medium transition-all ${i === 0 ? "text-[#0066FF] bg-[#0066FF]/8" : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"}`}>{tab}</a>
+            {[{ label: "Home", href: "/feed" }, { label: "Discover", href: "/discover" }, { label: "Communities", href: "#" }].map((tab, i) => (
+              <Link key={tab.label} href={tab.href} className={`px-4 py-2 rounded-lg text-[14px] font-medium transition-all ${i === 0 ? "text-[#0066FF] bg-[#0066FF]/8" : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"}`}>{tab.label}</Link>
             ))}
           </div>
           <div className="flex items-center gap-2">
@@ -86,10 +95,15 @@ export function FeedContent() {
             <button onClick={() => document.documentElement.classList.toggle("dark")} className="size-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors text-[15px]">🌙</button>
             <button className="relative size-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors">
               <Bell className="size-[18px] text-gray-500 dark:text-gray-400" />
-              <span className="absolute -top-0.5 -right-0.5 size-[18px] rounded-full bg-[#0066FF] text-[10px] font-bold text-white flex items-center justify-center">3</span>
             </button>
             <button className="flex items-center gap-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1.5 transition-colors">
-              <Avatar className="size-8"><AvatarFallback className="text-[11px] font-bold bg-blue-50 dark:bg-blue-950/50 text-[#0066FF]">MR</AvatarFallback></Avatar>
+              <Avatar className="size-8">
+                {currentUser?.avatar?.key ? (
+                  <img src={getCloudinaryUrl(currentUser.avatar.key, { w: 64, h: 64 })} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <AvatarFallback className="text-[11px] font-bold bg-blue-50 dark:bg-blue-950/50 text-[#0066FF]">{getInitials(currentUser?.full_name || "U")}</AvatarFallback>
+                )}
+              </Avatar>
               <ChevronDown className="size-3 text-gray-400 hidden sm:block" />
             </button>
           </div>
@@ -103,10 +117,9 @@ export function FeedContent() {
           <aside className="hidden lg:block w-[240px] shrink-0">
             <div className="sticky top-[72px]">
               <div className="space-y-0.5">
-                {[{ icon: Home, label: "Home", href: "/feed", active: true }, { icon: Search, label: "Explore", href: "#" }, { icon: Bell, label: "Notifications", href: "/dashboard/notifications", badge: 3 }, { icon: MessageSquare, label: "Messages", href: "/dashboard/messages" }, { icon: Bookmark, label: "Bookmarks", href: "#" }, { icon: User, label: "Profile", href: "/dashboard/profile" }, { icon: Settings, label: "Settings", href: "/dashboard/settings" }].map((item) => (
+                {[{ icon: Home, label: "Home", href: "/feed", active: true }, { icon: Search, label: "Explore", href: "#" }, { icon: Bell, label: "Notifications", href: "/dashboard/notifications" }, { icon: MessageSquare, label: "Messages", href: "/dashboard/messages" }, { icon: Bookmark, label: "Bookmarks", href: "#" }, { icon: User, label: "Profile", href: "/dashboard/profile" }, { icon: Settings, label: "Settings", href: "/dashboard/settings" }].map((item) => (
                   <Link key={item.label} href={item.href} className={`flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-all ${item.active ? "text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white"}`}>
                     <item.icon className="size-[18px]" /><span>{item.label}</span>
-                    {item.badge && <span className="ml-auto min-w-[20px] h-5 rounded-full bg-[#0066FF] text-[11px] font-bold text-white flex items-center justify-center px-1.5">{item.badge}</span>}
                   </Link>
                 ))}
               </div>
@@ -169,7 +182,7 @@ export function FeedContent() {
                     <div key={user.id || user.handle} className="flex items-center gap-3">
                       <Avatar className="size-10">
                         {user.avatar_key ? (
-                          <img src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_80,h_80,c_fill/${user.avatar_key}`} alt="" className="w-full h-full object-cover rounded-full" />
+                          <img src={getCloudinaryUrl(user.avatar_key, { w: 80, h: 80 })} alt="" className="w-full h-full object-cover rounded-full" />
                         ) : (
                           <AvatarFallback className="text-[11px] font-bold bg-blue-50 dark:bg-blue-950/50 text-[#0066FF]">{getInitials(user.name)}</AvatarFallback>
                         )}
@@ -183,7 +196,7 @@ export function FeedContent() {
               <div className="rounded-2xl border border-blue-200/50 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/20 dark:to-[#16161D] p-5">
                 <Crown className="size-10 text-[#0066FF] mx-auto" />
                 <h3 className="mt-3 text-[15px] font-bold text-gray-900 dark:text-white text-center">Get More with Pro</h3>
-                <div className="mt-3 space-y-2">{["Unlimited posts", "Advanced analytics", "Priority support", "Custom profile"].map((f) => (<div key={f} className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400"><CheckIcon className="size-3.5 text-[#0066FF] shrink-0" /> {f}</div>))}</div>
+                <div className="mt-3 space-y-2">{["Enhanced visibility", "Priority listing", "Advanced tools"].map((f) => (<div key={f} className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400"><CheckIcon className="size-3.5 text-[#0066FF] shrink-0" /> {f}</div>))}</div>
                 <Button className="mt-4 w-full rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white h-9 text-[13px] font-semibold shadow-lg shadow-blue-500/20">Upgrade Now</Button>
               </div>
             </div>
@@ -212,7 +225,7 @@ function PostCard({ post, expandedComments, setExpandedComments, expandedPost, s
       <div className="flex items-center justify-between px-5 pt-5 pb-3">
         <div className="flex items-center gap-3">
           <div className="size-11 rounded-full overflow-hidden ring-2 ring-gray-100 dark:ring-gray-800 shrink-0">
-            {post.author.avatar ? <img src={`https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_88,h_88,c_fill/${post.author.avatar.key}`} alt="" className="w-full h-full object-cover" loading="lazy" />
+            {post.author.avatar ? <img src={getCloudinaryUrl(post.author.avatar.key, { w: 88, h: 88 })} alt="" className="w-full h-full object-cover" loading="lazy" />
             : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600"><span className="text-[11px] font-bold text-white">{getInitials(post.author.full_name)}</span></div>}
           </div>
           <div>

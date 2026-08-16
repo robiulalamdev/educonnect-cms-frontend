@@ -10,6 +10,7 @@ import { uploadAvatarAction, updateProfileAction } from "@/lib/actions/auth";
 import { searchUsersAction } from "@/lib/actions/users";
 import { LocationPicker } from "@/components/location/location-picker";
 import { Loader2, Camera, User, Mail, Phone, FileText, AtSign, Check, X, Save } from "lucide-react";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 interface ProfileFormProps { user: any; }
 
@@ -36,7 +37,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const [addressLine, setAddressLine] = useState(user.address_line || "");
 
   const avatarUrl = avatarPreview || (user.avatar?.key
-    ? `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_192,h_192,c_fill/${user.avatar.key}`
+    ? getCloudinaryUrl(user.avatar.key, { w: 192, h: 192 })
     : null);
 
   function handleAvatarClick() { fileInputRef.current?.click(); }

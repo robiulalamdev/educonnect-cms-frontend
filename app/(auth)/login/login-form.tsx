@@ -28,7 +28,7 @@ export function LoginForm() {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">Password</Label>
-          <a href="#" className="text-xs font-medium text-[#0066FF] hover:text-[#0052CC]">Forgot?</a>
+          <Link href="/forgot-password" className="text-xs font-medium text-[#0066FF] hover:text-[#0052CC]">Forgot?</Link>
         </div>
         <Input name="password" type="password" placeholder="••••••••" required autoComplete="current-password" disabled={isPending} className="h-11 rounded-full bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-[#0066FF] focus:ring-[#0066FF]/20" />
       </div>

@@ -27,6 +27,7 @@ import {
   Award,
   Calendar,
 } from "lucide-react";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 interface ProfileContentProps {
   user: any;
@@ -66,7 +67,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
   const avatarUrl =
     avatarPreview ||
     (user.avatar?.key
-      ? `https://res.cloudinary.com/dmlu7hni7/image/upload/f_auto,q_auto,w_192,h_192,c_fill/${user.avatar.key}`
+      ? getCloudinaryUrl(user.avatar.key, { w: 192, h: 192 })
       : null);
 
   function handleAvatarClick() {
