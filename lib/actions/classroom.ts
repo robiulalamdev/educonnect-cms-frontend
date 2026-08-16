@@ -85,7 +85,7 @@ export async function createAnnouncement(batchId: string, payload: { title: stri
 // ── Enrollments for batch ──
 export async function getBatchEnrollments(batchId: string) {
   try {
-    return await apiGet<{ success: boolean; data: any[]; meta: any }>(`/api/v1/enrollments?batch_id=${batchId}&limit=100`);
+    return await apiGet<{ success: boolean; data: any[]; meta: any }>(`/api/v1/enrollments/profile/teacher?batch_id=${batchId}&limit=100`);
   } catch {
     return { success: false, data: [], meta: { total: 0 } };
   }
@@ -94,7 +94,7 @@ export async function getBatchEnrollments(batchId: string) {
 // ── Chat messages ──
 export async function getChatMessages(chatId: string, page = 1) {
   try {
-    return await apiGet<{ success: boolean; data: any[]; meta: any }>(`/api/v1/chats/${chatId}/messages?page=${page}&limit=50`);
+    return await apiGet<{ success: boolean; data: any[]; meta: any }>(`/api/v1/chats/profile/${chatId}/messages?page=${page}&limit=50`);
   } catch {
     return { success: false, data: [], meta: { total: 0 } };
   }
@@ -102,7 +102,7 @@ export async function getChatMessages(chatId: string, page = 1) {
 
 export async function sendChatMessage(chatId: string, body: string) {
   try {
-    return await apiPost<{ success: boolean; data: any }>(`/api/v1/chats/${chatId}/messages`, { body });
+    return await apiPost<{ success: boolean; data: any }>(`/api/v1/chats/profile/${chatId}/messages`, { body });
   } catch (err: any) {
     return { success: false, message: err.message };
   }

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Search, CreditCard, DollarSign, CheckCircle, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { apiGet } from "@/lib/api";
+import { getAdminPayments, getPaymentStats } from "@/lib/actions/admin";
 
 interface Payment {
   id: string;
@@ -76,14 +76,8 @@ export function AdminPaymentsContent() {
       if (methodFilter) params.set("method", methodFilter);
 
       const [paymentsRes, statsRes] = await Promise.all([
-        apiGet<{ success: boolean; data: Payment[]; meta: any }>(
-          `/api/v1/admin/dashboard/payments?${params}`,
-          { isAdmin: true }
-        ),
-        apiGet<{ success: boolean; data: any }>(
-          "/api/v1/payment/stats",
-          { isAdmin: true }
-        ),
+        getAdminPayments(params.toString()),
+        getPaymentStats(),
       ]);
 
       if (paymentsRes.success) {

@@ -13,6 +13,7 @@ const userLogin = "/login";
 
 const adminProtected = [
   "/admin/dashboard",
+  "/admin/admins",
   "/admin/users",
   "/admin/teachers",
   "/admin/services",
@@ -20,6 +21,12 @@ const adminProtected = [
   "/admin/reviews",
   "/admin/posts",
   "/admin/subscriptions",
+  "/admin/payments",
+  "/admin/moderation",
+  "/admin/audit-logs",
+  "/admin/guardian-links",
+  "/admin/class-room",
+  "/admin/education",
   "/admin/settings",
 ];
 

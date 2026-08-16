@@ -36,7 +36,7 @@ export async function createComment(
  */
 export async function deleteComment(commentId: string) {
   try {
-    return await apiDelete(`/api/v1/posts/comments/${commentId}`);
+    return await apiDelete(`/api/v1/posts/${commentId}`);
   } catch (err: any) {
     return { success: false, message: err.message };
   }
@@ -47,7 +47,7 @@ export async function deleteComment(commentId: string) {
  */
 export async function getReplies(commentId: string, page = 1, limit = 10) {
   try {
-    return await apiGet(`/api/v1/posts/comments/${commentId}/replies?page=${page}&limit=${limit}`);
+    return await apiGet(`/api/v1/posts/${commentId}/replies?page=${page}&limit=${limit}`);
   } catch {
     return { success: false, data: [], meta: { total: 0, total_pages: 0 } };
   }

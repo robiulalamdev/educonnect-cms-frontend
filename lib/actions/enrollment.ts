@@ -4,7 +4,7 @@ import { apiPost, apiPatch } from "@/lib/api";
 
 export async function createEnrollment(batchId: string) {
   try {
-    const res = await apiPost<{ success: boolean; data: any; message?: string }>("/api/v1/enrollments", { batch_id: batchId });
+    const res = await apiPost<{ success: boolean; data: any; message?: string }>("/api/v1/enrollments/profile/student", { batch_id: batchId });
     if (!res.success) throw new Error(res.message);
     return res;
   } catch (err: any) {
@@ -22,7 +22,7 @@ export async function submitEnrollmentPayment(
 ) {
   try {
     const res = await apiPost<{ success: boolean; data: any; message?: string }>(
-      `/api/v1/enrollments/${enrollmentId}/payment`,
+      `/api/v1/enrollments/profile/student/${enrollmentId}/payment`,
       payload
     );
     if (!res.success) throw new Error(res.message);

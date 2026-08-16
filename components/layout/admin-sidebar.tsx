@@ -22,7 +22,7 @@ import { useAdmin } from "@/lib/contexts/admin-context";
 import {
   LayoutDashboard, Users, GraduationCap, ShieldCheck, BookOpen,
   FileText, Star, DollarSign, ScrollText, Settings, Shield, Link2,
-  MoreVertical, CreditCard, ClipboardList, ShieldAlert,
+  MoreVertical, CreditCard, ClipboardList, ShieldAlert, X,
 } from "lucide-react";
 
 interface NavItem {

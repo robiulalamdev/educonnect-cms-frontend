@@ -357,3 +357,28 @@ export async function removePostAction(id: string) {
     return { success: false, error: err.message };
   }
 }
+
+// ── Admin Payments ────────────────────────────────────────
+export async function getAdminPayments(params: string) {
+  try {
+    const data = await apiGet<{ success: boolean; data: any; meta: any }>(
+      `/api/v1/admin/dashboard/payments?${params}`,
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, data: null, error: err.message };
+  }
+}
+
+export async function getPaymentStats() {
+  try {
+    const data = await apiGet<{ success: boolean; data: any }>(
+      "/api/v1/payment/stats",
+      { isAdmin: true }
+    );
+    return data;
+  } catch (err: any) {
+    return { success: false, data: null, error: err.message };
+  }
+}

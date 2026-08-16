@@ -7,7 +7,7 @@ import { apiGet, apiPost, apiPatch } from "@/lib/api";
  */
 export async function getChatList(page = 1, limit = 20) {
   try {
-    return await apiGet(`/api/v1/chats?page=${page}&limit=${limit}`);
+    return await apiGet(`/api/v1/chats/profile?page=${page}&limit=${limit}`);
   } catch {
     return { success: false, data: [], meta: { total: 0, total_pages: 0 } };
   }
@@ -21,7 +21,7 @@ export async function getOrCreateDirectChat(
   initialMessage?: string,
 ) {
   try {
-    return await apiPost("/api/v1/chats/direct", {
+    return await apiPost("/api/v1/chats/profile/direct", {
       recipient_id: recipientId,
       initial_message: initialMessage,
     });
@@ -35,7 +35,7 @@ export async function getOrCreateDirectChat(
  */
 export async function getMessages(chatId: string, page = 1, limit = 50) {
   try {
-    return await apiGet(`/api/v1/chats/${chatId}/messages?page=${page}&limit=${limit}`);
+    return await apiGet(`/api/v1/chats/profile/${chatId}/messages?page=${page}&limit=${limit}`);
   } catch {
     return { success: false, data: [], meta: { total: 0, total_pages: 0 } };
   }
@@ -49,7 +49,7 @@ export async function sendMessage(
   body: { content: string; reply_to_id?: string },
 ) {
   try {
-    return await apiPost(`/api/v1/chats/${chatId}/messages`, body);
+    return await apiPost(`/api/v1/chats/profile/${chatId}/messages`, body);
   } catch (err: any) {
     return { success: false, message: err.message };
   }
@@ -60,7 +60,7 @@ export async function sendMessage(
  */
 export async function markChatRead(chatId: string) {
   try {
-    return await apiPatch(`/api/v1/chats/${chatId}/read`);
+    return await apiPatch(`/api/v1/chats/profile/${chatId}/read`);
   } catch {
     return { success: false };
   }

@@ -1,6 +1,6 @@
 "use server";
 
-import { apiGet, apiPostFormData } from "@/lib/api";
+import { apiGet, apiPostFormData, apiPatchFormData } from "@/lib/api";
 import { API } from "@/lib/constants";
 
 /**
@@ -54,7 +54,7 @@ export async function updateServiceAction(
   formData: FormData,
 ): Promise<{ error?: string; success?: boolean }> {
   try {
-    await apiPostFormData(`${API.SERVICE}/profile/teacher/${serviceId}`, formData);
+    await apiPatchFormData(`${API.SERVICE}/profile/teacher/${serviceId}`, formData);
     return { success: true };
   } catch (err: any) {
     return { error: err.message ?? "Failed to update service" };
