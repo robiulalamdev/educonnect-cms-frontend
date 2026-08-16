@@ -2,7 +2,7 @@
 
 import { apiGet, apiPatch, apiPost, apiPostFormData, apiDelete } from "@/lib/api";
 
-export async function getAdminTeachers(params: string) {
+export async function getAdminTeachers(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/admin/dashboard/teachers?${params}`,
@@ -14,7 +14,7 @@ export async function getAdminTeachers(params: string) {
   }
 }
 
-export async function rejectTeacherAction(id: string) {
+export async function rejectTeacherAction(id: string): Promise<{ success: boolean; message?: string; error?: any }> {
   try {
     const data = await apiPatch<{ success: boolean; message: string }>(
       `/api/v1/admin/dashboard/teachers/${id}/reject`,
@@ -27,7 +27,7 @@ export async function rejectTeacherAction(id: string) {
   }
 }
 
-export async function getAdminUsers(params: string) {
+export async function getAdminUsers(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/admin/dashboard/users?${params}`,
@@ -39,7 +39,7 @@ export async function getAdminUsers(params: string) {
   }
 }
 
-export async function getAdminUserById(id: string) {
+export async function getAdminUserById(id: string): Promise<{ success: boolean; data?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any }>(
       `/api/v1/admin/dashboard/users/${id}`,
@@ -57,7 +57,7 @@ export async function createUserByAdminAction(input: {
   password: string;
   role: string;
   phone?: string;
-}) {
+}): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
   try {
     const data = await apiPost<{ success: boolean; data: any; message: string }>(
       "/api/v1/admin/dashboard/users",
@@ -76,7 +76,7 @@ export async function updateUserByAdminAction(id: string, input: {
   phone?: string;
   role?: string;
   status?: string;
-}) {
+}): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
   try {
     const data = await apiPatch<{ success: boolean; data: any; message: string }>(
       `/api/v1/admin/dashboard/users/${id}`,
@@ -89,7 +89,7 @@ export async function updateUserByAdminAction(id: string, input: {
   }
 }
 
-export async function suspendUserAction(id: string) {
+export async function suspendUserAction(id: string): Promise<{ success: boolean; message?: string; error?: any }> {
   try {
     const data = await apiPatch<{ success: boolean; message: string }>(
       `/api/v1/admin/dashboard/users/${id}/suspend`,
@@ -102,7 +102,7 @@ export async function suspendUserAction(id: string) {
   }
 }
 
-export async function banUserAction(id: string) {
+export async function banUserAction(id: string): Promise<{ success: boolean; message?: string; error?: any }> {
   try {
     const data = await apiPatch<{ success: boolean; message: string }>(
       `/api/v1/admin/dashboard/users/${id}/ban`,
@@ -115,7 +115,7 @@ export async function banUserAction(id: string) {
   }
 }
 
-export async function reactivateUserAction(id: string) {
+export async function reactivateUserAction(id: string): Promise<{ success: boolean; message?: string; error?: any }> {
   try {
     const data = await apiPatch<{ success: boolean; message: string }>(
       `/api/v1/admin/dashboard/users/${id}/reactivate`,
@@ -128,7 +128,7 @@ export async function reactivateUserAction(id: string) {
   }
 }
 
-export async function approveTeacherAction(id: string) {
+export async function approveTeacherAction(id: string): Promise<{ success: boolean; message?: string; error?: any }> {
   try {
     const data = await apiPatch<{ success: boolean; message: string }>(
       `/api/v1/admin/dashboard/users/${id}/approve-teacher`,
@@ -141,7 +141,7 @@ export async function approveTeacherAction(id: string) {
   }
 }
 
-export async function deleteUserAction(id: string) {
+export async function deleteUserAction(id: string): Promise<{ success: boolean; message?: string; error?: any }> {
   try {
     const data = await apiDelete<{ success: boolean; message: string }>(
       `/api/v1/admin/dashboard/users/${id}`,
@@ -153,7 +153,7 @@ export async function deleteUserAction(id: string) {
   }
 }
 
-export async function getAdminAdmins(params: string) {
+export async function getAdminAdmins(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/admin/dashboard/admins?${params}`,
@@ -165,7 +165,7 @@ export async function getAdminAdmins(params: string) {
   }
 }
 
-export async function getAdminPosts(params: string) {
+export async function getAdminPosts(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/admin/dashboard/posts?${params}`,
@@ -177,7 +177,7 @@ export async function getAdminPosts(params: string) {
   }
 }
 
-export async function getAdminReviews(params: string) {
+export async function getAdminReviews(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/admin/dashboard/reviews?${params}`,
@@ -189,7 +189,7 @@ export async function getAdminReviews(params: string) {
   }
 }
 
-export async function hideReviewAction(id: string) {
+export async function hideReviewAction(id: string): Promise<{ success: boolean; message?: string; error?: any }> {
   try {
     const data = await apiPatch<{ success: boolean; message: string }>(
       `/api/v1/admin/dashboard/reviews/${id}/hide`,
@@ -202,7 +202,7 @@ export async function hideReviewAction(id: string) {
   }
 }
 
-export async function getSubscriptionPackages(params: string) {
+export async function getSubscriptionPackages(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/admin/dashboard/subscriptions?${params}`,
@@ -219,7 +219,7 @@ export async function registerAdminAction(
   email: string,
   password: string,
   role: string,
-) {
+): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
   try {
     const formData = new FormData();
     formData.append("full_name", full_name);
@@ -238,7 +238,7 @@ export async function registerAdminAction(
   }
 }
 
-export async function deleteAdminAction(id: string) {
+export async function deleteAdminAction(id: string): Promise<{ success: boolean; message?: string; error?: any }> {
   try {
     const data = await apiDelete<{ success: boolean; message: string }>(
       `/api/v1/admin/dashboard/admins/${id}`,
@@ -255,7 +255,7 @@ export async function updateAdminAction(id: string, input: {
   email?: string;
   role?: string;
   status?: string;
-}) {
+}): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
   try {
     const data = await apiPatch<{ success: boolean; data: any; message: string }>(
       `/api/v1/admin/dashboard/admins/${id}`,
@@ -268,7 +268,7 @@ export async function updateAdminAction(id: string, input: {
   }
 }
 
-export async function getAuditLogs(params: string) {
+export async function getAuditLogs(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/admin/dashboard/audit-logs?${params}`,
@@ -281,7 +281,7 @@ export async function getAuditLogs(params: string) {
 }
 
 // ── Class Room (Admin Batches) ──────────────────────────────
-export async function getAdminBatches(params: string) {
+export async function getAdminBatches(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/batches/dashboard?${params}`,
@@ -295,7 +295,7 @@ export async function getAdminBatches(params: string) {
 
 // ── Guardian-Student Links ───────────────────────────────
 
-export async function getGuardianLinks(params: string) {
+export async function getGuardianLinks(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/admin/dashboard/guardian-links?${params}`,
@@ -307,7 +307,7 @@ export async function getGuardianLinks(params: string) {
   }
 }
 
-export async function createGuardianLink(guardianUserId: string, studentUserId: string, relationLabel: string) {
+export async function createGuardianLink(guardianUserId: string, studentUserId: string, relationLabel: string): Promise<{ success: boolean; data?: any; message?: string; error?: any }> {
   try {
     const data = await apiPost<{ success: boolean; data: any; message: string }>(
       "/api/v1/admin/dashboard/guardian-links",
@@ -320,7 +320,7 @@ export async function createGuardianLink(guardianUserId: string, studentUserId: 
   }
 }
 
-export async function removeGuardianLink(linkId: string) {
+export async function removeGuardianLink(linkId: string): Promise<{ success: boolean; message?: string; error?: any }> {
   try {
     const data = await apiDelete<{ success: boolean; message: string }>(
       `/api/v1/admin/dashboard/guardian-links/${linkId}`,
@@ -333,7 +333,7 @@ export async function removeGuardianLink(linkId: string) {
 }
 
 // ── Moderation ────────────────────────────────────────────
-export async function getModerationItems(params: string) {
+export async function getModerationItems(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/admin/dashboard/moderation?${params}`,
@@ -345,7 +345,7 @@ export async function getModerationItems(params: string) {
   }
 }
 
-export async function removePostAction(id: string) {
+export async function removePostAction(id: string): Promise<{ success: boolean; message?: string; error?: any }> {
   try {
     const data = await apiPatch<{ success: boolean; message: string }>(
       `/api/v1/admin/dashboard/posts/${id}/remove`,
@@ -359,7 +359,7 @@ export async function removePostAction(id: string) {
 }
 
 // ── Admin Payments ────────────────────────────────────────
-export async function getAdminPayments(params: string) {
+export async function getAdminPayments(params: string): Promise<{ success: boolean; data?: any; meta?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any; meta: any }>(
       `/api/v1/admin/dashboard/payments?${params}`,
@@ -371,7 +371,7 @@ export async function getAdminPayments(params: string) {
   }
 }
 
-export async function getPaymentStats() {
+export async function getPaymentStats(): Promise<{ success: boolean; data?: any; error?: any }> {
   try {
     const data = await apiGet<{ success: boolean; data: any }>(
       "/api/v1/payment/stats",

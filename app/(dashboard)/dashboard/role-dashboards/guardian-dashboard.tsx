@@ -64,7 +64,7 @@ export function GuardianDashboard() {
           <CardContent>
             {stats?.children && stats.children.length > 0 ? (
               <div className="space-y-3">
-                {stats.children.map((child) => (
+                {stats.children.map((child: ChildInfo) => (
                   <div key={child.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
                     <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 font-bold text-sm">
                       {child.name.charAt(0)}

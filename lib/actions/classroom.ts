@@ -20,7 +20,7 @@ export async function getAttendanceList(batchId: string, page = 1) {
   }
 }
 
-export async function markBulkAttendance(batchId: string, records: { student_profile_id: string; status: string; note?: string }[], classDate: string) {
+export async function markBulkAttendance(batchId: string, records: { student_profile_id: string; status: string; note?: string }[], classDate: string): Promise<{ success: boolean; data?: any; message?: any }> {
   try {
     return await apiPost<{ success: boolean; data: any }>(`/api/v1/attendance/batch/${batchId}/bulk`, {
       class_date: classDate,
@@ -40,7 +40,7 @@ export async function getTaskList(batchId: string, page = 1) {
   }
 }
 
-export async function createTask(batchId: string, payload: { title: string; description?: string; due_date?: string }) {
+export async function createTask(batchId: string, payload: { title: string; description?: string; due_date?: string }): Promise<{ success: boolean; data?: any; message?: any }> {
   try {
     return await apiPost<{ success: boolean; data: any }>(`/api/v1/tasks/batch/${batchId}`, payload);
   } catch (err: any) {
@@ -57,7 +57,7 @@ export async function getDailyNotes(batchId: string, page = 1) {
   }
 }
 
-export async function createDailyNote(batchId: string, payload: { note_date: string; title?: string; content: string; next_day_plan?: string }) {
+export async function createDailyNote(batchId: string, payload: { note_date: string; title?: string; content: string; next_day_plan?: string }): Promise<{ success: boolean; data?: any; message?: any }> {
   try {
     return await apiPost<{ success: boolean; data: any }>(`/api/v1/daily-notes/batch/${batchId}`, payload);
   } catch (err: any) {
@@ -74,7 +74,7 @@ export async function getAnnouncements(batchId: string, page = 1) {
   }
 }
 
-export async function createAnnouncement(batchId: string, payload: { title: string; body: string }) {
+export async function createAnnouncement(batchId: string, payload: { title: string; body: string }): Promise<{ success: boolean; data?: any; message?: any }> {
   try {
     return await apiPost<{ success: boolean; data: any }>(`/api/v1/announcements/batch/${batchId}`, payload);
   } catch (err: any) {
@@ -100,7 +100,7 @@ export async function getChatMessages(chatId: string, page = 1) {
   }
 }
 
-export async function sendChatMessage(chatId: string, body: string) {
+export async function sendChatMessage(chatId: string, body: string): Promise<{ success: boolean; data?: any; message?: any }> {
   try {
     return await apiPost<{ success: boolean; data: any }>(`/api/v1/chats/profile/${chatId}/messages`, { body });
   } catch (err: any) {

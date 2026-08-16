@@ -155,7 +155,7 @@ export function AdminUsersContent() {
         setUsers(res.data);
         setMeta(res.meta || { total: 0, total_pages: 0 });
       } else {
-        toast.error(res.error || "Failed to load users");
+        toast.error((res as any).error || "Failed to load users");
       }
     } catch {} finally {
       setLoading(false);
@@ -197,7 +197,7 @@ export function AdminUsersContent() {
         setAddForm({ full_name: "", email: "", password: "", role: "STUDENT", phone: "" });
         load(page);
       } else {
-        toast.error(res.error || "Failed to create user");
+        toast.error((res as any).error || "Failed to create user");
       }
     } catch { toast.error("Network error"); }
     finally { setFormLoading(false); }
@@ -222,7 +222,7 @@ export function AdminUsersContent() {
         setEditUser(null);
         load(page);
       } else {
-        toast.error(res.error || "Failed to update user");
+        toast.error((res as any).error || "Failed to update user");
       }
     } catch { toast.error("Network error"); }
     finally { setFormLoading(false); }
@@ -243,11 +243,11 @@ export function AdminUsersContent() {
         default: return;
       }
       if (res.success) {
-        toast.success(res.message || "Action completed");
+        toast.success((res as any).message || "Action completed");
         setConfirmAction(null);
         load(page);
       } else {
-        toast.error(res.error || "Action failed");
+        toast.error((res as any).error || "Action failed");
       }
     } catch { toast.error("Network error"); }
     finally { setActionLoading(false); }

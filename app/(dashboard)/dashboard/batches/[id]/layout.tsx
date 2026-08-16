@@ -27,11 +27,17 @@ export default function BatchClassroomLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const pathname = usePathname();
   const user = useUser();
-  const batchId = params.id;
+  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
+
+  useEffect(() => {
+    params.then(setResolvedParams);
+  }, [params]);
+
+  const batchId = resolvedParams?.id ?? "";
   const [batch, setBatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

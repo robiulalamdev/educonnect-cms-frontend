@@ -56,7 +56,7 @@ export function StudentDashboard() {
           <CardContent>
             {stats?.upcoming_classes && stats.upcoming_classes.length > 0 ? (
               <div className="space-y-3">
-                {stats.upcoming_classes.map((cls) => (
+                {stats.upcoming_classes.map((cls: { id: string; batch_name: string; date: string; time: string }) => (
                   <div key={cls.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
                     <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600">
                       <Calendar className="size-5" />
