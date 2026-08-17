@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { API } from "./constants";
-import env from "../config/.env";
+import env from "../config/env";
 
 /**
  * Server-side authenticated fetcher.

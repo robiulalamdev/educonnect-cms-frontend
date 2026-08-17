@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import env from "../../config/.env";
+import env from "../../config/env";
 
 /**
  * Lightweight server action to get the current user.

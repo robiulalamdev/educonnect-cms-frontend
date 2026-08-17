@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import env from "../config/.env";
+import env from "../config/env";
 import { ROUTES } from "./constants";
 
 /**
