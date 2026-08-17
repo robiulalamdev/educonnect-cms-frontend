@@ -1,6 +1,6 @@
 "use server";
 
-import env from "@/config/.env";
+import env from "../../config/.env";
 
 /**
  * Fetch a public user by their username (no auth required).

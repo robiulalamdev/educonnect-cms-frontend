@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
-import env from "@/config/.env";
 import { API } from "./constants";
+import env from "../config/.env";
 
 /**
  * Server-side authenticated fetcher.
@@ -55,10 +55,7 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
 /**
  * Authenticated POST request.
  */
-export async function apiPost<T>(
-  endpoint: string,
-  body?: unknown,
-): Promise<T> {
+export async function apiPost<T>(endpoint: string, body?: unknown): Promise<T> {
   return serverFetch<T>(endpoint, {
     method: "POST",
     body: body ? JSON.stringify(body) : undefined,
@@ -68,10 +65,7 @@ export async function apiPost<T>(
 /**
  * Authenticated PUT request.
  */
-export async function apiPut<T>(
-  endpoint: string,
-  body?: unknown,
-): Promise<T> {
+export async function apiPut<T>(endpoint: string, body?: unknown): Promise<T> {
   return serverFetch<T>(endpoint, {
     method: "PUT",
     body: body ? JSON.stringify(body) : undefined,
@@ -104,9 +98,7 @@ export async function apiDelete<T>(endpoint: string): Promise<T> {
  */
 export async function getCurrentUser() {
   try {
-    const res = await serverFetch<{ success: boolean; data: any }>(
-      API.AUTH.ME,
-    );
+    const res = await serverFetch<{ success: boolean; data: any }>(API.AUTH.ME);
     return res.data ?? null;
   } catch {
     return null;

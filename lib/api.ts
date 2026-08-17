@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import env from "@/config/.env";
+import env from "../config/.env";
 import { ROUTES } from "./constants";
 
 /**
@@ -44,7 +44,10 @@ async function handle401(isAdmin = false): Promise<never> {
 }
 
 // ─── Internal: forward Set-Cookie from backend ────────────────
-async function forwardSetCookies(res: Response, isAdmin = false): Promise<void> {
+async function forwardSetCookies(
+  res: Response,
+  isAdmin = false,
+): Promise<void> {
   const setCookies = res.headers.getSetCookie();
   const cookieStore = await cookies();
 
@@ -374,9 +377,7 @@ export async function apiDelete<T = any>(
 /**
  * Public (unauthenticated) GET request.
  */
-export async function apiPublicGet<T = any>(
-  endpoint: string,
-): Promise<T> {
+export async function apiPublicGet<T = any>(endpoint: string): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method: "GET",
     cache: "no-store",
