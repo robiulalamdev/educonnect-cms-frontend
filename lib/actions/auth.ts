@@ -2,13 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { ROUTES, API } from "@/lib/constants";
-import env from "@/config/.env";
 import {
-  apiGet,
   apiPost,
   apiPatch,
   apiPatchFormData,
-  apiPostFormData,
   apiLogin,
   clearAuthCookies,
 } from "@/lib/api";
@@ -199,10 +196,11 @@ export async function uploadAvatarAction(
   formData: FormData,
 ): Promise<{ error?: string; success?: boolean; avatarUrl?: string }> {
   try {
-    const data = await apiPatchFormData<{ success: boolean; data?: any; message?: string }>(
-      API.AUTH.ME,
-      formData,
-    );
+    const data = await apiPatchFormData<{
+      success: boolean;
+      data?: any;
+      message?: string;
+    }>(API.AUTH.ME, formData);
 
     if (!data.success) {
       return { error: (data as any).message || "Failed to upload avatar" };
@@ -295,13 +293,13 @@ export async function updateProfileAction(
  * Forgot password action.
  */
 export async function forgotPasswordAction(
-  email: string
+  email: string,
 ): Promise<{ error?: string; success?: boolean; message?: string }> {
   try {
     const { apiPublicPost } = await import("@/lib/api");
     const data = await apiPublicPost<{ success: boolean; message?: string }>(
       API.AUTH.FORGOT_PASSWORD,
-      { email }
+      { email },
     );
     return { success: true, message: data.message };
   } catch (err: any) {
@@ -314,13 +312,13 @@ export async function forgotPasswordAction(
  */
 export async function resetPasswordAction(
   token: string,
-  password: string
+  password: string,
 ): Promise<{ error?: string; success?: boolean; message?: string }> {
   try {
     const { apiPublicPost } = await import("@/lib/api");
     const data = await apiPublicPost<{ success: boolean; message?: string }>(
       API.AUTH.RESET_PASSWORD,
-      { token, password }
+      { token, password },
     );
     return { success: true, message: data.message };
   } catch (err: any) {
