@@ -63,6 +63,10 @@ export function DashboardFeed({ userId }: DashboardFeedProps) {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const observerRef = useRef<HTMLDivElement>(null);
+  const hasMoreRef = useRef(true);
+  const loadingMoreRef = useRef(false);
+  const lastFetchRef = useRef(0);
+  const lastFailedRef = useRef(false);
 
   const loadPosts = useCallback(async (p: number, append = false) => {
     if (append) setLoadingMore(true);
@@ -90,8 +94,10 @@ export function DashboardFeed({ userId }: DashboardFeedProps) {
       }
 
       setHasMore(p < (ownRes?.meta?.total_pages || 1) || p < (publicRes?.meta?.total_pages || 1));
+      lastFailedRef.current = false;
     } catch (err) {
       console.error("Failed to load feed:", err);
+      lastFailedRef.current = true;
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -102,23 +108,30 @@ export function DashboardFeed({ userId }: DashboardFeedProps) {
     loadPosts(1);
   }, [loadPosts]);
 
+  useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
+  useEffect(() => { loadingMoreRef.current = loadingMore; }, [loadingMore]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
-          setPage((prev) => {
-            const next = prev + 1;
-            loadPosts(next, true);
-            return next;
-          });
-        }
+        if (!entries[0].isIntersecting) return;
+        if (!hasMoreRef.current || loadingMoreRef.current) return;
+        const cooldown = lastFailedRef.current ? 8000 : 1500;
+        if (Date.now() - lastFetchRef.current < cooldown) return;
+        loadingMoreRef.current = true;
+        lastFetchRef.current = Date.now();
+        setPage((prev) => {
+          const next = prev + 1;
+          loadPosts(next, true).finally(() => { loadingMoreRef.current = false; });
+          return next;
+        });
       },
       { threshold: 0.1 },
     );
 
     if (observerRef.current) observer.observe(observerRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loadingMore, loadPosts]);
+  }, [loadPosts]);
 
   if (loading) {
     return (

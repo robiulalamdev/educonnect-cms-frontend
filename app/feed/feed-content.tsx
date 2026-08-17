@@ -51,18 +51,43 @@ export function FeedContent() {
     try {
       const fetcher = feedType === "trending" ? getTrendingFeed : getPublicFeed;
       const res = (await fetcher(p, 10)) as any;
-      if (res.success) { if (append) setPosts((prev) => [...prev, ...res.data]); else setPosts(res.data); setHasMore(p < res.meta.total_pages); }
-    } catch (err) { console.error(err); }
+      if (res.success) { if (append) setPosts((prev) => [...prev, ...res.data]); else setPosts(res.data); setHasMore(p < res.meta.total_pages); lastFailedRef.current = false; }
+      else { lastFailedRef.current = true; }
+    } catch (err) { console.error(err); lastFailedRef.current = true; }
     finally { setLoading(false); setLoadingMore(false); }
   }, [feedType]);
 
   useEffect(() => { setPage(1); setPosts([]); loadPosts(1); }, [feedType, loadPosts]);
 
+  // Infinite scroll — uses refs to avoid re-creating the observer on every state change
+  // (previously this re-observed the sentinel each time loadingMore flipped, causing an
+  // infinite request loop that tripped the backend rate limiter).
+  const hasMoreRef = useRef(true);
+  const loadingMoreRef = useRef(false);
+  const lastFetchRef = useRef(0);
+  const lastFailedRef = useRef(false);
+
+  useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
+  useEffect(() => { loadingMoreRef.current = loadingMore; }, [loadingMore]);
+
   useEffect(() => {
-    const obs = new IntersectionObserver((e) => { if (e[0].isIntersecting && hasMore && !loadingMore) { setPage((p) => { const n = p + 1; loadPosts(n, true); return n; }); } }, { threshold: 0.1, rootMargin: "200px" });
+    const obs = new IntersectionObserver((e) => {
+      if (!e[0].isIntersecting) return;
+      if (!hasMoreRef.current || loadingMoreRef.current) return;
+      // Cooldown guard: 1.5s after a success, 8s after a failure (rate-limit backoff)
+      const cooldown = lastFailedRef.current ? 8000 : 1500;
+      if (Date.now() - lastFetchRef.current < cooldown) return;
+      loadingMoreRef.current = true;
+      lastFetchRef.current = Date.now();
+      setPage((p) => {
+        const n = p + 1;
+        loadPosts(n, true).finally(() => { loadingMoreRef.current = false; });
+        return n;
+      });
+    }, { threshold: 0.1, rootMargin: "200px" });
     if (observerRef.current) obs.observe(observerRef.current);
     return () => obs.disconnect();
-  }, [hasMore, loadingMore, loadPosts]);
+  }, [loadPosts]);
 
   useEffect(() => { const h = () => setShowBackToTop(window.scrollY > 500); window.addEventListener("scroll", h); return () => window.removeEventListener("scroll", h); }, []);
 
