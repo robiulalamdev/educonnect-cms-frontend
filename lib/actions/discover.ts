@@ -4,10 +4,14 @@ import { apiGet } from "@/lib/api";
 
 /**
  * Get trending topics from the API (trending subjects from posts).
+ * Uses silent mode to avoid clearing cookies on 401.
  */
 export async function getTrendingTopics() {
   try {
-    const data = await apiGet<{ success: boolean; data: any[] }>("/api/v1/posts/trending?limit=10");
+    const data = await apiGet<{ success: boolean; data: any[] }>(
+      "/api/v1/posts/trending?limit=10",
+      { silent: true },
+    );
 
     if (!data.success || !data.data) {
       return { success: true, data: [] };
@@ -42,10 +46,14 @@ export async function getTrendingTopics() {
 
 /**
  * Get suggested users from the API.
+ * Uses silent mode to avoid clearing cookies on 401.
  */
 export async function getSuggestedUsers() {
   try {
-    const data = await apiGet<{ success: boolean; data: any[] }>("/api/v1/user/suggestions?limit=3");
+    const data = await apiGet<{ success: boolean; data: any[] }>(
+      "/api/v1/user/suggestions?limit=3",
+      { silent: true },
+    );
 
     if (!data.success || !data.data) {
       return { success: true, data: [] };
@@ -75,7 +83,10 @@ export async function searchServices(params: Record<string, string | number | un
         searchParams.append(key, String(value));
       }
     });
-    return await apiGet<{ success: boolean; data: any[]; meta: any }>(`/api/v1/services?${searchParams.toString()}`);
+    return await apiGet<{ success: boolean; data: any[]; meta: any }>(
+      `/api/v1/services?${searchParams.toString()}`,
+      { silent: true },
+    );
   } catch {
     return { success: false, data: [], meta: { total: 0 } };
   }
@@ -92,7 +103,10 @@ export async function searchPosts(params: Record<string, string | number | undef
         searchParams.append(key, String(value));
       }
     });
-    return await apiGet<{ success: boolean; data: any[]; meta: any }>(`/api/v1/posts?${searchParams.toString()}`);
+    return await apiGet<{ success: boolean; data: any[]; meta: any }>(
+      `/api/v1/posts?${searchParams.toString()}`,
+      { silent: true },
+    );
   } catch {
     return { success: false, data: [], meta: { total: 0 } };
   }

@@ -1,0 +1,14 @@
+name: Ping Landing Page
+
+on:
+  schedule:
+    - cron: "*/10 * * * *" # Runs every 10 minutes
+  workflow_dispatch: # Allows you to run it manually from GitHub anytime
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Visit Landing Page
+        run: |
+          curl -A "Uptime-Bot-KeepAlive" -I https://vercel.app

@@ -4,6 +4,7 @@ import { apiGet } from "@/lib/api";
 
 /**
  * Get public post feed (unauthenticated).
+ * Uses silent mode to avoid clearing cookies on 401.
  */
 export async function getPublicFeed(
   page = 1,
@@ -13,7 +14,7 @@ export async function getPublicFeed(
   try {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (type) params.set("type", type);
-    return await apiGet(`/api/v1/posts/?${params}`);
+    return await apiGet(`/api/v1/posts/?${params}`, { silent: true });
   } catch {
     return { success: false, data: [], meta: { total: 0, total_pages: 0 } };
   }
@@ -21,11 +22,13 @@ export async function getPublicFeed(
 
 /**
  * Get trending feed — uses backend trending endpoint.
+ * Uses silent mode to avoid clearing cookies on 401.
  */
 export async function getTrendingFeed(page = 1, limit = 10) {
   try {
     const data = await apiGet<{ success: boolean; data: any[] }>(
       `/api/v1/posts/trending?limit=${limit}`,
+      { silent: true },
     );
 
     if (!data.success || !data.data) {

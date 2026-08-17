@@ -55,7 +55,7 @@ export function TeacherDashboard() {
           <StatCard icon={Users} color="green" label="Total Students" value={stats?.total_students ?? 0} />
         </Link>
         <Link href="/dashboard/enrollments">
-          <StatCard icon={DollarSign} color="yellow" label="Revenue" value={`$${stats?.total_revenue ?? 0}`} />
+          <StatCard icon={DollarSign} color="yellow" label="Revenue" value={`৳${stats?.total_revenue ?? 0}`} />
         </Link>
         <Link href="/dashboard/batches">
           <StatCard icon={GraduationCap} color="purple" label="Active Batches" value={stats?.active_batches ?? 0} />

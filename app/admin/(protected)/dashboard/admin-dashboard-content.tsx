@@ -64,6 +64,19 @@ export function AdminDashboardContent() {
   const totalUsers = stats ? Object.values(stats.users).reduce((a, b) => a + b, 0) : 0;
   const totalEnrollments = stats ? Object.values(stats.enrollments).reduce((a, b) => a + b, 0) : 0;
 
+  // Calculate real month-over-month growth
+  const monthlyData = stats?.monthlyGrowth || [];
+  const currentMonth = monthlyData[monthlyData.length - 1];
+  const prevMonth = monthlyData[monthlyData.length - 2];
+  const growthPct = prevMonth && prevMonth.total > 0
+    ? (((currentMonth?.total || 0) - prevMonth.total) / prevMonth.total * 100).toFixed(1)
+    : "0";
+  const growthPositive = Number(growthPct) >= 0;
+
+  // Enrollment breakdown
+  const enrollmentEntries = stats?.enrollments ? Object.entries(stats.enrollments) : [];
+  const hasEnrollments = enrollmentEntries.length > 0 && totalEnrollments > 0;
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -105,9 +118,9 @@ export function AdminDashboardContent() {
       icon: Users,
       iconBg: "bg-blue-100 dark:bg-blue-900/50",
       iconColor: "text-blue-600",
-      change: "—",
+      change: growthPct !== "0" ? `${growthPositive ? "+" : ""}${growthPct}%` : "—",
       changeLabel: "from last month",
-      changePositive: true,
+      changePositive: growthPositive,
     },
     {
       label: "Total Revenue",
@@ -116,8 +129,8 @@ export function AdminDashboardContent() {
       iconBg: "bg-green-100 dark:bg-green-900/50",
       iconColor: "text-green-600",
       change: "—",
-      changeLabel: "from last month",
-      changePositive: false,
+      changeLabel: "all time",
+      changePositive: true,
     },
     {
       label: "Enrollments",
@@ -126,8 +139,8 @@ export function AdminDashboardContent() {
       iconBg: "bg-purple-100 dark:bg-purple-900/50",
       iconColor: "text-purple-600",
       change: "—",
-      changeLabel: "from last month",
-      changePositive: false,
+      changeLabel: "total",
+      changePositive: true,
     },
     {
       label: "Pending Approvals",
@@ -135,9 +148,9 @@ export function AdminDashboardContent() {
       icon: AlertCircle,
       iconBg: "bg-orange-100 dark:bg-orange-900/50",
       iconColor: "text-orange-600",
-      change: "—",
-      changeLabel: "from last month",
-      changePositive: false,
+      change: (stats?.pending_approvals ?? 0) > 0 ? "Needs action" : "All clear",
+      changeLabel: "",
+      changePositive: !stats?.pending_approvals,
     },
   ];
 
@@ -203,9 +216,9 @@ export function AdminDashboardContent() {
                 <p className="text-[12px] text-gray-500 mt-0.5">Monthly approved payments</p>
               </div>
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 dark:bg-green-950/50 border border-green-100 dark:border-green-900/30">
-                  <TrendingUp className="size-3.5 text-green-600" />
-                  <span className="text-[11px] font-bold text-green-600">18.2%</span>
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${growthPositive ? "bg-green-50 dark:bg-green-950/50 border border-green-100 dark:border-green-900/30" : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"}`}>
+                  <TrendingUp className={`size-3.5 ${growthPositive ? "text-green-600" : "text-gray-400"}`} />
+                  <span className={`text-[11px] font-bold ${growthPositive ? "text-green-600" : "text-gray-500"}`}>{growthPct}%</span>
                 </div>
                 <select className="text-[12px] font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option>Last 12 Months</option>
@@ -303,10 +316,21 @@ export function AdminDashboardContent() {
           <CardContent className="p-6">
             <h3 className="text-[15px] font-bold text-gray-900 dark:text-white">Enrollments</h3>
             <p className="text-[12px] text-gray-500 mt-0.5 mb-4">{totalEnrollments} total</p>
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <GraduationCap className="size-12 text-gray-300 dark:text-gray-600 mb-3" />
-              <p className="text-[13px] text-gray-400">No enrollments yet</p>
-            </div>
+            {hasEnrollments ? (
+              <div className="space-y-2.5">
+                {enrollmentEntries.map(([status, count]) => (
+                  <div key={status} className="flex items-center justify-between">
+                    <span className="text-[12px] font-medium text-gray-600 dark:text-gray-400">{status}</span>
+                    <span className="text-[13px] font-bold text-gray-900 dark:text-white">{count}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <GraduationCap className="size-12 text-gray-300 dark:text-gray-600 mb-3" />
+                <p className="text-[13px] text-gray-400">No enrollments yet</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

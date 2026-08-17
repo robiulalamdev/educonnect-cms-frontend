@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, CheckCircle, Award, Calendar, MapPin, Mail, Phone, User, Globe, Users, GraduationCap, Hash, Clock, MessageSquare, Bell, Home, Settings, Search, Sun, ChevronRight, FileText, Crown, Star, TrendingUp, Heart, Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { getCloudinaryUrl } from "@/lib/utils";
+import { getSubscriptionPackages } from "@/lib/actions/modules";
 
 interface ProfilePublicProps { user: any; posts?: any[]; }
 
@@ -15,6 +16,7 @@ const tabs = ["Overview", "Academics", "Activity", "Achievements", "Messages"];
 
 export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
   const [activeTab, setActiveTab] = useState("Overview");
+  const [featuredPackage, setFeaturedPackage] = useState<any>(null);
   const avatarUrl = user.avatar?.key
     ? getCloudinaryUrl(user.avatar.key, { w: 192, h: 192 })
     : null;
@@ -24,6 +26,15 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
 
   const uniqueSubjects = [...new Set(posts.flatMap((p: any) => p.subjects?.map((s: any) => s.subject?.name).filter(Boolean) || []))];
   const subjectCount = uniqueSubjects.length;
+
+  useEffect(() => {
+    getSubscriptionPackages().then((res: any) => {
+      if (res.success && res.data?.length) {
+        const featured = res.data.find((p: any) => p.is_featured) || res.data.find((p: any) => p.slug === "pro") || res.data[0];
+        setFeaturedPackage(featured);
+      }
+    }).catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0D0D12]">
@@ -205,8 +216,6 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                   </h3>
                   <div className="space-y-4">
                     <StatItem icon={BookOpen} color="blue" label="Posts" value={posts.length.toString()} />
-                    <StatItem icon={CheckCircle} color="green" label="Completed Courses" value="0" />
-                    <StatItem icon={Award} color="amber" label="Certificates" value="0" />
                   </div>
                 </CardContent>
               </Card>
@@ -297,7 +306,6 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                   <div className="space-y-4">
                     <StatItem icon={BookOpen} color="blue" label="Subjects" value={String(subjectCount)} />
                     <StatItem icon={FileText} color="green" label="Posts Shared" value={posts.length.toString()} />
-                    <StatItem icon={Award} color="amber" label="Completed" value="0" />
                   </div>
                 </CardContent>
               </Card>
@@ -307,7 +315,11 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
                     <Calendar className="size-5 text-[#0066FF]" /> Schedule
                   </h3>
-                  <p className="text-sm text-gray-400 text-center py-4">No schedule information available</p>
+                  {user.role === "TEACHER" ? (
+                    <p className="text-sm text-gray-400 text-center py-4">View services to see batch schedules</p>
+                  ) : (
+                    <p className="text-sm text-gray-400 text-center py-4">View enrolled batches to see schedule</p>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -426,9 +438,19 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
               <Card className="border border-gray-200/80 dark:border-gray-800/80 rounded-2xl bg-white dark:bg-[#16161D]">
                 <CardContent className="p-6 text-center">
                   <Crown className="size-10 text-[#0066FF] mx-auto" />
-                  <h3 className="mt-3 text-[15px] font-bold text-gray-900 dark:text-white">Unlock More</h3>
-                  <p className="mt-1 text-[13px] text-gray-500">Upgrade to Pro for exclusive badges</p>
-                  <Button className="mt-4 w-full rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white h-9 text-[13px] font-semibold">Upgrade Now</Button>
+                  <h3 className="mt-3 text-[15px] font-bold text-gray-900 dark:text-white">Unlock More with {featuredPackage?.name || "Pro"}</h3>
+                  {featuredPackage?.features?.length > 0 && (
+                    <div className="mt-3 space-y-1.5 text-left">
+                      {featuredPackage.features.filter((f: any) => f.is_included).slice(0, 3).map((f: any) => (
+                        <div key={f.id} className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400">
+                          <CheckCircle className="size-3.5 text-[#0066FF] shrink-0" /> {f.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <Link href="/dashboard/subscription">
+                    <Button className="mt-4 w-full rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white h-9 text-[13px] font-semibold">Upgrade Now</Button>
+                  </Link>
                 </CardContent>
               </Card>
             </div>
@@ -481,9 +503,8 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
         <div className="max-w-[1280px] mx-auto px-4 py-6 flex items-center justify-between text-xs text-gray-400">
           <span>&copy; {new Date().getFullYear()} EduConnect. All rights reserved.</span>
           <div className="flex items-center gap-4">
-            <a href="#" className="hover:text-gray-600 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-gray-600 transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-gray-600 transition-colors">Help Center</a>
+            <Link href="/feed" className="hover:text-gray-600 transition-colors">Home</Link>
+            <Link href="/discover" className="hover:text-gray-600 transition-colors">Discover</Link>
           </div>
         </div>
       </footer>

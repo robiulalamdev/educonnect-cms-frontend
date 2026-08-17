@@ -1,0 +1,16 @@
+{
+  "name": "Coaching Management System",
+  "short_name": "EduConnect",
+  "description": "A comprehensive platform for coaching and education management",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0066FF",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

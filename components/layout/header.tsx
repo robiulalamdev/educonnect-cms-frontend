@@ -1,10 +1,26 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
 import { GraduationCap } from "lucide-react";
+import { getCurrentUser } from "@/lib/actions/get-current-user";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getCloudinaryUrl } from "@/lib/utils";
 
 export function Header() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getCurrentUser()
+      .then((u) => setUser(u))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -42,23 +58,50 @@ export function Header() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href={ROUTES.LOGIN}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl"
-              >
-                Log in
-              </Button>
-            </Link>
-            <Link href={ROUTES.REGISTER}>
-              <Button
-                size="sm"
-                className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-5 h-9 font-semibold shadow-md shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-300"
-              >
-                Get Started
-              </Button>
-            </Link>
+            {loading ? (
+              <div className="h-9 w-20 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            ) : user ? (
+              <Link href={ROUTES.USER.DASHBOARD}>
+                <Avatar className="size-9 cursor-pointer">
+                  {user.avatar?.key ? (
+                    <img
+                      src={getCloudinaryUrl(user.avatar.key, { w: 80, h: 80 })}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <AvatarFallback className="text-xs font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-600">
+                      {user.full_name
+                        ?.split(" ")
+                        .map((n: string) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2) || "U"}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+              </Link>
+            ) : (
+              <>
+                <Link href={ROUTES.LOGIN}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl"
+                  >
+                    Log in
+                  </Button>
+                </Link>
+                <Link href={ROUTES.REGISTER}>
+                  <Button
+                    size="sm"
+                    className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-5 h-9 font-semibold shadow-md shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-300"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

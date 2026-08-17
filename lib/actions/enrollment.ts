@@ -18,8 +18,12 @@ export async function submitEnrollmentPayment(
   enrollmentId: string,
   payload: {
     amount: number;
-    method: "BKASH" | "NAGAD" | "ROCKET" | "BANK_TRANSFER" | "CASH";
+    method: "BKASH" | "NAGAD" | "ROCKET" | "BANK_TRANSFER" | "CASH" | "OTHER";
     transaction_id: string;
+    sender_name?: string;
+    sender_number?: string;
+    note?: string;
+    payment_for?: string;
   }
 ): Promise<{ success: boolean; data?: any; message?: string }> {
   try {

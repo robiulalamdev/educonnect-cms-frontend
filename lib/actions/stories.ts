@@ -4,10 +4,11 @@ import { apiGet, apiPost, apiDelete, apiPostFormData } from "@/lib/api";
 
 /**
  * Get stories feed.
+ * Uses silent mode to avoid clearing cookies on 401.
  */
 export async function getStoriesFeed() {
   try {
-    return await apiGet("/api/v1/stories/");
+    return await apiGet("/api/v1/stories/", { silent: true });
   } catch {
     return { success: false, data: [] };
   }
@@ -15,10 +16,11 @@ export async function getStoriesFeed() {
 
 /**
  * Get user stories.
+ * Uses silent mode to avoid clearing cookies on 401.
  */
 export async function getUserStories(userId: string) {
   try {
-    return await apiGet(`/api/v1/stories/user/${userId}`);
+    return await apiGet(`/api/v1/stories/user/${userId}`, { silent: true });
   } catch {
     return { success: false, data: [] };
   }
@@ -37,10 +39,11 @@ export async function viewStory(storyId: string) {
 
 /**
  * Get story viewers.
+ * Uses silent mode to avoid clearing cookies on 401.
  */
 export async function getStoryViewers(storyId: string) {
   try {
-    return await apiGet(`/api/v1/stories/${storyId}/viewers`);
+    return await apiGet(`/api/v1/stories/${storyId}/viewers`, { silent: true });
   } catch {
     return { success: false, data: [] };
   }

@@ -111,6 +111,8 @@ async function forwardSetCookiesFromResponse(res: Response): Promise<void> {
 interface FetchOptions extends Omit<RequestInit, "body"> {
   /** If true, handles admin cookies instead of user cookies */
   isAdmin?: boolean;
+  /** If true, don't clear cookies or redirect on 401 — just throw */
+  silent?: boolean;
 }
 
 /**
@@ -121,7 +123,7 @@ export async function apiGet<T = any>(
   endpoint: string,
   options: FetchOptions = {},
 ): Promise<T> {
-  const { isAdmin = false, ...fetchOpts } = options;
+  const { isAdmin = false, silent = false, ...fetchOpts } = options;
   const cookieHeader = await getCookieHeader();
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -134,7 +136,10 @@ export async function apiGet<T = any>(
     cache: "no-store",
   });
 
-  if (res.status === 401) return handle401(isAdmin);
+  if (res.status === 401) {
+    if (silent) throw new Error("UNAUTHORIZED");
+    return handle401(isAdmin);
+  }
 
   const data = await res.json();
 
@@ -153,7 +158,7 @@ export async function apiPost<T = any>(
   body?: unknown,
   options: FetchOptions = {},
 ): Promise<T> {
-  const { isAdmin = false, ...fetchOpts } = options;
+  const { isAdmin = false, silent = false, ...fetchOpts } = options;
   const cookieHeader = await getCookieHeader();
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -168,7 +173,10 @@ export async function apiPost<T = any>(
     cache: "no-store",
   });
 
-  if (res.status === 401) return handle401(isAdmin);
+  if (res.status === 401) {
+    if (silent) throw new Error("UNAUTHORIZED");
+    return handle401(isAdmin);
+  }
 
   const data = await res.json();
 
@@ -187,7 +195,7 @@ export async function apiPut<T = any>(
   body?: unknown,
   options: FetchOptions = {},
 ): Promise<T> {
-  const { isAdmin = false, ...fetchOpts } = options;
+  const { isAdmin = false, silent = false, ...fetchOpts } = options;
   const cookieHeader = await getCookieHeader();
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -202,7 +210,10 @@ export async function apiPut<T = any>(
     cache: "no-store",
   });
 
-  if (res.status === 401) return handle401(isAdmin);
+  if (res.status === 401) {
+    if (silent) throw new Error("UNAUTHORIZED");
+    return handle401(isAdmin);
+  }
 
   const data = await res.json();
 
@@ -221,7 +232,7 @@ export async function apiPatch<T = any>(
   body?: unknown,
   options: FetchOptions = {},
 ): Promise<T> {
-  const { isAdmin = false, ...fetchOpts } = options;
+  const { isAdmin = false, silent = false, ...fetchOpts } = options;
   const cookieHeader = await getCookieHeader();
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -236,7 +247,10 @@ export async function apiPatch<T = any>(
     cache: "no-store",
   });
 
-  if (res.status === 401) return handle401(isAdmin);
+  if (res.status === 401) {
+    if (silent) throw new Error("UNAUTHORIZED");
+    return handle401(isAdmin);
+  }
 
   const data = await res.json();
 
@@ -256,7 +270,7 @@ export async function apiPatchFormData<T = any>(
   formData: FormData,
   options: FetchOptions = {},
 ): Promise<T> {
-  const { isAdmin = false, ...fetchOpts } = options;
+  const { isAdmin = false, silent = false, ...fetchOpts } = options;
   const cookieHeader = await getCookieHeader();
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -270,7 +284,10 @@ export async function apiPatchFormData<T = any>(
     cache: "no-store",
   });
 
-  if (res.status === 401) return handle401(isAdmin);
+  if (res.status === 401) {
+    if (silent) throw new Error("UNAUTHORIZED");
+    return handle401(isAdmin);
+  }
 
   const data = await res.json();
 
@@ -290,7 +307,7 @@ export async function apiPostFormData<T = any>(
   formData: FormData,
   options: FetchOptions = {},
 ): Promise<T> {
-  const { isAdmin = false, ...fetchOpts } = options;
+  const { isAdmin = false, silent = false, ...fetchOpts } = options;
   const cookieHeader = await getCookieHeader();
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -304,7 +321,10 @@ export async function apiPostFormData<T = any>(
     cache: "no-store",
   });
 
-  if (res.status === 401) return handle401(isAdmin);
+  if (res.status === 401) {
+    if (silent) throw new Error("UNAUTHORIZED");
+    return handle401(isAdmin);
+  }
 
   const data = await res.json();
 
@@ -322,7 +342,7 @@ export async function apiDelete<T = any>(
   endpoint: string,
   options: FetchOptions = {},
 ): Promise<T> {
-  const { isAdmin = false, ...fetchOpts } = options;
+  const { isAdmin = false, silent = false, ...fetchOpts } = options;
   const cookieHeader = await getCookieHeader();
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -335,7 +355,10 @@ export async function apiDelete<T = any>(
     cache: "no-store",
   });
 
-  if (res.status === 401) return handle401(isAdmin);
+  if (res.status === 401) {
+    if (silent) throw new Error("UNAUTHORIZED");
+    return handle401(isAdmin);
+  }
 
   const data = await res.json();
 

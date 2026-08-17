@@ -4,10 +4,11 @@ import { apiGet, apiPost, apiDelete } from "@/lib/api";
 
 /**
  * Get comments for a post.
+ * Uses silent mode to avoid clearing cookies on 401.
  */
 export async function getComments(postId: string, page = 1, limit = 20) {
   try {
-    return await apiGet(`/api/v1/posts/${postId}/comments?page=${page}&limit=${limit}`);
+    return await apiGet(`/api/v1/posts/${postId}/comments?page=${page}&limit=${limit}`, { silent: true });
   } catch {
     return { success: false, data: [], meta: { total: 0, total_pages: 0 } };
   }
@@ -44,10 +45,11 @@ export async function deleteComment(commentId: string) {
 
 /**
  * Get replies to a comment.
+ * Uses silent mode to avoid clearing cookies on 401.
  */
 export async function getReplies(commentId: string, page = 1, limit = 10) {
   try {
-    return await apiGet(`/api/v1/posts/${commentId}/replies?page=${page}&limit=${limit}`);
+    return await apiGet(`/api/v1/posts/${commentId}/replies?page=${page}&limit=${limit}`, { silent: true });
   } catch {
     return { success: false, data: [], meta: { total: 0, total_pages: 0 } };
   }
@@ -66,10 +68,11 @@ export async function togglePostLike(postId: string) {
 
 /**
  * Get likes for a post.
+ * Uses silent mode to avoid clearing cookies on 401.
  */
 export async function getPostLikes(postId: string) {
   try {
-    return await apiGet(`/api/v1/posts/${postId}/like`);
+    return await apiGet(`/api/v1/posts/${postId}/like`, { silent: true });
   } catch {
     return { success: false, data: [] };
   }

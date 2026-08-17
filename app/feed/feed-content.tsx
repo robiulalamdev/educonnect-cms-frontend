@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getPublicFeed, getTrendingFeed } from "@/lib/actions/feed";
 import { getTrendingTopics, getSuggestedUsers } from "@/lib/actions/discover";
-import { getCurrentUser } from "@/lib/auth";
+import { getSubscriptionPackages } from "@/lib/actions/modules";
+import { getCurrentUser } from "@/lib/actions/get-current-user";
 import { LikeButton } from "@/components/social/like-button";
 import { CommentSection } from "@/components/social/comment-section";
 import { StoryBubbles } from "@/components/social/story-bubbles";
@@ -42,6 +43,7 @@ export function FeedContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [featuredPackage, setFeaturedPackage] = useState<any>(null);
   const observerRef = useRef<HTMLDivElement>(null);
 
   const loadPosts = useCallback(async (p: number, append = false) => {
@@ -65,8 +67,17 @@ export function FeedContent() {
   useEffect(() => { const h = () => setShowBackToTop(window.scrollY > 500); window.addEventListener("scroll", h); return () => window.removeEventListener("scroll", h); }, []);
 
   useEffect(() => {
-    getCurrentUser().then((res: any) => {
-      if (res?.data) setCurrentUser(res.data);
+    getCurrentUser().then((user) => {
+      if (user) setCurrentUser(user);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    getSubscriptionPackages().then((res: any) => {
+      if (res.success && res.data?.length) {
+        const featured = res.data.find((p: any) => p.is_featured) || res.data.find((p: any) => p.slug === "pro") || res.data[0];
+        setFeaturedPackage(featured);
+      }
     }).catch(() => {});
   }, []);
 
@@ -156,15 +167,17 @@ export function FeedContent() {
               </button>
               <div className="mt-4 rounded-2xl border border-gray-200/80 dark:border-gray-800/80 bg-white dark:bg-[#16161D] p-4 text-center">
                 <Crown className="size-8 text-[#0066FF] mx-auto" />
-                <p className="mt-2 text-[13px] font-bold text-gray-900 dark:text-white">Upgrade to Pro</p>
+                <p className="mt-2 text-[13px] font-bold text-gray-900 dark:text-white">Upgrade to {featuredPackage?.name || "Pro"}</p>
                 <p className="mt-1 text-[12px] text-gray-500">Unlock premium features</p>
-                <Button variant="outline" size="sm" className="mt-3 rounded-full text-[12px] h-7 px-4 border-[#0066FF] text-[#0066FF] hover:bg-[#0066FF] hover:text-white">Upgrade Now</Button>
+                <Link href="/dashboard/subscription">
+                  <Button variant="outline" size="sm" className="mt-3 rounded-full text-[12px] h-7 px-4 border-[#0066FF] text-[#0066FF] hover:bg-[#0066FF] hover:text-white">Upgrade Now</Button>
+                </Link>
               </div>
             </div>
           </aside>
 
           {/* Center Feed */}
-          <main className="flex-1 max-w-[580px] min-w-0">
+          <main className="flex-1 max-w-full lg:max-w-[580px] min-w-0">
             <div className="bg-white dark:bg-[#16161D] rounded-2xl border border-gray-200/80 dark:border-gray-800/80 p-4 mb-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[14px] font-bold text-gray-900 dark:text-white">Stories</h3>
@@ -223,9 +236,15 @@ export function FeedContent() {
               </div>
               <div className="rounded-2xl border border-blue-200/50 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/20 dark:to-[#16161D] p-5">
                 <Crown className="size-10 text-[#0066FF] mx-auto" />
-                <h3 className="mt-3 text-[15px] font-bold text-gray-900 dark:text-white text-center">Get More with Pro</h3>
-                <div className="mt-3 space-y-2">{["Enhanced visibility", "Priority listing", "Advanced tools"].map((f) => (<div key={f} className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400"><CheckIcon className="size-3.5 text-[#0066FF] shrink-0" /> {f}</div>))}</div>
-                <Button className="mt-4 w-full rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white h-9 text-[13px] font-semibold shadow-lg shadow-blue-500/20">Upgrade Now</Button>
+                <h3 className="mt-3 text-[15px] font-bold text-gray-900 dark:text-white text-center">Get More with {featuredPackage?.name || "Pro"}</h3>
+                <div className="mt-3 space-y-2">
+                  {(featuredPackage?.features?.length ? featuredPackage.features.filter((f: any) => f.is_included).map((f: any) => f.label) : ["Enhanced visibility", "Priority listing", "Advanced tools"]).map((label: string) => (
+                    <div key={label} className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400"><CheckIcon className="size-3.5 text-[#0066FF] shrink-0" /> {label}</div>
+                  ))}
+                </div>
+                <Link href="/dashboard/subscription">
+                  <Button className="mt-4 w-full rounded-full bg-[#0066FF] hover:bg-[#0052CC] text-white h-9 text-[13px] font-semibold shadow-lg shadow-blue-500/20">Upgrade Now</Button>
+                </Link>
               </div>
             </div>
           </aside>

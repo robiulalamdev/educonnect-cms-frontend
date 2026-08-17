@@ -51,7 +51,7 @@ export function GuardianDashboard() {
           <StatCard icon={BookOpen} color="green" label="Enrollments" value={stats?.total_enrollments ?? 0} />
         </Link>
         <Link href="/dashboard/payments">
-          <StatCard icon={CreditCard} color="yellow" label="Payments" value={`$${stats?.total_payments ?? 0}`} />
+          <StatCard icon={CreditCard} color="yellow" label="Payments" value={`৳${stats?.total_payments ?? 0}`} />
         </Link>
       </div>
 
