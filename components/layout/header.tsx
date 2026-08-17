@@ -32,7 +32,7 @@ export function Header() {
             <div className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
               <GraduationCap className="size-4.5" />
             </div>
-            <span className="text-gray-900 dark:text-white">EduConnect BD</span>
+            <span className="text-gray-900 dark:text-white">EduConnect</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-7">

@@ -188,7 +188,7 @@ export default function HomePage() {
               </h2>
               <p className="mt-4 text-lg text-gray-500 dark:text-gray-400">
                 From batch management and student enrollments to attendance and fees, 
-                EduConnect BD handles it all.
+                EduConnect handles it all.
               </p>
             </div>
 
@@ -325,7 +325,7 @@ export default function HomePage() {
                   coaching center?
                 </h2>
                 <p className="mt-4 text-lg text-blue-100 max-w-lg mx-auto">
-                  Join thousands of teachers and students across Bangladesh already using EduConnect BD.
+                  Join thousands of teachers and students across Bangladesh already using EduConnect.
                 </p>
                 <div className="mt-8">
                   <Link href={ROUTES.REGISTER}>

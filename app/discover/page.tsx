@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 
 export const metadata = {
-  title: "Discover | EduConnect BD",
+  title: "Discover | EduConnect",
   description: "Find the best coaching services or connect with seeking students in Bangladesh.",
 };
 

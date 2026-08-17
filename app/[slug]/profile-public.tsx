@@ -7,6 +7,7 @@ import { BookOpen, CheckCircle, Award, Calendar, MapPin, Mail, Phone, User, Glob
 import Link from "next/link";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { getSubscriptionPackages } from "@/lib/actions/modules";
+import { Header } from "@/components/layout/header";
 
 interface ProfilePublicProps { user: any; posts?: any[]; }
 
@@ -38,37 +39,8 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
 
   return (
     <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0D0D12]">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white dark:bg-[#16161D] border-b border-gray-200/80 dark:border-gray-800/80">
-        <div className="max-w-[1280px] mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/feed" className="flex items-center gap-2.5">
-            <div className="flex size-8 items-center justify-center rounded-xl bg-[#0066FF] text-white"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="size-4"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3z"/></svg></div>
-            <span className="text-[17px] font-bold text-gray-900 dark:text-white tracking-tight">EduConnect</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-1">
-            {[
-              { label: "Home", href: "/" },
-              { label: "Courses", href: "/feed" },
-              { label: "Schools", href: "/discover" },
-              { label: "About", href: "/#features" },
-            ].map((tab, i) => (
-              <Link key={tab.label} href={tab.href} className={`px-4 py-2 rounded-lg text-[14px] font-medium transition-all ${i === 0 ? "text-[#0066FF] bg-[#0066FF]/8" : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"}`}>{tab.label}</Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2">
-            <div className="relative hidden sm:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-              <div className="pl-10 pr-8 h-9 w-56 rounded-full bg-gray-100 dark:bg-gray-800/80 flex items-center text-[13px] text-gray-400">Search...</div>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">⌘K</span>
-            </div>
-            <button className="size-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors text-[15px]">🌙</button>
-            <button className="relative size-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors">
-              <Bell className="size-[18px] text-gray-500 dark:text-gray-400" />
-            </button>
-            <Link href="/login"><Button variant="outline" size="sm" className="rounded-full px-5 h-9 text-[13px] font-semibold border-[#0066FF] text-[#0066FF] hover:bg-[#0066FF] hover:text-white">Login</Button></Link>
-          </div>
-        </div>
-      </nav>
+      {/* Shared Header - uses auth state to show user avatar or login button */}
+      <Header />
 
       {/* Profile Hero */}
       <div className="bg-white dark:bg-[#16161D] border-b border-gray-200/80 dark:border-gray-800/80">

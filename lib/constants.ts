@@ -120,7 +120,7 @@ export const ADMIN_ROLES = {
  * Site metadata — used in layout.tsx and SEO components.
  */
 export const SITE = {
-  NAME: "Coaching Management System",
+  NAME: "EduConnect",
   DESCRIPTION:
     "A comprehensive platform for coaching and education management. Connect teachers, students, and guardians seamlessly.",
   URL: process.env.FRONTEND_URL ?? "http://localhost:3000",

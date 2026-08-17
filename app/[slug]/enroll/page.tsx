@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/footer";
 import { EnrollContent } from "./enroll-content";
 
 export const metadata = {
-  title: "Enroll in Batch | EduConnect BD",
+  title: "Enroll in Batch | EduConnect",
   description: "Secure your spot and process payment manually for the batch.",
 };
 

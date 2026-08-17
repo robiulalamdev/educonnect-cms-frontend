@@ -7,7 +7,7 @@ import { RegisterForm } from "./register-form";
 
 export const metadata: Metadata = {
   title: "Create Account",
-  description: "Create your Coaching Management System account",
+  description: "Create your EduConnect account",
 };
 
 export default function RegisterPage() {

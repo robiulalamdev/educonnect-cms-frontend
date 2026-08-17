@@ -1,8 +1,8 @@
-# Coaching Management System - Frontend
+# EduConnect - Frontend
 
 > **Version:** 2.0.0 | **Next.js:** 16 (App Router) | **React:** 19 | **TypeScript** | **Tailwind CSS** | **shadcn/ui**
 
-A modern, production-ready frontend for the Coaching Management System with role-based dashboards, real-time features, and smooth UX.
+A modern, production-ready frontend for EduConnect with role-based dashboards, real-time features, and smooth UX.
 
 ---
 
