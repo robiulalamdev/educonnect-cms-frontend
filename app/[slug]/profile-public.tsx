@@ -22,7 +22,7 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
     ? getCloudinaryUrl(user.avatar.key, { w: 192, h: 192 })
     : null;
   const initials = getInitials(user.full_name || "U");
-  const username = user.email?.split("@")[0] || user.full_name?.toLowerCase().replace(/\s+/g, "") || "user";
+  const username = user.username || user.email?.split("@")[0] || user.full_name?.toLowerCase().replace(/\s+/g, "") || "user";
   const memberSince = user.created_at ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "";
 
   const uniqueSubjects = [...new Set(posts.flatMap((p: any) => p.subjects?.map((s: any) => s.subject?.name).filter(Boolean) || []))];
@@ -44,43 +44,43 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
 
       {/* Profile Hero */}
       <div className="bg-white dark:bg-[#16161D] border-b border-gray-200/80 dark:border-gray-800/80">
-        <div className="max-w-[1280px] mx-auto px-4">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
           <div className="relative">
             {/* Gradient Background */}
-            <div className="h-48 rounded-b-3xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-500/5 dark:via-indigo-500/5 dark:to-purple-500/5">
+            <div className="h-32 sm:h-48 rounded-b-3xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-500/5 dark:via-indigo-500/5 dark:to-purple-500/5">
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMS41IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+PC9zdmc+')] opacity-40" />
             </div>
 
             {/* Profile Content */}
-            <div className="relative px-6 pb-6">
-              <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-16">
+            <div className="relative px-2 sm:px-6 pb-6">
+              <div className="flex flex-col sm:flex-row sm:items-end gap-5 sm:gap-6 -mt-10 sm:-mt-16">
                 {/* Avatar */}
-                <div className="relative shrink-0">
-                  <div className="size-[140px] rounded-full overflow-hidden ring-4 ring-white dark:ring-[#16161D] shadow-xl">
+                <div className="relative shrink-0 self-start sm:self-auto">
+                  <div className="size-20 sm:size-[140px] rounded-full overflow-hidden ring-4 ring-white dark:ring-[#16161D] shadow-xl">
                     {avatarUrl ? <img src={avatarUrl} alt={user.full_name} className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0066FF] to-[#3B82F6]"><span className="text-3xl font-bold text-white">{initials}</span></div>}
+                    : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0066FF] to-[#3B82F6]"><span className="text-xl sm:text-3xl font-bold text-white">{initials}</span></div>}
                   </div>
                 </div>
 
                 {/* User Info */}
                 <div className="flex-1 min-w-0 pb-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{user.full_name}</h1>
-                    <svg className="size-5 text-[#0066FF]" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white break-words">{user.full_name}</h1>
+                    <svg className="size-4 sm:size-5 text-[#0066FF]" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">@{username}</p>
                   <div className="mt-2">
                     <span className="inline-flex items-center rounded-full bg-[#0066FF]/10 px-3 py-1 text-xs font-semibold text-[#0066FF]">{user.role || "Student"}</span>
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                    <span className="flex items-center gap-1.5"><Mail className="size-3.5" />{user.email || "Contact via message"}</span>
-                    <span className="flex items-center gap-1.5"><Phone className="size-3.5" />{user.phone || "Not available"}</span>
-                    <span className="flex items-center gap-1.5"><MapPin className="size-3.5" />{user.city ? `${user.city}, ${user.country || "Bangladesh"}` : "Dhaka, Bangladesh"}</span>
+                  <div className="mt-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span className="flex items-center gap-1.5 min-w-0"><Mail className="size-3.5 shrink-0" /><span className="truncate">{user.email || "Contact via message"}</span></span>
+                    <span className="flex items-center gap-1.5"><Phone className="size-3.5 shrink-0" />{user.phone || "Not available"}</span>
+                    <span className="flex items-center gap-1.5"><MapPin className="size-3.5 shrink-0" />{user.city ? `${user.city}, ${user.country || "Bangladesh"}` : "Dhaka, Bangladesh"}</span>
                   </div>
                 </div>
 
                 {/* Member Since Card */}
-                <div className="shrink-0 bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200/80 dark:border-gray-700/80 p-4 space-y-3">
+                <div className="shrink-0 w-full sm:w-auto bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200/80 dark:border-gray-700/80 p-4 space-y-3">
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="size-4 text-gray-400" />
                     <div><p className="text-xs text-gray-500">Member Since</p><p className="font-semibold text-gray-900 dark:text-white">{memberSince || "N/A"}</p></div>
@@ -95,10 +95,10 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 border-b border-gray-200/80 dark:border-gray-800/80 -mb-px">
+          <div className="flex gap-1 border-b border-gray-200/80 dark:border-gray-800/80 -mb-px overflow-x-auto">
             {tabs.map((tab) => (
               <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`flex items-center gap-2 px-4 py-3 text-[14px] font-medium border-b-2 transition-all ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-3 text-[13px] sm:text-[14px] font-medium border-b-2 transition-all whitespace-nowrap ${
                   activeTab === tab ? "border-[#0066FF] text-[#0066FF]" : "border-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                 }`}>
                 {tab === "Overview" && <User className="size-4" />}
@@ -114,7 +114,7 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
       </div>
 
       {/* Content */}
-      <div className="max-w-[1280px] mx-auto px-4 py-8">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-8">
         {activeTab === "Overview" && (
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Left - About & Academic */}
@@ -472,7 +472,7 @@ export function ProfilePublic({ user, posts = [] }: ProfilePublicProps) {
 
       {/* Footer */}
       <footer className="border-t border-gray-200/80 dark:border-gray-800/80 mt-8">
-        <div className="max-w-[1280px] mx-auto px-4 py-6 flex items-center justify-between text-xs text-gray-400">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400">
           <span>&copy; {new Date().getFullYear()} EduConnect. All rights reserved.</span>
           <div className="flex items-center gap-4">
             <Link href="/feed" className="hover:text-gray-600 transition-colors">Home</Link>
