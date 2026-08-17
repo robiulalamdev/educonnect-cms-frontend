@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { RoleGate } from "@/components/layout/role-gate";
+import { PushNotificationSetup } from "@/components/push/push-notification-setup";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { ROUTES } from "@/lib/constants";
@@ -20,6 +21,7 @@ export default async function DashboardLayout({
 
   return (
     <UserProvider user={user}>
+      <PushNotificationSetup />
       <SidebarProvider>
         <DashboardSidebar />
         <SidebarInset className="bg-[#f0f5ff]/60 dark:bg-gray-950">

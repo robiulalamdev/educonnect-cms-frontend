@@ -3,6 +3,27 @@
 import { apiGet, apiPatch, apiDelete } from "@/lib/api";
 
 /**
+ * Get the public Firebase Web Push config (project id + VAPID public key).
+ * Uses silent mode — no auth required.
+ */
+export async function getFirebaseConfig(): Promise<{
+  project_id?: string;
+  vapid_public_key?: string;
+  sender_id?: string;
+} | null> {
+  try {
+    const data = await apiGet<{ success: boolean; data: any }>(
+      "/api/v1/notifications/firebase-config",
+      { silent: true },
+    );
+    if (data.success && data.data) return data.data;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Get notifications list.
  */
 export async function getNotifications(page = 1, limit = 20) {
