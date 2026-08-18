@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { AssistantWidget } from "@/components/assistant/assistant-widget";
 import { SITE } from "@/lib/constants";
 import "./globals.css";
 
@@ -96,6 +97,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>{children}</Providers>
+        <AssistantWidget />
       </body>
     </html>
   );
