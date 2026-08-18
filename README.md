@@ -38,6 +38,19 @@ App runs at `http://localhost:3000`
 docker-compose up -d
 ```
 
+### 👤 Demo Accounts
+
+All demo accounts share the password `123456`:
+
+| Role | Email |
+|------|-------|
+| Super Admin | `superadmin@ec.com` |
+| Teacher | `teacher@ec.com` |
+| Student | `student@ec.com` |
+| Guardian | `guardian@ec.com` |
+
+> Super Admin signs in via the `/admin` portal; the rest use the standard login.
+
 ---
 
 ## 📦 Tech Stack
