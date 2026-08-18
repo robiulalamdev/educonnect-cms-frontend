@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MessageCircle, X, Send, Sparkles, Loader2, Trash2, Bot, User } from "lucide-react";
+import Link from "next/link";
+import { MessageCircle, X, Send, Sparkles, Loader2, Bot, User, Plus } from "lucide-react";
 
 type Message = {
   id: string;
@@ -9,6 +10,72 @@ type Message = {
   content: string;
   ts: number;
 };
+
+const ROUTE_LINKS: { phrases: string[]; href: string; label: string }[] = [
+  { phrases: ["sign up", "signup", "register", "create account", "create an account"], href: "/register", label: "Sign Up" },
+  { phrases: ["log in", "login", "sign in"], href: "/login", label: "Login" },
+  { phrases: ["forgot password", "reset password"], href: "/forgot-password", label: "Reset Password" },
+  { phrases: ["verify email"], href: "/verify-email", label: "Verify Email" },
+  { phrases: ["feed", "social feed", "posts"], href: "/feed", label: "Feed" },
+  { phrases: ["discover"], href: "/discover", label: "Discover" },
+  { phrases: ["search"], href: "/search", label: "Search" },
+  { phrases: ["batch", "batches"], href: "/dashboard/batches", label: "Batches" },
+  { phrases: ["attendance"], href: "/dashboard/attendance", label: "Attendance" },
+  { phrases: ["payment", "payments", "fee", "fees", "billing"], href: "/dashboard/payments", label: "Payments" },
+  { phrases: ["assignment", "assignments", "task", "tasks", "homework"], href: "/dashboard/tasks", label: "Tasks" },
+  { phrases: ["announcement", "announcements"], href: "/dashboard/announcements", label: "Announcements" },
+  { phrases: ["message", "messages", "chat", "inbox"], href: "/dashboard/messages", label: "Messages" },
+  { phrases: ["notification", "notifications"], href: "/dashboard/notifications", label: "Notifications" },
+  { phrases: ["calendar", "schedule", "timetable"], href: "/dashboard/calendar", label: "Calendar" },
+  { phrases: ["profile"], href: "/dashboard/profile", label: "Profile" },
+  { phrases: ["settings"], href: "/dashboard/settings", label: "Settings" },
+  { phrases: ["subscription", "package", "packages", "plan"], href: "/dashboard/subscription", label: "Subscription" },
+  { phrases: ["review", "reviews", "rating", "ratings"], href: "/dashboard/reviews", label: "Reviews" },
+  { phrases: ["enrollment", "enrollments"], href: "/dashboard/enrollments", label: "Enrollments" },
+];
+
+function renderContent(content: string): React.ReactNode[] {
+  const matches: { start: number; end: number; href: string; label: string }[] = [];
+
+  for (const route of ROUTE_LINKS) {
+    for (const phrase of route.phrases) {
+      const re = new RegExp(`\\b${phrase}\\b`, "gi");
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(content)) !== null) {
+        matches.push({ start: m.index, end: m.index + m[0].length, href: route.href, label: m[0] });
+        if (m.index === re.lastIndex) re.lastIndex++;
+      }
+    }
+  }
+
+  matches.sort((a, b) => a.start - b.start);
+
+  const kept: typeof matches = [];
+  for (const m of matches) {
+    if (kept.length > 0 && m.start < kept[kept.length - 1].end) continue;
+    kept.push(m);
+  }
+
+  if (kept.length === 0) return [content];
+
+  const nodes: React.ReactNode[] = [];
+  let last = 0;
+  for (const m of kept) {
+    if (m.start > last) nodes.push(content.slice(last, m.start));
+    nodes.push(
+      <Link
+        key={`${m.start}-${m.end}`}
+        href={m.href}
+        className="font-medium text-[#0066FF] underline underline-offset-2 hover:text-[#0052CC]"
+      >
+        {m.label}
+      </Link>
+    );
+    last = m.end;
+  }
+  if (last < content.length) nodes.push(content.slice(last));
+  return nodes;
+}
 
 const STORAGE_KEY = "educonnect-assistant-history";
 const MAX_HISTORY = 60;
@@ -157,10 +224,10 @@ export function AssistantWidget() {
               <button
                 onClick={clearChat}
                 className="rounded-lg p-1.5 hover:bg-white/20 transition-colors"
-                aria-label="Clear chat"
-                title="Clear chat"
+                aria-label="New session"
+                title="New session"
               >
-                <Trash2 className="size-4" />
+                <Plus className="size-4.5" />
               </button>
               <button
                 onClick={toggle}
@@ -221,7 +288,9 @@ export function AssistantWidget() {
                       : "bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm"
                   }`}
                 >
-                  {m.content || (thinking ? "…" : "")}
+                  {m.role === "assistant"
+                    ? renderContent(m.content || (thinking ? "…" : ""))
+                    : m.content}
                 </div>
               </div>
             ))}
