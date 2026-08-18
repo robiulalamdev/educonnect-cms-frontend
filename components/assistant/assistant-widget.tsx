@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MessageCircle, X, Send, Sparkles, Loader2, Trash2, Bot, User } from "lucide-react";
-import { retrievePassage, NO_ANSWER_RESPONSE } from "@/lib/assistant/retrieval";
 
 type Message = {
   id: string;
@@ -14,37 +13,15 @@ type Message = {
 const STORAGE_KEY = "educonnect-assistant-history";
 const MAX_HISTORY = 60;
 
-let modelPromise: Promise<any> | null = null;
-
-async function getPipeline() {
-  if (!modelPromise) {
-    modelPromise = (async () => {
-      const { env, pipeline } = await import("@huggingface/transformers");
-      env.allowLocalModels = true;
-      env.allowRemoteModels = false;
-      env.localModelPath = "/models/";
-      if (env.backends?.onnx?.wasm) {
-        env.backends.onnx.wasm.proxy = false;
-      }
-      return pipeline("question-answering", "qa-assistant", {
-        dtype: "q8",
-        device: "wasm",
-      });
-    })();
-  }
-  return modelPromise;
-}
-
 export function AssistantWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [loadingModel, setLoadingModel] = useState(false);
   const [thinking, setThinking] = useState(false);
-  const [modelReady, setModelReady] = useState(false);
-  const [modelError, setModelError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     try {
@@ -67,31 +44,9 @@ export function AssistantWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
-  const ensureModel = useCallback(async () => {
-    if (modelReady) return;
-    setLoadingModel(true);
-    setModelError(null);
-    try {
-      await getPipeline();
-      setModelReady(true);
-    } catch (err) {
-      console.error("Model load failed:", err);
-      setModelError(
-        "Could not load the AI model on this device. Please try a modern browser."
-      );
-    } finally {
-      setLoadingModel(false);
-    }
-  }, [modelReady]);
-
   const toggle = useCallback(() => {
-    const next = !open;
-    setOpen(next);
-    if (next) {
-      ensureModel();
-      setTimeout(() => inputRef.current?.focus(), 150);
-    }
-  }, [open, ensureModel]);
+    setOpen((prev) => !prev);
+  }, []);
 
   const clearChat = useCallback(() => {
     setMessages([]);
@@ -104,49 +59,73 @@ export function AssistantWidget() {
       if (!q || thinking) return;
 
       const userMsg: Message = { id: crypto.randomUUID(), role: "user", content: q, ts: Date.now() };
-      setMessages((prev) => [...prev, userMsg]);
+      const assistantId = crypto.randomUUID();
+      const assistantMsg: Message = { id: assistantId, role: "assistant", content: "", ts: Date.now() };
+
+      setMessages((prev) => [...prev, userMsg, assistantMsg]);
       setInput("");
       setThinking(true);
+      setError(null);
+
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
       try {
-        const passages = retrievePassage(q, 3);
-        if (passages.length === 0) {
-          setMessages((prev) => [
-            ...prev,
-            { id: crypto.randomUUID(), role: "assistant", content: NO_ANSWER_RESPONSE, ts: Date.now() },
-          ]);
-          return;
+        const history = messages
+          .slice(-6)
+          .map((m) => ({ role: m.role, content: m.content }));
+
+        const res = await fetch("/api/assistant", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: [...history, { role: "user", content: q }] }),
+          signal: controller.signal,
+        });
+
+        if (!res.ok || !res.body) {
+          let detail = `Request failed (${res.status})`;
+          try {
+            const j = await res.json();
+            if (j.error) detail = j.error;
+          } catch {
+            /* ignore */
+          }
+          throw new Error(detail);
         }
 
-        const context = passages.map((p) => p.content).join("\n\n");
-        const pipe = await getPipeline();
-        const result: any = await pipe(q, context);
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let acc = "";
 
-        const answer =
-          result && result.answer && result.score > 0.05
-            ? result.answer
-            : NO_ANSWER_RESPONSE;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          acc += decoder.decode(value, { stream: true });
+          setMessages((prev) =>
+            prev.map((m) => (m.id === assistantId ? { ...m, content: acc } : m))
+          );
+        }
 
-        setMessages((prev) => [
-          ...prev,
-          { id: crypto.randomUUID(), role: "assistant", content: answer, ts: Date.now() },
-        ]);
-      } catch (err) {
-        console.error("QA failed:", err);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: "Something went wrong while answering. Please try again.",
-            ts: Date.now(),
-          },
-        ]);
+        if (!acc.trim()) {
+          throw new Error("The assistant returned an empty response. Please try again.");
+        }
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+        console.error("Assistant request failed:", err);
+        setError(err?.message || "Something went wrong. Please try again.");
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? { ...m, content: "Something went wrong. Please try again." }
+              : m
+          )
+        );
       } finally {
         setThinking(false);
       }
     },
-    [thinking]
+    [thinking, messages]
   );
 
   const suggestions = [
@@ -154,6 +133,7 @@ export function AssistantWidget() {
     "What is a batch?",
     "How does attendance work?",
     "How do I make a payment?",
+    "Tell me a fun fact",
   ];
 
   return (
@@ -169,7 +149,7 @@ export function AssistantWidget() {
               <div>
                 <p className="text-sm font-semibold leading-tight">EduConnect Assistant</p>
                 <p className="text-[11px] text-white/80 leading-tight">
-                  {loadingModel ? "Loading AI model (first time only)…" : modelError ? "Offline" : "Online — answers about the platform"}
+                  {error ? "Something went wrong" : "Online — AI assistant"}
                 </p>
               </div>
             </div>
@@ -200,17 +180,17 @@ export function AssistantWidget() {
                   <Sparkles className="size-6 text-[#0066FF]" />
                 </div>
                 <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                  Ask me anything about EduConnect
+                  Ask me anything
                 </p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  The model loads once on first open, then stays ready.
+                  I can help with EduConnect — and chat about anything else too.
                 </p>
                 <div className="mt-4 grid gap-2">
                   {suggestions.map((s) => (
                     <button
                       key={s}
                       onClick={() => ask(s)}
-                      disabled={thinking || loadingModel}
+                      disabled={thinking}
                       className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-left text-xs text-gray-600 dark:text-gray-300 hover:border-[#0066FF]/50 hover:text-[#0066FF] transition-colors disabled:opacity-50"
                     >
                       {s}
@@ -241,7 +221,7 @@ export function AssistantWidget() {
                       : "bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm"
                   }`}
                 >
-                  {m.content}
+                  {m.content || (thinking ? "…" : "")}
                 </div>
               </div>
             ))}
@@ -262,8 +242,8 @@ export function AssistantWidget() {
 
           {/* Input */}
           <div className="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-3">
-            {modelError && (
-              <p className="mb-2 text-[11px] text-red-500">{modelError}</p>
+            {error && (
+              <p className="mb-2 text-[11px] text-red-500">{error}</p>
             )}
             <form
               onSubmit={(e) => {
@@ -276,17 +256,17 @@ export function AssistantWidget() {
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about EduConnect…"
-                disabled={loadingModel || thinking}
+                placeholder="Ask anything…"
+                disabled={thinking}
                 className="h-10 flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-950 px-3.5 text-sm text-gray-800 dark:text-gray-200 placeholder:text-gray-400 focus:border-[#0066FF] focus:outline-none disabled:opacity-60"
               />
               <button
                 type="submit"
-                disabled={!input.trim() || loadingModel || thinking}
+                disabled={!input.trim() || thinking}
                 className="flex size-10 items-center justify-center rounded-xl bg-[#0066FF] text-white shadow-md shadow-blue-500/20 hover:bg-[#0052CC] transition-colors disabled:opacity-50"
                 aria-label="Send"
               >
-                {loadingModel ? <Loader2 className="size-4.5 animate-spin" /> : <Send className="size-4.5" />}
+                {thinking ? <Loader2 className="size-4.5 animate-spin" /> : <Send className="size-4.5" />}
               </button>
             </form>
           </div>

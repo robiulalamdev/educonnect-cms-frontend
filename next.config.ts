@@ -4,9 +4,6 @@ const nextConfig: NextConfig = {
   // Enable standalone output for Docker
   output: "standalone",
 
-  // transformers.js (ONNX runtime) must not be bundled into the server
-  serverExternalPackages: ["@huggingface/transformers"],
-
   // Proxy /api/* requests to the backend during development
   async rewrites() {
     return [

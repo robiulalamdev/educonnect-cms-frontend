@@ -22,6 +22,9 @@ const env = {
 
   // Google Maps API (client-side, for location autocomplete)
   GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
+
+  // OpenRouter AI (server-side only, for the AI assistant)
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ?? "",
 } as const;
 
 export default env;

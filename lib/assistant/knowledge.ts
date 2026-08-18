@@ -7,6 +7,27 @@ export type KnowledgePassage = {
 
 export const KNOWLEDGE_BASE: KnowledgePassage[] = [
   {
+    id: "greeting",
+    title: "Greeting",
+    keywords: ["hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening", "assalamu", "salam", "hola", "yo", "welcome"],
+    content:
+      "Hello there! Hi, nice to meet you. I am the EduConnect Assistant, your friendly helper here to answer questions about the platform. Welcome to EduConnect! How can I help you today?",
+  },
+  {
+    id: "name",
+    title: "Assistant Name",
+    keywords: ["your name", "who are you", "what are you", "name", "yourself", "called", "assistant"],
+    content:
+      "I am the EduConnect Assistant. My name is EduConnect Assistant. I am an AI helper built into the EduConnect platform to answer your questions. I am here to help you.",
+  },
+  {
+    id: "howareyou",
+    title: "Assistant Well-being",
+    keywords: ["how are you", "how r u", "how are u", "hru", "doing", "how's it going", "how do you feel", "how are things"],
+    content:
+      "I am doing great, thank you for asking! I am feeling wonderful and I am happy to help you today. What can I do for you on EduConnect?",
+  },
+  {
     id: "platform",
     title: "About EduConnect",
     keywords: ["educonnect", "platform", "about", "what is", "coaching", "education", "cms", "software"],
@@ -159,5 +180,19 @@ export const KNOWLEDGE_BASE: KnowledgePassage[] = [
     keywords: ["help", "support", "contact", "issue", "problem", "bug", "error", "how"],
     content:
       "If you need help, you can use this assistant for quick answers about the platform. For issues with your account or payments, contact support from the platform. You can also check your email for verification and reset links if something is not working.",
+  },
+  {
+    id: "thanks",
+    title: "Thanks",
+    keywords: ["thank", "thanks", "thank you", "thx", "appreciate", "great help"],
+    content:
+      "You are very welcome! I am glad I could help you. If you need anything else about EduConnect, I am always here for you.",
+  },
+  {
+    id: "bye",
+    title: "Goodbye",
+    keywords: ["bye", "goodbye", "see you", "cya", "later", "good night", "good luck", "farewell"],
+    content:
+      "Goodbye! It was nice talking with you. I hope you enjoy using EduConnect. Feel free to come back anytime if you need help.",
   },
 ];
