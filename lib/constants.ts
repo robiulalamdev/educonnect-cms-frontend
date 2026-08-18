@@ -123,6 +123,6 @@ export const SITE = {
   NAME: "EduConnect",
   DESCRIPTION:
     "A comprehensive platform for coaching and education management. Connect teachers, students, and guardians seamlessly.",
-  URL: process.env.FRONTEND_URL ?? "http://localhost:3000",
+  URL: process.env.FRONTEND_URL ?? "https://educonnect-cms.vercel.app",
   OG_IMAGE: "/og-image.png",
 } as const;

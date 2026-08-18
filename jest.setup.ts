@@ -46,8 +46,8 @@ process.env.ADMIN_COOKIE_REFRESH_NAME = "cms_admin_refresh";
 
 process.env.COOKIE_SECRET = "test-secret";
 
-process.env.FRONTEND_URL = "http://localhost:3000";
-process.env.ADMIN_FRONTEND_URL = "http://localhost:3000";
+process.env.FRONTEND_URL = "https://educonnect-cms.vercel.app";
+process.env.ADMIN_FRONTEND_URL = "https://educonnect-cms.vercel.app";
 
 process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = "test-key";
 

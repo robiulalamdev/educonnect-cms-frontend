@@ -17,8 +17,8 @@ const env = {
   COOKIE_SECRET: process.env.COOKIE_SECRET ?? "",
 
   // Frontend URLs
-  FRONTEND_URL: process.env.FRONTEND_URL ?? "http://localhost:3000",
-  ADMIN_FRONTEND_URL: process.env.ADMIN_FRONTEND_URL ?? "http://localhost:3000",
+  FRONTEND_URL: process.env.FRONTEND_URL ?? "https://educonnect-cms.vercel.app",
+  ADMIN_FRONTEND_URL: process.env.ADMIN_FRONTEND_URL ?? "https://educonnect-cms.vercel.app",
 
   // Google Maps API (client-side, for location autocomplete)
   GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
