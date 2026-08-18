@@ -41,7 +41,7 @@ export const metadata: Metadata = {
       {
         url: SITE.OG_IMAGE,
         width: 1200,
-        height: 630,
+        height: 1200,
         alt: SITE.NAME,
       },
     ],
@@ -84,8 +84,15 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={inter.variable}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
+        <meta name="application-name" content={SITE.NAME} />
+        <meta name="apple-mobile-web-app-title" content={SITE.NAME} />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>{children}</Providers>
