@@ -9,23 +9,23 @@ export const KNOWLEDGE_BASE: KnowledgePassage[] = [
   {
     id: "greeting",
     title: "Greeting",
-    keywords: ["hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening", "assalamu", "salam", "hola", "yo", "welcome"],
+    keywords: ["hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening", "assalamu", "salam", "hola", "yo", "welcome", "আসসালামু", "আসসালামু আলাইকুম", "সালাম", "হ্যালো", "কেমন আছেন", "কেমন আছো"],
     content:
-      "Hello there! Hi, nice to meet you. I am the EduConnect Assistant, your friendly helper here to answer questions about the platform. Welcome to EduConnect! How can I help you today?",
+      "Assalamu Alaikum! I am the EduConnect Assistant, your friendly helper here to answer questions about the platform. Welcome to EduConnect! How can I help you today? (আসসালামু আলাইকুম! আমি এডুকানেক্ট সহকারী। আজকে আপনাকে কীভাবে সাহায্য করতে পারি?)",
   },
   {
     id: "name",
     title: "Assistant Name",
-    keywords: ["your name", "who are you", "what are you", "name", "yourself", "called", "assistant"],
+    keywords: ["your name", "who are you", "what are you", "name", "yourself", "called", "assistant", "তোমার নাম", "আপনার নাম", "কে তুমি", "তুমি কে"],
     content:
-      "I am the EduConnect Assistant. My name is EduConnect Assistant. I am an AI helper built into the EduConnect platform to answer your questions. I am here to help you.",
+      "I am the EduConnect Assistant, an AI helper built into the EduConnect platform to answer your questions. In Sha Allah, I am here to help you. (আমি এডুকানেক্ট সহকারী — প্ল্যাটফর্ম সম্পর্কে যেকোনো প্রশ্নের উত্তর দিতে আমি আছি, ইনশাআল্লাহ।)",
   },
   {
     id: "howareyou",
     title: "Assistant Well-being",
-    keywords: ["how are you", "how r u", "how are u", "hru", "doing", "how's it going", "how do you feel", "how are things"],
+    keywords: ["how are you", "how r u", "how are u", "hru", "doing", "how's it going", "how do you feel", "how are things", "কেমন আছেন", "কেমন আছো", "কেমন আছিস"],
     content:
-      "I am doing great, thank you for asking! I am feeling wonderful and I am happy to help you today. What can I do for you on EduConnect?",
+      "Alhamdulillah, I am doing great, thank you for asking! I am happy to help you today. What can I do for you on EduConnect? (আলহামদুলিল্লাহ, আমি ভালো আছি, জিজ্ঞেস করার জন্য ধন্যবাদ! আজকে কীভাবে সাহায্য করতে পারি?)",
   },
   {
     id: "platform",
@@ -198,8 +198,8 @@ export const KNOWLEDGE_BASE: KnowledgePassage[] = [
   {
     id: "developer",
     title: "Developer",
-    keywords: ["who developed", "developer", "who made", "who built", "creator", "owner", "robiul", "alam", "portfolio", "linkedin", "facebook", "telegram", "whatsapp", "contact developer", "developer info", "about developer"],
+    keywords: ["who developed", "developer", "who made", "who built", "creator", "owner", "robiul", "alam", "portfolio", "linkedin", "facebook", "telegram", "whatsapp", "contact developer", "developer info", "about developer", "ডেভেলপার", "কী করল", "কী বানাল"],
     content:
-      "EduConnect was developed by Robiul Alam, a full stack developer from Bangladesh. Robiul is a passionate full stack web developer skilled in building modern web applications. You can find him at his portfolio website: https://robiulalamdev.vercel.app. His social profiles are: LinkedIn, Facebook, and Telegram all use the username robiulalamdev. His WhatsApp number is +8801751299132 (username: robiulalamdev). He is always happy to connect and hear feedback about EduConnect.",
+      "EduConnect was developed by Robiul Alam, a full stack developer from Bangladesh. Robiul is a passionate full stack web developer skilled in building modern web applications. You can find him at his portfolio website: https://robiulalamdev.vercel.app. His social profiles are: LinkedIn, Facebook, and Telegram all use the username robiulalamdev. His WhatsApp number is +8801751299132 (username: robiulalamdev). He is always happy to connect and hear feedback about EduConnect. (এডুকানেক্ট তৈরি করেছেন বাংলাদেশের ফুল স্ট্যাক ডেভেলপার রবিউল আলম। তাঁর পোর্টফোলিও: https://robiulalamdev.vercel.app।)",
   },
 ];
