@@ -20,6 +20,7 @@ async function getPipeline() {
   if (!modelPromise) {
     modelPromise = (async () => {
       const { env, pipeline } = await import("@huggingface/transformers");
+      env.allowLocalModels = true;
       env.allowRemoteModels = false;
       env.localModelPath = "/models/";
       if (env.backends?.onnx?.wasm) {
