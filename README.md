@@ -1,10 +1,36 @@
-# EduConnect - Frontend
+# EduConnect - Frontend (Coaching Management System)
 
 > **Version:** 2.0.0 | **Next.js:** 16 (App Router) | **React:** 19 | **TypeScript** | **Tailwind CSS** | **shadcn/ui**
 
-A modern, production-ready frontend for EduConnect with role-based dashboards, real-time features, and smooth UX.
+A modern, production-ready frontend for **EduConnect** — a coaching management platform with role-based dashboards, real-time features, an AI assistant, and smooth UX, connecting **teachers**, **students**, and **guardians** across Bangladesh.
 
----
+## 🌐 Live URLs
+
+| Environment | URL |
+|-------------|-----|
+| User App | https://educonnect-cms.vercel.app |
+| Admin Panel | https://educonnect-cms.vercel.app/admin |
+| Backend API | https://educonnect-cms-api.vercel.app |
+| API Docs (Swagger) | https://educonnect-cms-api.vercel.app/docs |
+
+> The backend repo is at **https://github.com/robiulalamdev/educonnect-cms-backend**.
+
+## ✨ Features
+
+- **Landing page** — Hero with animated stats, feature highlights, teacher showcase carousel, testimonials
+- **Role-based dashboards** — Student, Teacher, Guardian, and Admin with role-specific views & actions
+- **Service discovery** — Map-based search (Google Maps), filters (subject, level, location, price, rating), infinite scroll
+- **Service detail & enrollment** — Full service info, teacher profile, batch schedules, reviews, enroll flow
+- **Auth & security** — Email OTP registration, HttpOnly cookie sessions, auto token refresh, middleware route protection
+- **Batches, attendance, tasks** — Manage class groups, mark/view attendance, submit & grade assignments
+- **Daily notes & announcements** — Share progress notes, batch-wide announcements
+- **Social feed** — Posts (seek/offer), comments, likes, follows, blocks, reviews & ratings, 24h stories
+- **Real-time chat** — Direct & group messaging via Socket.io with presence & read receipts
+- **Notifications** — In-app + email + push, with granular preference settings
+- **Payments & subscriptions** — Enrollment payments, subscription packages, payment history
+- **AI Assistant** — Built-in assistant (OpenRouter) with polite Islamic tone, dynamic English/Bangla responses, and a Bangla knowledge base
+- **Admin panel** — Analytics dashboards, user/teacher management, teacher approvals, content moderation, audit logs, system settings
+- **Dark mode** — Full support via `next-themes`
 
 ## 🚀 Quick Start
 
@@ -40,16 +66,16 @@ docker-compose up -d
 
 ### 👤 Demo Accounts
 
-All demo accounts share the password `123456`:
+All demo accounts share the password `123456` (seeded via the backend's `npm run prisma:seed`):
 
-| Role | Email |
-|------|-------|
-| Super Admin | `superadmin@ec.com` |
-| Teacher | `teacher@ec.com` |
-| Student | `student@ec.com` |
-| Guardian | `guardian@ec.com` |
+| Role | Email | Login |
+|------|-------|-------|
+| Super Admin | `superadmin@ec.com` | `/admin` portal |
+| Teacher | `teacher@ec.com` | Standard login |
+| Student | `student@ec.com` | Standard login |
+| Guardian | `guardian@ec.com` | Standard login |
 
-> Super Admin signs in via the `/admin` portal; the rest use the standard login.
+> **Tip:** Try the live demo at **https://educonnect-cms.vercel.app**.
 
 ---
 
@@ -412,22 +438,17 @@ docker-compose up -d
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
+**Live:** https://educonnect-cms.vercel.app
+
 1. Connect GitHub repo to Vercel
-2. Configure environment variables
-3. Deploy automatically on push to main
-
-### Docker + VPS
-```bash
-# Build
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
-
-# Deploy
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
+2. Configure environment variables (see below)
+3. Deploy automatically on push to `main`
 
 ### Environment Variables (Production)
 Set all from `.env.example`:
-- `API_BASE_URL` - Backend API URL
+- `API_BASE_URL` - Backend API URL (https://educonnect-cms-api.vercel.app)
+- Socket URL - Backend Socket.io endpoint (https://educonnect-cms-api.vercel.app)
 - Cookie names (must match backend)
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
 - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
