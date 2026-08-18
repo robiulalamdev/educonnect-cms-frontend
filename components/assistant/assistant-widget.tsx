@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { MessageCircle, X, Send, Sparkles, Loader2, Bot, User, Plus } from "lucide-react";
 
 type Message = {
@@ -39,66 +42,75 @@ const ROUTE_LINKS: { phrases: string[]; href: string; label: string }[] = [
   { phrases: ["facebook"], href: "https://www.facebook.com/robiulalamdev", label: "Facebook" },
 ];
 
-function renderContent(content: string): React.ReactNode[] {
-  const matches: { start: number; end: number; href: string; label: string }[] = [];
+function prepareMarkdown(content: string): string {
+  let text = content;
+  const tokens: string[] = [];
 
-  // Markdown links: [text](url)
-  const mdRe = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
-  let mm: RegExpExecArray | null;
-  while ((mm = mdRe.exec(content)) !== null) {
-    matches.push({ start: mm.index, end: mm.index + mm[0].length, href: mm[2], label: mm[1] });
-    if (mm.index === mdRe.lastIndex) mdRe.lastIndex++;
-  }
+  const toPlaceholder = (value: string): string => {
+    tokens.push(value);
+    return `\u0000${tokens.length - 1}\u0000`;
+  };
 
-  // Bare URLs: https://...
-  const urlRe = /(https?:\/\/[^\s)]+)/g;
-  let um: RegExpExecArray | null;
-  while ((um = urlRe.exec(content)) !== null) {
-    matches.push({ start: um.index, end: um.index + um[0].length, href: um[1], label: um[1] });
-    if (um.index === urlRe.lastIndex) urlRe.lastIndex++;
-  }
+  // Preserve existing markdown links as placeholders
+  text = text.replace(/\[[^\]]+\]\((https?:\/\/[^\s)]+)\)/g, (m) => toPlaceholder(m));
 
+  // Preserve bare URLs as placeholders (so keyword replacement can't corrupt them)
+  text = text.replace(/(https?:\/\/[^\s)]+)/g, (m) => toPlaceholder(m));
+
+  // Convert route keywords to clickable links. Each generated link is immediately
+  // stored as a placeholder so later keywords can't match inside its URL.
   for (const route of ROUTE_LINKS) {
     for (const phrase of route.phrases) {
       const re = new RegExp(`\\b${phrase}\\b`, "gi");
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(content)) !== null) {
-        matches.push({ start: m.index, end: m.index + m[0].length, href: route.href, label: m[0] });
-        if (m.index === re.lastIndex) re.lastIndex++;
-      }
+      text = text.replace(re, (match) => toPlaceholder(`[${match}](${route.href})`));
     }
   }
 
-  matches.sort((a, b) => a.start - b.start);
+  // Restore tokens; wrap bare URLs as markdown links so they are clickable
+  text = text.replace(/\u0000(\d+)\u0000/g, (_, i) => {
+    const t = tokens[Number(i)];
+    return /^https?:\/\//.test(t) ? `[${t}](${t})` : t;
+  });
 
-  const kept: typeof matches = [];
-  for (const m of matches) {
-    if (kept.length > 0 && m.start < kept[kept.length - 1].end) continue;
-    kept.push(m);
-  }
+  return text;
+}
 
-  if (kept.length === 0) return [content];
-
-  const nodes: React.ReactNode[] = [];
-  let last = 0;
-  for (const m of kept) {
-    if (m.start > last) nodes.push(content.slice(last, m.start));
-    const isExternal = /^https?:\/\//.test(m.href);
-    nodes.push(
-      <Link
-        key={`${m.start}-${m.end}`}
-        href={m.href}
-        target={isExternal ? "_blank" : undefined}
-        rel={isExternal ? "noopener noreferrer" : undefined}
-        className="font-medium text-[#0066FF] underline underline-offset-2 hover:text-[#0052CC]"
-      >
-        {m.label}
-      </Link>
-    );
-    last = m.end;
-  }
-  if (last < content.length) nodes.push(content.slice(last));
-  return nodes;
+function Markdown({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm, remarkBreaks]}
+      components={{
+        a: ({ href, children }) => {
+          const isExternal = /^https?:\/\//.test(href ?? "");
+          return (
+            <Link
+              href={href ?? "#"}
+              target={isExternal ? "_blank" : undefined}
+              rel={isExternal ? "noopener noreferrer" : undefined}
+              className="font-medium text-[#0066FF] underline underline-offset-2 hover:text-[#0052CC]"
+            >
+              {children}
+            </Link>
+          );
+        },
+        p: ({ children }) => <p className="m-0">{children}</p>,
+        ul: ({ children }) => <ul className="m-0 list-disc pl-5">{children}</ul>,
+        ol: ({ children }) => <ol className="m-0 list-decimal pl-5">{children}</ol>,
+        li: ({ children }) => <li className="my-0.5">{children}</li>,
+        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+        code: ({ children }) => (
+          <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-0.5 text-[0.85em]">
+            {children}
+          </code>
+        ),
+        h1: ({ children }) => <p className="m-0 font-semibold">{children}</p>,
+        h2: ({ children }) => <p className="m-0 font-semibold">{children}</p>,
+        h3: ({ children }) => <p className="m-0 font-semibold">{children}</p>,
+      }}
+    >
+      {prepareMarkdown(content)}
+    </ReactMarkdown>
+  );
 }
 
 const STORAGE_KEY = "educonnect-assistant-history";
@@ -224,6 +236,7 @@ export function AssistantWidget() {
     "What is a batch?",
     "How does attendance work?",
     "How do I make a payment?",
+    "Tell me about the developer",
     "Tell me a fun fact",
   ];
 
@@ -306,14 +319,16 @@ export function AssistantWidget() {
                   {m.role === "user" ? <User className="size-4" /> : <Bot className="size-4" />}
                 </div>
                 <div
-                  className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                  className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                     m.role === "user"
-                      ? "bg-[#0066FF] text-white rounded-tr-sm"
+                      ? "bg-[#0066FF] text-white rounded-tr-sm whitespace-pre-wrap"
                       : "bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm"
                   }`}
                 >
                   {m.role === "assistant"
-                    ? renderContent(m.content || (thinking ? "…" : ""))
+                    ? m.content
+                      ? <Markdown content={m.content} />
+                      : thinking ? "…" : ""
                     : m.content}
                 </div>
               </div>
