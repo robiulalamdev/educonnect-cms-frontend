@@ -32,6 +32,11 @@ const ROUTE_LINKS: { phrases: string[]; href: string; label: string }[] = [
   { phrases: ["subscription", "package", "packages", "plan"], href: "/dashboard/subscription", label: "Subscription" },
   { phrases: ["review", "reviews", "rating", "ratings"], href: "/dashboard/reviews", label: "Reviews" },
   { phrases: ["enrollment", "enrollments"], href: "/dashboard/enrollments", label: "Enrollments" },
+  { phrases: ["portfolio", "portfolio website", "robiulalamdev", "robiul alam", "robiul"], href: "https://robiulalamdev.vercel.app", label: "Robiul Alam" },
+  { phrases: ["whatsapp"], href: "https://wa.me/8801751299132", label: "WhatsApp" },
+  { phrases: ["linkedin"], href: "https://www.linkedin.com/in/robiulalamdev", label: "LinkedIn" },
+  { phrases: ["telegram"], href: "https://t.me/robiulalamdev", label: "Telegram" },
+  { phrases: ["facebook"], href: "https://www.facebook.com/robiulalamdev", label: "Facebook" },
 ];
 
 function renderContent(content: string): React.ReactNode[] {

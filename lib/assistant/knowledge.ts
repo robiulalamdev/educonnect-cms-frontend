@@ -195,4 +195,11 @@ export const KNOWLEDGE_BASE: KnowledgePassage[] = [
     content:
       "Goodbye! It was nice talking with you. I hope you enjoy using EduConnect. Feel free to come back anytime if you need help.",
   },
+  {
+    id: "developer",
+    title: "Developer",
+    keywords: ["who developed", "developer", "who made", "who built", "creator", "owner", "robiul", "alam", "portfolio", "linkedin", "facebook", "telegram", "whatsapp", "contact developer", "developer info", "about developer"],
+    content:
+      "EduConnect was developed by Robiul Alam, a full stack developer from Bangladesh. Robiul is a passionate full stack web developer skilled in building modern web applications. You can find him at his portfolio website: https://robiulalamdev.vercel.app. His social profiles are: LinkedIn, Facebook, and Telegram all use the username robiulalamdev. His WhatsApp number is +8801751299132 (username: robiulalamdev). He is always happy to connect and hear feedback about EduConnect.",
+  },
 ];
