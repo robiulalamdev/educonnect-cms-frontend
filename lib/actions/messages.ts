@@ -46,7 +46,7 @@ export async function getMessages(chatId: string, page = 1, limit = 50) {
  */
 export async function sendMessage(
   chatId: string,
-  body: { content: string; reply_to_id?: string },
+  body: { body: string; reply_to_id?: string },
 ) {
   try {
     return await apiPost(`/api/v1/chats/profile/${chatId}/messages`, body);

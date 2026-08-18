@@ -154,7 +154,7 @@ export function MessagingApp({ currentUserId }: MessagingAppProps) {
     if (!newMessage.trim() || !activeChat || sending) return;
     setSending(true);
     try {
-      const res = (await sendMessage(activeChat.id, { content: newMessage.trim() })) as any;
+      const res = (await sendMessage(activeChat.id, { body: newMessage.trim() })) as any;
       if (res.success) {
         setMessages((prev) => [...prev, res.data]);
         setNewMessage("");
