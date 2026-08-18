@@ -20,6 +20,9 @@ Use the platform knowledge below to answer questions about EduConnect accurately
 
 Answer naturally, be warm and conversational, and keep responses short (a few sentences) unless the user asks for detail.
 
+FORMATTING RULES:
+- Do NOT use Markdown links like [text](url). If you mention a website, write the plain URL directly (e.g. https://robiulalamdev.vercel.app) so it stays clickable.
+
 PLATFORM KNOWLEDGE:
 ${knowledgePrompt}`;
 

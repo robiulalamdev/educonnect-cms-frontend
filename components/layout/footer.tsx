@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ROUTES, SITE } from "@/lib/constants";
 import { BrandLogo } from "@/components/brand-logo";
-import { ExternalLink, Globe, Send, MessageCircle, Share2 } from "lucide-react";
+import { ExternalLink, Globe, Send, MessageCircle, Share2, ArrowUpRight, Heart } from "lucide-react";
 
 const DEVELOPER = {
   name: "Robiul Alam",
@@ -23,16 +23,22 @@ const developerLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-gray-100 dark:border-white/5">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
-          <div className="space-y-4">
+    <footer className="relative border-t border-gray-100 dark:border-white/5 overflow-hidden">
+      {/* Ambient glow */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 h-72 w-[700px] rounded-full bg-blue-500/5 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-12 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          {/* Brand */}
+          <div className="space-y-5">
             <Link
               href={ROUTES.HOME}
               className="inline-flex items-center gap-2.5 font-bold text-lg"
             >
-              <div className="flex size-8 items-center justify-center">
-                <BrandLogo size={32} />
+              <div className="flex size-9 items-center justify-center">
+                <BrandLogo size={36} />
               </div>
               <span className="text-gray-900 dark:text-white">EduConnect</span>
             </Link>
@@ -42,6 +48,7 @@ export function Footer() {
             </p>
           </div>
 
+          {/* Platform */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
               Platform
@@ -70,6 +77,7 @@ export function Footer() {
             </ul>
           </div>
 
+          {/* For */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
               For
@@ -90,14 +98,6 @@ export function Footer() {
                   Guardians
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-              Legal
-            </h3>
-            <ul className="space-y-3 text-sm text-gray-500 dark:text-gray-400">
               <li>
                 <span className="cursor-not-allowed">Privacy Policy</span>
               </li>
@@ -107,24 +107,30 @@ export function Footer() {
             </ul>
           </div>
 
+          {/* Developer */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
               Developer
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-              {DEVELOPER.name} — {DEVELOPER.role}
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              {DEVELOPER.name}
+              <br />
+              <span className="text-xs">{DEVELOPER.role}</span>
             </p>
-            <ul className="space-y-3 text-sm">
+            <ul className="space-y-2.5 text-sm">
               {developerLinks.map(({ href, label, icon: Icon }) => (
                 <li key={label}>
                   <a
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="group inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                   >
-                    <Icon className="size-4" />
+                    <span className="flex size-6 items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-950 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <Icon className="size-3.5" />
+                    </span>
                     {label}
+                    <ArrowUpRight className="size-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </a>
                 </li>
               ))}
@@ -132,17 +138,18 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-gray-200 dark:border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Bottom bar */}
+        <div className="border-t border-gray-200 dark:border-white/5 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             &copy; {new Date().getFullYear()} {SITE.NAME}. All rights reserved.
           </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500">
-            Developed by{" "}
+          <p className="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500">
+            Crafted with <Heart className="size-3.5 fill-current text-blue-600" /> by{" "}
             <a
               href={DEVELOPER.portfolio}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               {DEVELOPER.name}
             </a>

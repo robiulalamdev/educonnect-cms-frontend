@@ -42,6 +42,22 @@ const ROUTE_LINKS: { phrases: string[]; href: string; label: string }[] = [
 function renderContent(content: string): React.ReactNode[] {
   const matches: { start: number; end: number; href: string; label: string }[] = [];
 
+  // Markdown links: [text](url)
+  const mdRe = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  let mm: RegExpExecArray | null;
+  while ((mm = mdRe.exec(content)) !== null) {
+    matches.push({ start: mm.index, end: mm.index + mm[0].length, href: mm[2], label: mm[1] });
+    if (mm.index === mdRe.lastIndex) mdRe.lastIndex++;
+  }
+
+  // Bare URLs: https://...
+  const urlRe = /(https?:\/\/[^\s)]+)/g;
+  let um: RegExpExecArray | null;
+  while ((um = urlRe.exec(content)) !== null) {
+    matches.push({ start: um.index, end: um.index + um[0].length, href: um[1], label: um[1] });
+    if (um.index === urlRe.lastIndex) urlRe.lastIndex++;
+  }
+
   for (const route of ROUTE_LINKS) {
     for (const phrase of route.phrases) {
       const re = new RegExp(`\\b${phrase}\\b`, "gi");
@@ -67,10 +83,13 @@ function renderContent(content: string): React.ReactNode[] {
   let last = 0;
   for (const m of kept) {
     if (m.start > last) nodes.push(content.slice(last, m.start));
+    const isExternal = /^https?:\/\//.test(m.href);
     nodes.push(
       <Link
         key={`${m.start}-${m.end}`}
         href={m.href}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
         className="font-medium text-[#0066FF] underline underline-offset-2 hover:text-[#0052CC]"
       >
         {m.label}
