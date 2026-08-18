@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { GraduationCap, Home, Compass, Search } from "lucide-react";
+import { Home, Compass, Search } from "lucide-react";
 import { Header } from "@/components/layout/header";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function NotFound() {
   return (
@@ -10,7 +11,7 @@ export default function NotFound() {
         <div className="max-w-lg w-full text-center">
           <div className="relative inline-flex mb-8">
             <div className="flex size-24 items-center justify-center rounded-3xl bg-blue-600 text-white shadow-2xl shadow-blue-600/30">
-              <GraduationCap className="size-12" />
+              <BrandLogo size={72} />
             </div>
             <div className="absolute -top-3 -right-3 flex size-10 items-center justify-center rounded-full bg-red-500 text-white text-lg font-bold shadow-lg">
               404

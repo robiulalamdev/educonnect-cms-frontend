@@ -24,6 +24,7 @@ import {
   FileText, Star, DollarSign, ScrollText, Settings, Shield, Link2,
   MoreVertical, CreditCard, ClipboardList, ShieldAlert, X,
 } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 
 interface NavItem {
   title: string;
@@ -131,8 +132,8 @@ export function AdminSidebar() {
             className="flex items-center gap-2.5"
             onClick={() => isMobile && setOpenMobile(false)}
           >
-            <div className="flex size-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/25">
-              <Shield className="size-5" />
+            <div className="flex size-9 items-center justify-center">
+              <BrandLogo size={36} />
             </div>
             <span className="text-[17px] font-bold text-gray-900 dark:text-white tracking-tight">Admin Panel</span>
           </Link>

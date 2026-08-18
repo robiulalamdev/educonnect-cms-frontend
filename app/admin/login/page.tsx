@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Shield } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { BrandLogo } from "@/components/brand-logo";
 import { AdminLoginForm } from "./admin-login-form";
 
 export const metadata: Metadata = {
@@ -30,8 +30,8 @@ export default function AdminLoginPage() {
               href={ROUTES.HOME}
               className="inline-flex items-center gap-2.5 font-bold text-xl"
             >
-              <div className="flex size-10 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/25">
-                <Shield className="size-5" />
+              <div className="flex size-10 items-center justify-center">
+                <BrandLogo size={40} />
               </div>
               <span className="text-gray-900 dark:text-white">Admin Panel</span>
             </Link>

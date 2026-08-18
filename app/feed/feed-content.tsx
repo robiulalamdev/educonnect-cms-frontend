@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Home, Search, Bell, MessageSquare, Bookmark, User, Settings, MoreHorizontal, Share2, Plus, Crown, ArrowUp, Hash, Loader2, X, ChevronDown, TrendingUp } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 import { getCloudinaryUrl } from "@/lib/utils";
 
 interface Post { id: string; title: string; content: string; type: string; created_at: string; author: { id: string; full_name: string; avatar?: { key: string } | null }; media: Array<{ id: string; key: string; filename: string; mime_type: string }>; subjects: Array<{ subject: { id: string; name: string } }>; }
@@ -145,7 +146,7 @@ export function FeedContent() {
         <div className="max-w-[1280px] mx-auto px-4 h-[56px] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex size-8 items-center justify-center rounded-xl bg-[#0066FF]"><GraduationCapIcon /></div>
+              <div className="flex size-8 items-center justify-center"><BrandLogo size={32} /></div>
               <span className="text-[17px] font-bold text-gray-900 dark:text-white hidden sm:block tracking-tight">EduConnect</span>
             </Link>
           </div>
@@ -337,5 +338,4 @@ function PostCard({ post, expandedComments, setExpandedComments, expandedPost, s
 
 function PostSkeleton() { return <div className="bg-white dark:bg-[#16161D] rounded-2xl border border-gray-200/80 dark:border-gray-800/80 p-5 animate-pulse"><div className="flex items-center gap-3 mb-4"><div className="size-11 rounded-full bg-gray-200 dark:bg-gray-700" /><div className="space-y-2"><div className="h-3.5 w-32 bg-gray-200 dark:bg-gray-700 rounded-full" /><div className="h-2.5 w-20 bg-gray-200 dark:bg-gray-700 rounded-full" /></div></div><div className="space-y-2 mb-4"><div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded-full" /><div className="h-3.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full" /></div><div className="aspect-[16/10] rounded-2xl bg-gray-200 dark:bg-gray-700" /></div>; }
 function EmptyState() { return <div className="bg-white dark:bg-[#16161D] rounded-2xl border border-gray-200/80 dark:border-gray-800/80 p-16 text-center"><div className="size-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-6 text-gray-300 dark:text-gray-600"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><h3 className="mt-4 text-[16px] font-bold text-gray-900 dark:text-white">No posts yet</h3><p className="mt-1.5 text-[14px] text-gray-500">Be the first to share something.</p></div>; }
-function GraduationCapIcon() { return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="size-4"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3z"/></svg>; }
 function CheckIcon(props: any) { return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={props.className}><polyline points="20 6 9 17 4 12"/></svg>; }

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
-import { GraduationCap } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 import { getCurrentUser } from "@/lib/actions/get-current-user";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getCloudinaryUrl } from "@/lib/utils";
@@ -29,8 +29,8 @@ export function Header() {
             href={ROUTES.HOME}
             className="flex items-center gap-2.5 font-bold text-lg"
           >
-            <div className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
-              <GraduationCap className="size-4.5" />
+            <div className="flex size-8 items-center justify-center">
+              <BrandLogo size={32} />
             </div>
             <span className="text-gray-900 dark:text-white">EduConnect</span>
           </Link>

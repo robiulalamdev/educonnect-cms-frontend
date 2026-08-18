@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ROUTES, SITE } from "@/lib/constants";
-import { GraduationCap } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 
 export function Footer() {
   return (
@@ -12,8 +12,8 @@ export function Footer() {
               href={ROUTES.HOME}
               className="inline-flex items-center gap-2.5 font-bold text-lg"
             >
-              <div className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
-                <GraduationCap className="size-4.5" />
+              <div className="flex size-8 items-center justify-center">
+                <BrandLogo size={32} />
               </div>
               <span className="text-gray-900 dark:text-white">EduConnect</span>
             </Link>

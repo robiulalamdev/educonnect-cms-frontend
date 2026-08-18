@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
 import { useUser } from "@/lib/contexts/user-context";
+import { BrandLogo } from "@/components/brand-logo";
 import {
   LayoutDashboard, User, BookOpen, GraduationCap, CreditCard,
   MessageSquare, Bell, Settings, X, FileText, FolderOpen,
@@ -97,8 +98,8 @@ export function DashboardSidebar() {
             className="flex items-center gap-2.5"
             onClick={() => isMobile && setOpenMobile(false)}
           >
-            <div className="flex size-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/25">
-              <GraduationCap className="size-5" />
+            <div className="flex size-9 items-center justify-center">
+              <BrandLogo size={36} />
             </div>
             <span className="text-[17px] font-bold text-gray-900 dark:text-white tracking-tight">Coaching CMS</span>
           </Link>
