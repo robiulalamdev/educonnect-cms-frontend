@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getChatList, getMessages, sendMessage, sendMessageWithMedia, markChatRead, getOrCreateDirectChat } from "@/lib/actions/messages";
 import { getMyServices } from "@/lib/actions/services";
-import { joinChatRoom, leaveChatRoom, onNewMessage, onUserTyping, emitTyping } from "@/lib/socket";
+import { joinChatRoom, leaveChatRoom, onNewMessage, onMessageRead, onUserTyping, emitTyping } from "@/lib/socket";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -170,11 +170,9 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
   // Listen for new messages
   useEffect(() => {
     const cleanup = onNewMessage((data: any) => {
-      if (activeChat && data.chat_id === activeChat.id) {
-        setMessages((prev) => [...prev, data]);
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-        markChatRead(activeChat.id);
-      }
+      if (!data || !data.id) return;
+      const isOwn = data.sender_id === currentUserId;
+
       // Update chat list
       setChats((prev) => {
         const updated = prev.map((c) =>
@@ -184,7 +182,7 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                 last_message: { body: data.body, created_at: data.created_at, sender_id: data.sender_id },
                 updated_at: data.created_at,
                 unread_count:
-                  activeChat && activeChat.id === data.chat_id
+                  isOwn || (activeChat && activeChat.id === data.chat_id)
                     ? 0
                     : (c.unread_count ?? 0) + 1,
               }
@@ -192,9 +190,48 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
         );
         return updated.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
       });
+
+      if (activeChat && data.chat_id === activeChat.id) {
+        setMessages((prev) => {
+          // Already rendered (own optimistic echo already replaced, or duplicate broadcast)
+          if (prev.some((m) => m.id === data.id)) return prev;
+
+          // Own message: replace the oldest pending optimistic bubble with the confirmed one
+          if (isOwn) {
+            const tempIdx = prev.findIndex(
+              (m) => m.sender_id === currentUserId && m.status === "SENDING",
+            );
+            if (tempIdx !== -1) {
+              const next = [...prev];
+              next[tempIdx] = data;
+              return next;
+            }
+            return prev;
+          }
+
+          return [...prev, data];
+        });
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+        markChatRead(activeChat.id);
+      }
     });
     return cleanup;
-  }, [activeChat?.id]);
+  }, [activeChat?.id, currentUserId]);
+
+  // Listen for read receipts — flip our own messages to the "seen" state
+  useEffect(() => {
+    const cleanup = onMessageRead((data: any) => {
+      if (!data || !activeChat || data.chat_id !== activeChat.id) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.sender_id === currentUserId && m.status !== "READ"
+            ? { ...m, status: "READ" }
+            : m
+        )
+      );
+    });
+    return cleanup;
+  }, [activeChat?.id, currentUserId]);
 
   // Listen for typing
   useEffect(() => {
@@ -215,32 +252,74 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if ((!newMessage.trim() && attachments.length === 0) || !activeChat || sending) return;
+    if ((!newMessage.trim() && attachments.length === 0) || !activeChat || !currentUserId) return;
+
+    const body = newMessage.trim() || " ";
+    const reply = replyTo;
+    const service = contextService;
+    const files = attachments;
+
+    // Optimistic bubble — render instantly, then confirm against the server
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const optimistic: Message = {
+      id: tempId,
+      body,
+      sender_id: currentUserId,
+      status: "SENDING",
+      created_at: new Date().toISOString(),
+      sender: {
+        id: currentUserId,
+        full_name: user?.full_name ?? "You",
+        avatar: user?.avatar ?? null,
+      },
+      reply_to: reply
+        ? { id: reply.id, body: reply.body ?? "", sender_id: reply.sender_id }
+        : undefined,
+      context_service_id: service?.id ?? null,
+    };
+
+    setMessages((prev) => [...prev, optimistic]);
+    setNewMessage("");
+    setReplyTo(null);
+    setContextService(null);
+    setShowServicePicker(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setSending(true);
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+
     try {
       const payload = {
-        body: newMessage.trim() || " ",
-        reply_to_id: replyTo?.id,
-        context_service_id: contextService?.id,
+        body,
+        reply_to_id: reply?.id,
+        context_service_id: service?.id,
       };
-      let res: any;
-      if (attachments.length > 0) {
-        res = await sendMessageWithMedia(activeChat.id, payload, attachments);
-      } else {
-        res = await sendMessage(activeChat.id, payload);
-      }
-      if (res.success) {
-        setMessages((prev) => [...prev, res.data]);
-        setNewMessage("");
-        setAttachments([]);
-        setReplyTo(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+      const res: any = files.length > 0
+        ? await sendMessageWithMedia(activeChat.id, payload, files)
+        : await sendMessage(activeChat.id, payload);
+
+      if (res.success && res.data) {
+        setMessages((prev) => {
+          const idx = prev.findIndex((m) => m.id === tempId);
+          if (idx === -1) return prev; // already replaced via socket echo
+          const next = [...prev];
+          next[idx] = { ...res.data, status: res.data.status || "SENT" };
+          return next;
+        });
+        if (files.length > 0) setAttachments([]);
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       } else {
+        // Roll back the optimistic bubble and restore the draft so nothing is lost
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        if (body.trim()) setNewMessage(body);
+        if (files.length > 0) setAttachments(files);
         toast.error(res.message || "Failed to send message");
       }
     } catch (err) {
       console.error(err);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      if (body.trim()) setNewMessage(body);
+      if (files.length > 0) setAttachments(files);
+      toast.error("Failed to send message");
     } finally {
       setSending(false);
     }
@@ -584,8 +663,14 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                             {formatTime(msg.created_at)}
                           </span>
                           {isOwn && (
-                            <span className="text-blue-400">
-                              {msg.status === "READ" ? <CheckCheck className="size-3" /> : <Check className="size-3" />}
+                            <span className="text-blue-400 flex items-center">
+                              {msg.status === "SENDING" ? (
+                                <Loader2 className="size-3 animate-spin" />
+                              ) : msg.status === "READ" ? (
+                                <CheckCheck className="size-3" />
+                              ) : (
+                                <Check className="size-3" />
+                              )}
                             </span>
                           )}
                         </div>
@@ -698,7 +783,6 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                     value={newMessage}
                     onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }}
                     className="pr-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 border-0"
-                    disabled={sending}
                   />
                   <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 size-8 text-gray-400">
                     <Smile className="size-4" />
@@ -721,7 +805,7 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                   type="submit"
                   size="icon"
                   className="size-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shrink-0"
-                  disabled={(!newMessage.trim() && attachments.length === 0) || sending}
+                  disabled={!newMessage.trim() && attachments.length === 0}
                 >
                   {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                 </Button>

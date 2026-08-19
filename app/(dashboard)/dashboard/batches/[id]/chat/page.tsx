@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { getBatchDetails, getChatMessages, sendChatMessage, sendChatMessageWithMedia } from "@/lib/actions/classroom";
 import { useUser } from "@/lib/contexts/user-context";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, MessageSquare, Paperclip, X, FileText, Plus } from "lucide-react";
+import { Loader2, Send, MessageSquare, Paperclip, X, FileText, Plus, Check } from "lucide-react";
 import { toast } from "sonner";
 import { getCloudinaryUrl } from "@/lib/utils";
 
@@ -87,24 +87,54 @@ export default function BatchChatTab() {
     e.preventDefault();
     if ((!newMessage.trim() && attachments.length === 0) || !chatId) return;
 
+    const body = newMessage.trim() || " ";
+    const files = attachments;
+
+    // Optimistic bubble — render instantly, then confirm against the server
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const optimistic = {
+      id: tempId,
+      body,
+      sender_id: user?.id,
+      status: "SENDING",
+      created_at: new Date().toISOString(),
+      sender: { id: user?.id, full_name: user?.full_name ?? "You", avatar: user?.avatar ?? null },
+    };
+
+    setMessages((prev) => [...prev, optimistic]);
+    setNewMessage("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setSending(true);
-    let res: any;
-    if (attachments.length > 0) {
-      res = await sendChatMessageWithMedia(chatId, newMessage.trim() || " ", attachments);
-    } else {
-      res = await sendChatMessage(chatId, newMessage.trim());
+
+    try {
+      const res: any = files.length > 0
+        ? await sendChatMessageWithMedia(chatId, body, files)
+        : await sendChatMessage(chatId, body);
+
+      if (res.success && res.data) {
+        setMessages((prev) => {
+          const idx = prev.findIndex((m) => m.id === tempId);
+          if (idx === -1) return prev; // already refreshed by polling
+          const next = [...prev];
+          next[idx] = { ...res.data, status: res.data.status || "SENT" };
+          return next;
+        });
+        if (files.length > 0) setAttachments([]);
+      } else {
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        if (body.trim()) setNewMessage(body);
+        if (files.length > 0) setAttachments(files);
+        toast.error(res.message || "Failed to send message");
+      }
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      if (body.trim()) setNewMessage(body);
+      if (files.length > 0) setAttachments(files);
+      toast.error("Failed to send message");
+    } finally {
+      setSending(false);
     }
-    if (res.success) {
-      setNewMessage("");
-      setAttachments([]);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      // Immediately fetch new messages
-      const msgRes = await getChatMessages(chatId);
-      if (msgRes.success) setMessages(msgRes.data);
-    } else {
-      toast.error(res.message || "Failed to send message");
-    }
-    setSending(false);
   };
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -229,6 +259,15 @@ export default function BatchChatTab() {
                       ) : null}
                       <p className={`text-[10px] text-gray-400 mt-1 ${isMe ? "text-right mr-1" : "ml-1"}`}>
                         {new Date(msg.created_at).toLocaleTimeString("en-BD", { hour: "2-digit", minute: "2-digit" })}
+                        {isMe && (
+                          <span className="inline-flex items-center align-middle ml-1">
+                            {msg.status === "SENDING" ? (
+                              <Loader2 className="size-2.5 animate-spin" />
+                            ) : (
+                              <Check className="size-2.5" />
+                            )}
+                          </span>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -298,11 +337,10 @@ export default function BatchChatTab() {
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Type a message..."
           className="flex-1 h-11 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 px-4 text-sm outline-none focus:border-[#0066FF] focus:ring-2 focus:ring-[#0066FF]/20 transition-all"
-          disabled={sending}
         />
         <Button
           type="submit"
-          disabled={sending || (!newMessage.trim() && attachments.length === 0)}
+          disabled={!newMessage.trim() && attachments.length === 0}
           className="size-11 p-0 rounded-xl bg-[#0066FF] hover:bg-blue-600 text-white shrink-0"
         >
           {sending ? (

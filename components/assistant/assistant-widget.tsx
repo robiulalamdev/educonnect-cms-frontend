@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
@@ -117,6 +118,7 @@ const STORAGE_KEY = "educonnect-assistant-history";
 const MAX_HISTORY = 60;
 
 export function AssistantWidget() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -125,6 +127,12 @@ export function AssistantWidget() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // The assistant launcher is a public-facing widget — hide it inside the
+  // dashboard and admin areas (messages, batches, settings, etc.).
+  // NOTE: checked after all hooks so hook order stays consistent.
+  const isAppArea =
+    pathname?.startsWith("/dashboard") || pathname?.startsWith("/admin");
 
   useEffect(() => {
     try {
@@ -239,6 +247,8 @@ export function AssistantWidget() {
     "Tell me about the developer",
     "Tell me a fun fact",
   ];
+
+  if (isAppArea) return null;
 
   return (
     <>

@@ -59,6 +59,12 @@ export function onNewMessage(callback: (data: any) => void): () => void {
   return () => { s.off("new_message", callback); };
 }
 
+export function onMessageRead(callback: (data: any) => void): () => void {
+  const s = getSocket();
+  s.on("message_read", callback);
+  return () => { s.off("message_read", callback); };
+}
+
 export function onUserTyping(callback: (data: any) => void): () => void {
   const s = getSocket();
   s.on("user_typing", callback);
