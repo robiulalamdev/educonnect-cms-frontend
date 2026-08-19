@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { getChatList, getMessages, sendMessage, markChatRead, getOrCreateDirectChat } from "@/lib/actions/messages";
+import { getChatList, getMessages, sendMessage, sendMessageWithMedia, markChatRead, getOrCreateDirectChat } from "@/lib/actions/messages";
+import { getMyServices } from "@/lib/actions/services";
 import { joinChatRoom, leaveChatRoom, onNewMessage, onUserTyping, emitTyping } from "@/lib/socket";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -20,14 +21,21 @@ import {
   CheckCheck,
   Loader2,
   MessageSquare,
+  X,
+  FileText,
+  GraduationCap,
+  Quote,
+  Plus,
 } from "lucide-react";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { useUser } from "@/lib/contexts/user-context";
+import { toast } from "sonner";
 
 interface Chat {
   id: string;
   type: string;
   updated_at: string;
+  unread_count?: number;
   participants: Array<{ user: { id: string; full_name: string; avatar?: { key: string } | null } }>;
   last_message?: { body: string; created_at: string; sender_id: string } | null;
 }
@@ -39,8 +47,9 @@ interface Message {
   status: string;
   created_at: string;
   sender: { id: string; full_name: string; avatar?: { key: string } | null };
-  media?: Array<{ id: string; key: string; filename: string; mime_type: string }>;
+  media?: Array<{ id: string; key: string; filename: string; mime_type: string; type?: string }>;
   reply_to?: { id: string; body: string; sender_id: string } | null;
+  context_service_id?: string | null;
 }
 
 function getInitials(name: string) {
@@ -105,6 +114,14 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
   const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [contextService, setContextService] = useState<{ id: string; title: string } | null>(null);
+  const [services, setServices] = useState<Array<{ id: string; title: string }>>([]);
+  const [serviceTitles, setServiceTitles] = useState<Record<string, string>>({});
+  const [showServicePicker, setShowServicePicker] = useState(false);
+  const [chatFilter, setChatFilter] = useState<"ALL" | "DIRECT" | "BATCH_GROUP">("ALL");
 
   // Load chat list
   const loadChats = useCallback(async () => {
@@ -126,6 +143,12 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
   useEffect(() => {
     if (!activeChat) return;
     setLoadingMessages(true);
+    setNewMessage("");
+    setAttachments([]);
+    setReplyTo(null);
+    setContextService(null);
+    setShowServicePicker(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     joinChatRoom(activeChat.id);
 
     getMessages(activeChat.id, 1, 50).then((res: any) => {
@@ -135,6 +158,11 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
     });
 
     markChatRead(activeChat.id);
+
+    // Clear the unread badge for the opened chat
+    setChats((prev) =>
+      prev.map((c) => (c.id === activeChat.id ? { ...c, unread_count: 0 } : c)),
+    );
 
     return () => { leaveChatRoom(activeChat.id); };
   }, [activeChat?.id]);
@@ -151,7 +179,15 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
       setChats((prev) => {
         const updated = prev.map((c) =>
           c.id === data.chat_id
-            ? { ...c, last_message: { body: data.body, created_at: data.created_at, sender_id: data.sender_id }, updated_at: data.created_at }
+            ? {
+                ...c,
+                last_message: { body: data.body, created_at: data.created_at, sender_id: data.sender_id },
+                updated_at: data.created_at,
+                unread_count:
+                  activeChat && activeChat.id === data.chat_id
+                    ? 0
+                    : (c.unread_count ?? 0) + 1,
+              }
             : c
         );
         return updated.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
@@ -179,20 +215,69 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!newMessage.trim() || !activeChat || sending) return;
+    if ((!newMessage.trim() && attachments.length === 0) || !activeChat || sending) return;
     setSending(true);
     try {
-      const res = (await sendMessage(activeChat.id, { body: newMessage.trim() })) as any;
+      const payload = {
+        body: newMessage.trim() || " ",
+        reply_to_id: replyTo?.id,
+        context_service_id: contextService?.id,
+      };
+      let res: any;
+      if (attachments.length > 0) {
+        res = await sendMessageWithMedia(activeChat.id, payload, attachments);
+      } else {
+        res = await sendMessage(activeChat.id, payload);
+      }
       if (res.success) {
         setMessages((prev) => [...prev, res.data]);
         setNewMessage("");
+        setAttachments([]);
+        setReplyTo(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      } else {
+        toast.error(res.message || "Failed to send message");
       }
     } catch (err) {
       console.error(err);
     } finally {
       setSending(false);
     }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    const remaining = 3 - attachments.length;
+    if (files.length > remaining) {
+      toast.error(`You can attach up to 3 files`);
+    }
+    const accepted = files.slice(0, remaining);
+    setAttachments((prev) => [...prev, ...accepted].slice(0, 3));
+    if (e.target) e.target.value = "";
+  }
+
+  function removeAttachment(index: number) {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function loadServices() {
+    const res = (await getMyServices(1, 50)) as any;
+    if (res.success && Array.isArray(res.data)) {
+      setServices(res.data.map((s: any) => ({ id: s.id, title: s.title })));
+    }
+  }
+
+  function pickService(s: { id: string; title: string }) {
+    setContextService(s);
+    setServiceTitles((prev) => ({ ...prev, [s.id]: s.title }));
+    setShowServicePicker(false);
+  }
+
+  function formatFileSize(bytes: number) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   function handleTyping() {
@@ -209,6 +294,7 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
   }
 
   const filteredChats = chats.filter((chat) => {
+    if (chatFilter !== "ALL" && chat.type !== chatFilter) return false;
     const other = getOtherParticipant(chat);
     return other?.full_name?.toLowerCase().includes(search.toLowerCase());
   });
@@ -230,6 +316,21 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 border-0"
             />
+          </div>
+          <div className="flex items-center gap-1 mt-3">
+            {(["ALL", "DIRECT", "BATCH_GROUP"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setChatFilter(f)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
+                  chatFilter === f
+                    ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                }`}
+              >
+                {f === "ALL" ? "All" : f === "DIRECT" ? "Direct" : "Groups"}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -289,9 +390,16 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                         {chat.last_message ? timeAgo(chat.last_message.created_at) : ""}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                      {chat.last_message?.body || "Start a conversation"}
-                    </p>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {chat.last_message?.body || "Start a conversation"}
+                      </p>
+                      {!!chat.unread_count && (
+                        <span className="ml-2 min-w-5 h-5 px-1.5 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
+                          {chat.unread_count > 99 ? "99+" : chat.unread_count}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </button>
               );
@@ -411,21 +519,66 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                           )}
                         </Avatar>
                       )}
-                      <div className={`max-w-[70%] ${isOwn ? "order-1" : ""}`}>
+                      <div className={`max-w-[70%] ${isOwn ? "order-1" : ""} group relative`}>
                         {msg.reply_to && (
-                          <div className="mb-1 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 border-l-2 border-blue-400">
-                            {msg.reply_to.body?.slice(0, 50)}...
+                          <div className="mb-1 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 border-l-2 border-blue-400 truncate max-w-full">
+                            <Quote className="size-3 inline mr-1" />
+                            {msg.reply_to.body?.slice(0, 60)}...
                           </div>
                         )}
-                        <div
-                          className={`px-3 py-2 rounded-2xl text-sm ${
-                            isOwn
-                              ? "bg-blue-600 text-white rounded-br-md"
-                              : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md"
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap break-words">{msg.body}</p>
-                        </div>
+                        {msg.media && msg.media.length > 0 && (
+                          <div className={`flex flex-wrap gap-1.5 mb-1.5 ${isOwn ? "justify-end" : ""}`}>
+                            {msg.media.map((m) =>
+                              m.mime_type?.startsWith("image/") ? (
+                                <a
+                                  key={m.id}
+                                  href={getCloudinaryUrl(m.key, { w: 960 })}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <img
+                                    src={getCloudinaryUrl(m.key, { w: 240 })}
+                                    alt={m.filename}
+                                    className="rounded-xl max-w-[200px] max-h-[200px] object-cover"
+                                    loading="lazy"
+                                  />
+                                </a>
+                              ) : (
+                                <a
+                                  key={m.id}
+                                  href={getCloudinaryUrl(m.key)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs max-w-[220px] ${
+                                    isOwn
+                                      ? "bg-blue-700/60 text-white"
+                                      : "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+                                  }`}
+                                >
+                                  <FileText className="size-4 shrink-0" />
+                                  <span className="truncate">{m.filename}</span>
+                                </a>
+                              ),
+                            )}
+                          </div>
+                        )}
+                        {msg.context_service_id && serviceTitles[msg.context_service_id] && (
+                          <div className={`flex items-center gap-1 mb-1 text-[10px] font-medium ${isOwn ? "text-blue-100" : "text-gray-500 dark:text-gray-400"}`}>
+                            <GraduationCap className="size-3 shrink-0" />
+                            <span className="truncate">Discussing: {serviceTitles[msg.context_service_id]}</span>
+                          </div>
+                        )}
+                        {msg.body && msg.body.trim() !== "" ? (
+                          <div
+                            className={`px-3 py-2 rounded-2xl text-sm ${
+                              isOwn
+                                ? "bg-blue-600 text-white rounded-br-md"
+                                : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md"
+                            }`}
+                          >
+                            <p className="whitespace-pre-wrap break-words">{msg.body}</p>
+                          </div>
+                        ) : null}
                         <div className={`flex items-center gap-1 mt-0.5 ${isOwn ? "justify-end" : ""}`}>
                           <span className="text-[10px] text-gray-400 dark:text-gray-500">
                             {formatTime(msg.created_at)}
@@ -436,6 +589,14 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                             </span>
                           )}
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => setReplyTo(msg)}
+                          className={`absolute top-0 ${isOwn ? "right-full mr-1.5" : "left-full ml-1.5"} opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-blue-500`}
+                          title="Reply"
+                        >
+                          <Quote className="size-4" />
+                        </button>
                       </div>
                     </div>
                     </div>
@@ -456,11 +617,79 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
 
             {/* Message Input */}
             <div className="p-3 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+              {/* Reply banner */}
+              {replyTo && (
+                <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900">
+                  <Quote className="size-4 text-blue-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">Replying to {replyTo.sender.full_name}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 truncate">{replyTo.body?.slice(0, 80) || (replyTo.media?.length ? "Attachment" : "")}</p>
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" className="size-7 text-gray-400" onClick={() => setReplyTo(null)}>
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Service context chip */}
+              {contextService && (
+                <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900">
+                  <GraduationCap className="size-4 text-indigo-500 shrink-0" />
+                  <p className="text-xs font-medium text-indigo-700 dark:text-indigo-300 flex-1 truncate">Discussing: {contextService.title}</p>
+                  <Button type="button" variant="ghost" size="icon" className="size-7 text-gray-400" onClick={() => setContextService(null)}>
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Attachment previews */}
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {attachments.map((file, idx) => (
+                    <div key={`${file.name}-${idx}`} className="relative">
+                      {file.type.startsWith("image/") ? (
+                        <img src={URL.createObjectURL(file)} alt={file.name} className="size-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700" />
+                      ) : (
+                        <div className="size-16 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center gap-0.5 p-1">
+                          <FileText className="size-5 text-gray-500" />
+                          <span className="text-[8px] text-gray-500 max-w-full truncate px-0.5">{file.name}</span>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(idx)}
+                        className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {attachments.length < 3 && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="size-16 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-400 hover:text-blue-500 hover:border-blue-400 flex items-center justify-center transition-colors"
+                      title="Add file"
+                    >
+                      <Plus className="size-5" />
+                    </button>
+                  )}
+                </div>
+              )}
+
               <form onSubmit={handleSend} className="flex items-end gap-2">
-                <Button type="button" variant="ghost" size="icon" className="size-9 text-gray-400 shrink-0">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  hidden
+                  accept="image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={handleFileSelect}
+                />
+                <Button type="button" variant="ghost" size="icon" className="size-9 text-gray-400 shrink-0" onClick={() => fileInputRef.current?.click()} title="Attach file (max 3)">
                   <Paperclip className="size-4.5" />
                 </Button>
-                <Button type="button" variant="ghost" size="icon" className="size-9 text-gray-400 shrink-0">
+                <Button type="button" variant="ghost" size="icon" className="size-9 text-gray-400 shrink-0" onClick={() => fileInputRef.current?.click()} title="Attach image">
                   <ImageIcon className="size-4.5" />
                 </Button>
                 <div className="flex-1 relative">
@@ -476,14 +705,53 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                   </Button>
                 </div>
                 <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 text-gray-400 shrink-0"
+                  title="Select service to discuss"
+                  onClick={() => {
+                    if (services.length === 0) loadServices();
+                    setShowServicePicker((v) => !v);
+                  }}
+                >
+                  <GraduationCap className="size-4.5" />
+                </Button>
+                <Button
                   type="submit"
                   size="icon"
                   className="size-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shrink-0"
-                  disabled={!newMessage.trim() || sending}
+                  disabled={(!newMessage.trim() && attachments.length === 0) || sending}
                 >
                   {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                 </Button>
               </form>
+
+              {/* Service picker */}
+              {showServicePicker && (
+                <div className="mt-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden max-h-56 overflow-y-auto">
+                  <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 border-b border-gray-100 dark:border-gray-800">
+                    Select a service to discuss
+                  </p>
+                  {services.length === 0 ? (
+                    <p className="px-3 py-3 text-xs text-gray-400">No services found.</p>
+                  ) : (
+                    services.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => pickService(s)}
+                        className={`w-full text-left px-3 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-blue-950/30 flex items-center gap-2 ${
+                          contextService?.id === s.id ? "bg-blue-50 dark:bg-blue-950/30 text-blue-600" : "text-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        <GraduationCap className="size-4 shrink-0 text-gray-400" />
+                        <span className="truncate">{s.title}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </>
         ) : (

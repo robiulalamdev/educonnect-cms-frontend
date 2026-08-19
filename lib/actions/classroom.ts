@@ -1,6 +1,6 @@
 "use server";
 
-import { apiGet, apiPost } from "@/lib/api";
+import { apiGet, apiPost, apiPostFormData } from "@/lib/api";
 
 // ── Batch Details ──
 export async function getBatchDetails(batchId: string) {
@@ -105,6 +105,19 @@ export async function getChatMessages(chatId: string, page = 1) {
 export async function sendChatMessage(chatId: string, body: string): Promise<{ success: boolean; data?: any; message?: any }> {
   try {
     return await apiPost<{ success: boolean; data: any }>(`/api/v1/chats/profile/${chatId}/messages`, { body });
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+}
+
+export async function sendChatMessageWithMedia(chatId: string, body: string, files: File[]): Promise<{ success: boolean; data?: any; message?: any }> {
+  try {
+    const formData = new FormData();
+    formData.append("body", body);
+    for (const file of files) {
+      formData.append("media", file);
+    }
+    return await apiPostFormData<{ success: boolean; data: any }>(`/api/v1/chats/profile/${chatId}/messages`, formData);
   } catch (err: any) {
     return { success: false, message: err.message };
   }

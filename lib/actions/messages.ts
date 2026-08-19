@@ -1,6 +1,6 @@
 "use server";
 
-import { apiGet, apiPost, apiPatch } from "@/lib/api";
+import { apiGet, apiPost, apiPatch, apiPostFormData } from "@/lib/api";
 
 /**
  * Get chat list.
@@ -48,10 +48,33 @@ export async function getMessages(chatId: string, page = 1, limit = 50) {
  */
 export async function sendMessage(
   chatId: string,
-  body: { body: string; reply_to_id?: string },
+  body: { body: string; reply_to_id?: string; context_service_id?: string },
 ) {
   try {
     return await apiPost(`/api/v1/chats/profile/${chatId}/messages`, body);
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+}
+
+/**
+ * Send a message with attachments (up to 3 files) via multipart.
+ * `body`, `reply_to_id`, `context_service_id` are sent as text fields.
+ */
+export async function sendMessageWithMedia(
+  chatId: string,
+  payload: { body: string; reply_to_id?: string; context_service_id?: string },
+  files: File[],
+) {
+  try {
+    const formData = new FormData();
+    formData.append("body", payload.body);
+    if (payload.reply_to_id) formData.append("reply_to_id", payload.reply_to_id);
+    if (payload.context_service_id) formData.append("context_service_id", payload.context_service_id);
+    for (const file of files) {
+      formData.append("media", file);
+    }
+    return await apiPostFormData(`/api/v1/chats/profile/${chatId}/messages`, formData);
   } catch (err: any) {
     return { success: false, message: err.message };
   }

@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
-import { getBatchDetails, getChatMessages, sendChatMessage } from "@/lib/actions/classroom";
+import { getBatchDetails, getChatMessages, sendChatMessage, sendChatMessageWithMedia } from "@/lib/actions/classroom";
 import { useUser } from "@/lib/contexts/user-context";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, MessageSquare } from "lucide-react";
+import { Loader2, Send, MessageSquare, Paperclip, X, FileText, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getCloudinaryUrl } from "@/lib/utils";
 
@@ -45,6 +45,8 @@ export default function BatchChatTab() {
   const [newMessage, setNewMessage] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
 
   // 1. Get the batch's group_chat ID
   useEffect(() => {
@@ -83,12 +85,19 @@ export default function BatchChatTab() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !chatId) return;
+    if ((!newMessage.trim() && attachments.length === 0) || !chatId) return;
 
     setSending(true);
-    const res = await sendChatMessage(chatId, newMessage.trim());
+    let res: any;
+    if (attachments.length > 0) {
+      res = await sendChatMessageWithMedia(chatId, newMessage.trim() || " ", attachments);
+    } else {
+      res = await sendChatMessage(chatId, newMessage.trim());
+    }
     if (res.success) {
       setNewMessage("");
+      setAttachments([]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       // Immediately fetch new messages
       const msgRes = await getChatMessages(chatId);
       if (msgRes.success) setMessages(msgRes.data);
@@ -97,6 +106,14 @@ export default function BatchChatTab() {
     }
     setSending(false);
   };
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    const remaining = 3 - attachments.length;
+    if (files.length > remaining) toast.error("You can attach up to 3 files");
+    setAttachments((prev) => [...prev, ...files.slice(0, remaining)].slice(0, 3));
+    if (e.target) e.target.value = "";
+  }
 
   if (loading) {
     return (
@@ -168,15 +185,48 @@ export default function BatchChatTab() {
                           {msg.sender?.full_name}
                         </p>
                       )}
-                      <div
-                        className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap ${
-                          isMe
-                            ? "bg-[#0066FF] text-white rounded-br-md"
-                            : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md"
-                        }`}
-                      >
-                        {msg.body}
-                      </div>
+                      {msg.media && msg.media.length > 0 && (
+                        <div className={`flex flex-wrap gap-1.5 mb-1.5 ${isMe ? "justify-end" : ""}`}>
+                          {msg.media.map((m: any) =>
+                            m.mime_type?.startsWith("image/") ? (
+                              <a key={m.id} href={getCloudinaryUrl(m.key, { w: 960 })} target="_blank" rel="noreferrer">
+                                <img
+                                  src={getCloudinaryUrl(m.key, { w: 200 })}
+                                  alt={m.filename}
+                                  className="rounded-xl max-w-[180px] max-h-[180px] object-cover"
+                                  loading="lazy"
+                                />
+                              </a>
+                            ) : (
+                              <a
+                                key={m.id}
+                                href={getCloudinaryUrl(m.key)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs max-w-[220px] ${
+                                  isMe
+                                    ? "bg-[#0066FF]/80 text-white"
+                                    : "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+                                }`}
+                              >
+                                <FileText className="size-4 shrink-0" />
+                                <span className="truncate">{m.filename}</span>
+                              </a>
+                            ),
+                          )}
+                        </div>
+                      )}
+                      {msg.body && msg.body.trim() !== "" ? (
+                        <div
+                          className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap ${
+                            isMe
+                              ? "bg-[#0066FF] text-white rounded-br-md"
+                              : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md"
+                          }`}
+                        >
+                          {msg.body}
+                        </div>
+                      ) : null}
                       <p className={`text-[10px] text-gray-400 mt-1 ${isMe ? "text-right mr-1" : "ml-1"}`}>
                         {new Date(msg.created_at).toLocaleTimeString("en-BD", { hour: "2-digit", minute: "2-digit" })}
                       </p>
@@ -191,7 +241,58 @@ export default function BatchChatTab() {
       </div>
 
       {/* Message Input */}
+      {attachments.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {attachments.map((file, idx) => (
+            <div key={`${file.name}-${idx}`} className="relative">
+              {file.type.startsWith("image/") ? (
+                <img src={URL.createObjectURL(file)} alt={file.name} className="size-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700" />
+              ) : (
+                <div className="size-16 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center gap-0.5 p-1">
+                  <FileText className="size-5 text-gray-500" />
+                  <span className="text-[8px] text-gray-500 max-w-full truncate px-0.5">{file.name}</span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
+                className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          ))}
+          {attachments.length < 3 && (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="size-16 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-400 hover:text-blue-500 hover:border-blue-400 flex items-center justify-center transition-colors"
+              title="Add file"
+            >
+              <Plus className="size-5" />
+            </button>
+          )}
+        </div>
+      )}
       <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-gray-100 dark:border-gray-800 pt-4">
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          hidden
+          accept="image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          onChange={handleFileSelect}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-11 rounded-xl text-gray-400 shrink-0"
+          onClick={() => fileInputRef.current?.click()}
+          title="Attach file (max 3)"
+        >
+          <Paperclip className="size-4.5" />
+        </Button>
         <input
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
@@ -201,7 +302,7 @@ export default function BatchChatTab() {
         />
         <Button
           type="submit"
-          disabled={sending || !newMessage.trim()}
+          disabled={sending || (!newMessage.trim() && attachments.length === 0)}
           className="size-11 p-0 rounded-xl bg-[#0066FF] hover:bg-blue-600 text-white shrink-0"
         >
           {sending ? (
