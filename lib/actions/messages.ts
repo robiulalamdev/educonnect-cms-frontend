@@ -35,7 +35,9 @@ export async function getOrCreateDirectChat(
  */
 export async function getMessages(chatId: string, page = 1, limit = 50) {
   try {
-    return await apiGet(`/api/v1/chats/profile/${chatId}/messages?page=${page}&limit=${limit}`);
+    const res = await apiGet<any>(`/api/v1/chats/profile/${chatId}/messages?page=${page}&limit=${limit}`);
+    const data = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
+    return { success: true, data, meta: res.data?.meta ?? res.meta };
   } catch {
     return { success: false, data: [], meta: { total: 0, total_pages: 0 } };
   }

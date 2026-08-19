@@ -9,6 +9,31 @@ import { Loader2, Send, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { getCloudinaryUrl } from "@/lib/utils";
 
+function isSameDay(a: string, b: string) {
+  const da = new Date(a);
+  const db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+}
+
+function formatDay(date: string) {
+  const d = new Date(date);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((today.getTime() - day.getTime()) / 86400000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return d.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: d.getFullYear() === now.getFullYear() ? undefined : "numeric",
+  });
+}
+
 export default function BatchChatTab() {
   const { id } = useParams<{ id: string }>();
   const user = useUser();
@@ -105,45 +130,57 @@ export default function BatchChatTab() {
             <p className="text-gray-500 text-sm">No messages yet. Start the conversation!</p>
           </div>
         ) : (
-          messages.map((msg: any) => {
+          messages.map((msg: any, i: number) => {
             const isMe = msg.sender_id === user?.id;
+            const showDayDivider = i === 0 || !isSameDay(messages[i - 1]?.created_at, msg.created_at);
             return (
-              <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[75%] flex gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
-                  {/* Avatar */}
-                  {!isMe && (
-                    msg.sender?.avatar?.key ? (
-                      <img
-                        src={getCloudinaryUrl(msg.sender.avatar.key, { w: 32, h: 32 })}
-                        className="size-7 rounded-full object-cover shrink-0 mt-1"
-                        alt=""
-                      />
-                    ) : (
-                      <div className="size-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 text-[10px] font-bold shrink-0 mt-1">
-                        {msg.sender?.full_name?.charAt(0) ?? "?"}
-                      </div>
-                    )
-                  )}
-
-                  {/* Bubble */}
-                  <div>
+              <div key={msg.id}>
+                {showDayDivider && (
+                  <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                      {formatDay(msg.created_at)}
+                    </span>
+                    <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+                  </div>
+                )}
+                <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[75%] flex gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
+                    {/* Avatar */}
                     {!isMe && (
-                      <p className="text-[10px] font-semibold text-gray-400 mb-0.5 ml-1">
-                        {msg.sender?.full_name}
-                      </p>
+                      msg.sender?.avatar?.key ? (
+                        <img
+                          src={getCloudinaryUrl(msg.sender.avatar.key, { w: 32, h: 32 })}
+                          className="size-7 rounded-full object-cover shrink-0 mt-1"
+                          alt=""
+                        />
+                      ) : (
+                        <div className="size-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 text-[10px] font-bold shrink-0 mt-1">
+                          {msg.sender?.full_name?.charAt(0) ?? "?"}
+                        </div>
+                      )
                     )}
-                    <div
-                      className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                        isMe
-                          ? "bg-[#0066FF] text-white rounded-br-md"
-                          : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md"
-                      }`}
-                    >
-                      {msg.body}
+
+                    {/* Bubble */}
+                    <div>
+                      {!isMe && (
+                        <p className="text-[10px] font-semibold text-gray-400 mb-0.5 ml-1">
+                          {msg.sender?.full_name}
+                        </p>
+                      )}
+                      <div
+                        className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap ${
+                          isMe
+                            ? "bg-[#0066FF] text-white rounded-br-md"
+                            : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md"
+                        }`}
+                      >
+                        {msg.body}
+                      </div>
+                      <p className={`text-[10px] text-gray-400 mt-1 ${isMe ? "text-right mr-1" : "ml-1"}`}>
+                        {new Date(msg.created_at).toLocaleTimeString("en-BD", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
                     </div>
-                    <p className={`text-[10px] text-gray-400 mt-1 ${isMe ? "text-right mr-1" : "ml-1"}`}>
-                      {new Date(msg.created_at).toLocaleTimeString("en-BD", { hour: "2-digit", minute: "2-digit" })}
-                    </p>
                   </div>
                 </div>
               </div>

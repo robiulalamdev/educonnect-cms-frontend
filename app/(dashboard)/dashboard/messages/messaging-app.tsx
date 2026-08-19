@@ -22,6 +22,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { getCloudinaryUrl } from "@/lib/utils";
+import { useUser } from "@/lib/contexts/user-context";
 
 interface Chat {
   id: string;
@@ -61,11 +62,38 @@ function formatTime(date: string) {
   return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+function isSameDay(a: string, b: string) {
+  const da = new Date(a);
+  const db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+}
+
+function formatDay(date: string) {
+  const d = new Date(date);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((today.getTime() - day.getTime()) / 86400000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return d.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: d.getFullYear() === now.getFullYear() ? undefined : "numeric",
+  });
+}
+
 interface MessagingAppProps {
   currentUserId?: string;
 }
 
-export function MessagingApp({ currentUserId }: MessagingAppProps) {
+export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppProps) {
+  const user = useUser();
+  const currentUserId = user?.id ?? currentUserIdProp;
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
@@ -174,7 +202,10 @@ export function MessagingApp({ currentUserId }: MessagingAppProps) {
   }
 
   function getOtherParticipant(chat: Chat) {
-    return chat.participants?.[0]?.user;
+    return (
+      chat.participants?.find((p) => p.user.id !== currentUserId)?.user ??
+      chat.participants?.[0]?.user
+    );
   }
 
   const filteredChats = chats.filter((chat) => {
@@ -351,8 +382,19 @@ export function MessagingApp({ currentUserId }: MessagingAppProps) {
                 messages.map((msg, i) => {
                   const isOwn = msg.sender_id === currentUserId;
                   const showAvatar = !isOwn && (i === 0 || messages[i - 1]?.sender_id !== msg.sender_id);
+                  const showDayDivider = i === 0 || !isSameDay(messages[i - 1]?.created_at, msg.created_at);
                   return (
-                    <div key={msg.id} className={`flex gap-2 ${isOwn ? "justify-end" : "justify-start"}`}>
+                    <div key={msg.id}>
+                      {showDayDivider && (
+                        <div className="flex items-center gap-3 my-4">
+                          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+                          <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                            {formatDay(msg.created_at)}
+                          </span>
+                          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+                        </div>
+                      )}
+                      <div className={`flex gap-2 ${isOwn ? "justify-end" : "justify-start"}`}>
                       {!isOwn && (
                         <Avatar className="size-8 mt-auto shrink-0">
                           {msg.sender.avatar ? (
@@ -395,6 +437,7 @@ export function MessagingApp({ currentUserId }: MessagingAppProps) {
                           )}
                         </div>
                       </div>
+                    </div>
                     </div>
                   );
                 })

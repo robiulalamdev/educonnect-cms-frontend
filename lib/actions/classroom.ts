@@ -94,7 +94,9 @@ export async function getBatchEnrollments(batchId: string) {
 // ── Chat messages ──
 export async function getChatMessages(chatId: string, page = 1) {
   try {
-    return await apiGet<{ success: boolean; data: any[]; meta: any }>(`/api/v1/chats/profile/${chatId}/messages?page=${page}&limit=50`);
+    const res = await apiGet<any>(`/api/v1/chats/profile/${chatId}/messages?page=${page}&limit=50`);
+    const data = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
+    return { success: true, data, meta: res.data?.meta ?? res.meta };
   } catch {
     return { success: false, data: [], meta: { total: 0 } };
   }

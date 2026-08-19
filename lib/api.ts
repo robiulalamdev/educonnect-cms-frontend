@@ -242,7 +242,7 @@ export async function apiPatch<T = any>(
     ...fetchOpts,
     method: "PATCH",
     headers: {
-      "Content-Type": "application/json",
+      ...(body ? { "Content-Type": "application/json" } : {}),
       Cookie: cookieHeader,
       ...fetchOpts.headers,
     },
