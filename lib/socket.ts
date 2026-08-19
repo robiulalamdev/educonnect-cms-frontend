@@ -70,3 +70,21 @@ export function onUserTyping(callback: (data: any) => void): () => void {
   s.on("user_typing", callback);
   return () => { s.off("user_typing", callback); };
 }
+
+export function onPresenceUpdate(callback: (data: { userId: string; online: boolean; last_seen?: string | null }) => void): () => void {
+  const s = getSocket();
+  s.on("presence_update", callback);
+  return () => { s.off("presence_update", callback); };
+}
+
+export function onPresenceSnapshot(callback: (data: { chatId: string; members: Record<string, { online: boolean; last_seen: string | null }> }) => void): () => void {
+  const s = getSocket();
+  s.on("presence_snapshot", callback);
+  return () => { s.off("presence_snapshot", callback); };
+}
+
+export function onMentionNotification(callback: (data: any) => void): () => void {
+  const s = getSocket();
+  s.on("mention_notification", callback);
+  return () => { s.off("mention_notification", callback); };
+}

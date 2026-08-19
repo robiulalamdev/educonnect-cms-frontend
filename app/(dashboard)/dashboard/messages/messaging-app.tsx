@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getChatList, getMessages, sendMessage, sendMessageWithMedia, markChatRead, getOrCreateDirectChat } from "@/lib/actions/messages";
 import { getMyServices } from "@/lib/actions/services";
-import { joinChatRoom, leaveChatRoom, onNewMessage, onMessageRead, onUserTyping, emitTyping } from "@/lib/socket";
+import { joinChatRoom, leaveChatRoom, onNewMessage, onMessageRead, onUserTyping, emitTyping, onPresenceUpdate, onPresenceSnapshot, onMentionNotification } from "@/lib/socket";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,6 @@ import {
   Send,
   ArrowLeft,
   MoreVertical,
-  Phone,
-  Video,
   Image as ImageIcon,
   Paperclip,
   Smile,
@@ -26,6 +24,12 @@ import {
   GraduationCap,
   Quote,
   Plus,
+  Users,
+  ChevronDown,
+  Crown,
+  ShieldCheck,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { getCloudinaryUrl } from "@/lib/utils";
 import { useUser } from "@/lib/contexts/user-context";
@@ -34,10 +38,18 @@ import { toast } from "sonner";
 interface Chat {
   id: string;
   type: string;
+  name?: string | null;
+  avatar?: { key: string } | null;
   updated_at: string;
   unread_count?: number;
-  participants: Array<{ user: { id: string; full_name: string; avatar?: { key: string } | null } }>;
-  last_message?: { body: string; created_at: string; sender_id: string } | null;
+  participants: Array<{ user: { id: string; full_name: string; username?: string | null; avatar?: { key: string } | null }; is_admin?: boolean }>;
+  last_message?: {
+    body: string;
+    created_at: string;
+    sender_id: string;
+    sender?: { full_name: string };
+    media?: Array<{ mime_type: string; filename: string }>;
+  } | null;
 }
 
 interface Message {
@@ -50,6 +62,31 @@ interface Message {
   media?: Array<{ id: string; key: string; filename: string; mime_type: string; type?: string }>;
   reply_to?: { id: string; body: string; sender_id: string } | null;
   context_service_id?: string | null;
+  mentions?: Array<{ mentioned_user: { id: string; username: string | null; full_name: string } }>;
+}
+
+// Keep in sync with backend CLD_MAX_SIZE[MESSAGE_MEDIA] and the multipart
+// "maxCount: 3" rule — validated here so the user gets instant toast feedback.
+const MAX_MESSAGE_ATTACHMENTS = 3;
+const MAX_MESSAGE_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ACCEPTED_MESSAGE_MIME = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
+function isMessageFileValid(file: File): string | null {
+  if (!ACCEPTED_MESSAGE_MIME.includes(file.type)) {
+    const ext = file.name.split(".").pop()?.toUpperCase() ?? file.type;
+    return `"${file.name}" has unsupported type (${ext}). Allowed: JPG, PNG, WEBP, PDF, DOC, DOCX.`;
+  }
+  if (file.size > MAX_MESSAGE_FILE_SIZE) {
+    return `"${file.name}" is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Max allowed is 10MB.`;
+  }
+  return null;
 }
 
 function getInitials(name: string) {
@@ -96,6 +133,31 @@ function formatDay(date: string) {
   });
 }
 
+function renderBody(body: string, mentions?: Message["mentions"]) {
+  if (!body) return null;
+  const parts = body.split(/(@[\w.]+)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("@")) {
+      const username = part.slice(1).toLowerCase();
+      const m = mentions?.find(
+        (x) => x.mentioned_user.username?.toLowerCase() === username,
+      );
+      if (m) {
+        return (
+          <span
+            key={i}
+            className="font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 rounded px-1 cursor-pointer hover:underline"
+            title={`${m.mentioned_user.full_name} (@${m.mentioned_user.username})`}
+          >
+            {part}
+          </span>
+        );
+      }
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 interface MessagingAppProps {
   currentUserId?: string;
 }
@@ -122,6 +184,11 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
   const [serviceTitles, setServiceTitles] = useState<Record<string, string>>({});
   const [showServicePicker, setShowServicePicker] = useState(false);
   const [chatFilter, setChatFilter] = useState<"ALL" | "DIRECT" | "BATCH_GROUP">("ALL");
+  const [showChatInfo, setShowChatInfo] = useState(false);
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Load chat list
   const loadChats = useCallback(async () => {
@@ -179,7 +246,13 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
           c.id === data.chat_id
             ? {
                 ...c,
-                last_message: { body: data.body, created_at: data.created_at, sender_id: data.sender_id },
+                last_message: {
+                  body: data.body,
+                  created_at: data.created_at,
+                  sender_id: data.sender_id,
+                  sender: data.sender,
+                  media: data.media,
+                },
                 updated_at: data.created_at,
                 unread_count:
                   isOwn || (activeChat && activeChat.id === data.chat_id)
@@ -250,6 +323,43 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
     return cleanup;
   }, [activeChat?.id]);
 
+  // Live presence — mark members online/offline as socket events arrive
+  useEffect(() => {
+    const cleanup = onPresenceUpdate(({ userId, online }) => {
+      setOnlineUserIds((prev) => {
+        const next = new Set(prev);
+        if (online) next.add(userId);
+        else next.delete(userId);
+        return next;
+      });
+    });
+    return cleanup;
+  }, []);
+
+  // Presence snapshot for the members of the currently open chat
+  useEffect(() => {
+    if (!activeChat) return;
+    const cleanup = onPresenceSnapshot((data) => {
+      if (data.chatId !== activeChat.id) return;
+      const online = new Set<string>();
+      for (const [uid, status] of Object.entries(data.members)) {
+        if (status.online) online.add(uid);
+      }
+      setOnlineUserIds(online);
+    });
+    return cleanup;
+  }, [activeChat?.id]);
+
+  // Mention notifications — someone @mentioned me in a chat
+  useEffect(() => {
+    const cleanup = onMentionNotification((data: any) => {
+      if (!data || !data.chatId) return;
+      loadChats();
+      toast(`${data.mentioned_by_name ?? "Someone"} mentioned you in a chat`);
+    });
+    return cleanup;
+  }, [loadChats]);
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if ((!newMessage.trim() && attachments.length === 0) || !activeChat || !currentUserId) return;
@@ -280,6 +390,7 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
 
     setMessages((prev) => [...prev, optimistic]);
     setNewMessage("");
+    setMentionQuery(null);
     setReplyTo(null);
     setContextService(null);
     setShowServicePicker(false);
@@ -327,12 +438,23 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
-    const remaining = 3 - attachments.length;
-    if (files.length > remaining) {
-      toast.error(`You can attach up to 3 files`);
+    const remaining = MAX_MESSAGE_ATTACHMENTS - attachments.length;
+
+    const accepted: File[] = [];
+    for (const file of files) {
+      if (accepted.length >= remaining) {
+        toast.error(`You can attach up to ${MAX_MESSAGE_ATTACHMENTS} files`);
+        break;
+      }
+      const err = isMessageFileValid(file);
+      if (err) {
+        toast.error(err);
+        continue;
+      }
+      accepted.push(file);
     }
-    const accepted = files.slice(0, remaining);
-    setAttachments((prev) => [...prev, ...accepted].slice(0, 3));
+
+    setAttachments((prev) => [...prev, ...accepted].slice(0, MAX_MESSAGE_ATTACHMENTS));
     if (e.target) e.target.value = "";
   }
 
@@ -365,6 +487,44 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
     }
   }
 
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setNewMessage(value);
+    handleTyping();
+    const caret = e.target.selectionStart ?? value.length;
+    const lastToken = value.slice(0, caret).split(/\s/).pop() ?? "";
+    if (lastToken.startsWith("@")) {
+      setMentionQuery(lastToken.slice(1));
+    } else {
+      setMentionQuery(null);
+    }
+  }
+
+  function insertMention(username: string, fullName: string) {
+    if (mentionQuery === null) return;
+    const pos = inputRef.current?.selectionStart ?? newMessage.length;
+    const beforeCaret = newMessage.slice(0, pos);
+    const atIndex = beforeCaret.lastIndexOf("@");
+    const insertion = atIndex >= 0 ? beforeCaret.slice(0, atIndex) + `@${username} ` : newMessage + `@${username} `;
+    setNewMessage(insertion + newMessage.slice(atIndex >= 0 ? pos : 0));
+    setMentionQuery(null);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      const newPos = (atIndex >= 0 ? atIndex : newMessage.length) + username.length + 2;
+      inputRef.current?.setSelectionRange(newPos, newPos);
+    }, 0);
+  }
+
+  const mentionCandidates = mentionQuery !== null
+    ? (activeChat?.participants ?? [])
+        .filter((p) => p.user.id !== currentUserId)
+        .filter((p) =>
+          !mentionQuery ||
+          p.user.full_name.toLowerCase().includes(mentionQuery.toLowerCase()) ||
+          (p.user.username ?? "").toLowerCase().includes(mentionQuery.toLowerCase())
+        )
+    : [];
+
   function getOtherParticipant(chat: Chat) {
     return (
       chat.participants?.find((p) => p.user.id !== currentUserId)?.user ??
@@ -379,7 +539,7 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
   });
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] -m-4 sm:-m-6 lg:-m-8 bg-white dark:bg-gray-950 rounded-none overflow-hidden">
+    <div className={`flex ${isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100vh-4rem)] -m-4 sm:-m-6 lg:-m-8"} bg-white dark:bg-gray-950 rounded-none overflow-hidden`}>
       {/* Chat List Sidebar */}
       <div className={`w-full sm:w-80 lg:w-96 border-r border-gray-200 dark:border-gray-800 flex flex-col ${activeChat ? "hidden sm:flex" : "flex"}`}>
         {/* Header */}
@@ -438,6 +598,15 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
             filteredChats.map((chat) => {
               const other = getOtherParticipant(chat);
               const isActive = activeChat?.id === chat.id;
+              const last = chat.last_message;
+              const isGroup = chat.type === "BATCH_GROUP";
+              const lastIsMine = last?.sender_id === currentUserId;
+              const lastMedia = last?.media?.[0];
+              const lastPreview = lastMedia
+                ? lastMedia.mime_type.startsWith("image/")
+                  ? "Photo"
+                  : lastMedia.filename
+                : (last?.body || null);
               return (
                 <button
                   key={chat.id}
@@ -463,15 +632,32 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                        {other?.full_name || "Unknown"}
+                        {isGroup ? chat.name || "Group Chat" : other?.full_name || "Unknown"}
                       </p>
-                      <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
-                        {chat.last_message ? timeAgo(chat.last_message.created_at) : ""}
+                      <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 ml-2">
+                        {last ? timeAgo(last.created_at) : ""}
                       </span>
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {chat.last_message?.body || "Start a conversation"}
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1 min-w-0">
+                        {lastIsMine && (
+                          <span className="text-blue-400 shrink-0 flex items-center">
+                            {lastPreview ? <CheckCheck className="size-3" /> : null}
+                          </span>
+                        )}
+                        {isGroup && last && !lastIsMine && (
+                          <span className="font-semibold text-gray-700 dark:text-gray-300 shrink-0">
+                            {last.sender?.full_name || "Someone"}:{" "}
+                          </span>
+                        )}
+                        {lastMedia ? (
+                          <span className="flex items-center gap-1 min-w-0">
+                            <FileText className="size-3 shrink-0 text-gray-400" />
+                            <span className="truncate">{lastPreview}</span>
+                          </span>
+                        ) : (
+                          <span className="truncate">{lastPreview || "Start a conversation"}</span>
+                        )}
                       </p>
                       {!!chat.unread_count && (
                         <span className="ml-2 min-w-5 h-5 px-1.5 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
@@ -488,7 +674,7 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
       </div>
 
       {/* Message Thread */}
-      <div className={`flex-1 flex flex-col ${activeChat ? "flex" : "hidden sm:flex"}`}>
+      <div className={`flex-1 flex flex-col relative ${activeChat ? "flex" : "hidden sm:flex"}`}>
         {activeChat ? (
           <>
             {/* Chat Header */}
@@ -501,40 +687,83 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
               >
                 <ArrowLeft className="size-5" />
               </Button>
-              <Avatar className="size-10">
-                {getOtherParticipant(activeChat)?.avatar ? (
-                  <img
-                    src={getCloudinaryUrl(getOtherParticipant(activeChat)?.avatar?.key!, { w: 80, h: 80 })}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <AvatarFallback className="text-xs font-medium bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-                    {getInitials(getOtherParticipant(activeChat)?.full_name || "U")}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                  {getOtherParticipant(activeChat)?.full_name}
-                </p>
-                {typingUsers[activeChat.id] ? (
-                  <p className="text-xs text-blue-500 dark:text-blue-400">typing...</p>
-                ) : (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Active now</p>
-                )}
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="size-9 text-gray-400">
-                  <Phone className="size-4.5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="size-9 text-gray-400">
-                  <Video className="size-4.5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="size-9 text-gray-400">
+              {activeChat.type === "BATCH_GROUP" ? (
+                <button
+                  type="button"
+                  onClick={() => setShowChatInfo(true)}
+                  className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                >
+                  <Avatar className="size-10 shrink-0">
+                    {activeChat.avatar?.key ? (
+                      <img
+                        src={getCloudinaryUrl(activeChat.avatar.key, { w: 80, h: 80 })}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <AvatarFallback className="bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                        <Users className="size-5" />
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate flex items-center gap-1.5">
+                      {activeChat.name || "Group Chat"}
+                      <ChevronDown className="size-3.5 text-gray-400 shrink-0" />
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      {activeChat.participants?.length ?? 0} members
+                    </p>
+                  </div>
+                </button>
+              ) : (
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <Avatar className="size-10 shrink-0">
+                    {getOtherParticipant(activeChat)?.avatar ? (
+                      <img
+                        src={getCloudinaryUrl(getOtherParticipant(activeChat)?.avatar?.key!, { w: 80, h: 80 })}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <AvatarFallback className="text-xs font-medium bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                        {getInitials(getOtherParticipant(activeChat)?.full_name || "U")}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                      {getOtherParticipant(activeChat)?.full_name || "Unknown"}
+                    </p>
+                    {typingUsers[activeChat.id] ? (
+                      <p className="text-xs text-blue-500 dark:text-blue-400">typing...</p>
+                    ) : onlineUserIds.has(getOtherParticipant(activeChat)?.id ?? "") ? (
+                      <p className="text-xs text-emerald-500">Online now</p>
+                    ) : (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Active now</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {activeChat.type === "BATCH_GROUP" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 text-gray-400"
+                  onClick={() => setShowChatInfo(true)}
+                >
                   <MoreVertical className="size-4.5" />
                 </Button>
-              </div>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-9 text-gray-400"
+                onClick={() => setIsFullscreen((v) => !v)}
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen chat"}
+              >
+                {isFullscreen ? <Minimize2 className="size-4.5" /> : <Maximize2 className="size-4.5" />}
+              </Button>
             </div>
 
             {/* Messages */}
@@ -546,7 +775,11 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Avatar className="size-16 mb-4">
-                    {getOtherParticipant(activeChat)?.avatar ? (
+                    {activeChat.type === "BATCH_GROUP" ? (
+                      <AvatarFallback className="bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                        <Users className="size-7" />
+                      </AvatarFallback>
+                    ) : getOtherParticipant(activeChat)?.avatar ? (
                       <img
                         src={getCloudinaryUrl(getOtherParticipant(activeChat)?.avatar?.key!, { w: 128, h: 128 })}
                         alt=""
@@ -559,10 +792,12 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                     )}
                   </Avatar>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {getOtherParticipant(activeChat)?.full_name}
+                    {activeChat.type === "BATCH_GROUP"
+                      ? activeChat.name || "Group Chat"
+                      : getOtherParticipant(activeChat)?.full_name}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Start a conversation
+                    {activeChat.type === "BATCH_GROUP" ? "Say hello to the group" : "Start a conversation"}
                   </p>
                 </div>
               ) : (
@@ -655,7 +890,7 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                                 : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md"
                             }`}
                           >
-                            <p className="whitespace-pre-wrap break-words">{msg.body}</p>
+                            <p className="whitespace-pre-wrap break-words">{renderBody(msg.body, msg.mentions)}</p>
                           </div>
                         ) : null}
                         <div className={`flex items-center gap-1 mt-0.5 ${isOwn ? "justify-end" : ""}`}>
@@ -779,14 +1014,56 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                 </Button>
                 <div className="flex-1 relative">
                   <Input
+                    ref={inputRef}
                     placeholder="Type a message..."
                     value={newMessage}
-                    onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }}
+                    onChange={handleInputChange}
                     className="pr-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 border-0"
                   />
                   <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 size-8 text-gray-400">
                     <Smile className="size-4" />
                   </Button>
+                  {mentionQuery !== null && (
+                    <div className="absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl overflow-hidden z-50">
+                      <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 border-b border-gray-100 dark:border-gray-800">
+                        Mention someone
+                      </p>
+                      <div className="max-h-48 overflow-y-auto">
+                        {mentionCandidates.length === 0 ? (
+                          <p className="px-3 py-3 text-xs text-gray-400">No members found</p>
+                        ) : (
+                          mentionCandidates.map((p) => (
+                            <button
+                              key={p.user.id}
+                              type="button"
+                              onClick={() => insertMention(p.user.username ?? p.user.full_name, p.user.full_name)}
+                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-blue-950/30 text-left"
+                            >
+                              <Avatar className="size-7 shrink-0">
+                                {p.user.avatar ? (
+                                  <img
+                                    src={getCloudinaryUrl(p.user.avatar.key, { w: 56, h: 56 })}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <AvatarFallback className="text-[10px] font-medium bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                                    {getInitials(p.user.full_name)}
+                                  </AvatarFallback>
+                                )}
+                              </Avatar>
+                              <span className="min-w-0">
+                                <span className="block text-gray-900 dark:text-white truncate">{p.user.full_name}</span>
+                                {p.user.username && (
+                                  <span className="block text-xs text-gray-400">@{p.user.username}</span>
+                                )}
+                              </span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <Button
                   type="button"
@@ -848,6 +1125,94 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
               Select a conversation to start chatting
             </p>
           </div>
+        )}
+
+        {/* Chat Info Panel (group members + admin + presence) */}
+        {activeChat && showChatInfo && (
+          <>
+            <div
+              className="absolute inset-0 bg-black/30 backdrop-blur-[2px] z-30"
+              onClick={() => setShowChatInfo(false)}
+            />
+            <div className="absolute right-0 top-0 bottom-0 w-80 max-w-[85%] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl z-40 flex flex-col animate-in slide-in-from-right duration-200">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">Chat Info</h3>
+                <Button variant="ghost" size="icon" className="size-8 text-gray-400" onClick={() => setShowChatInfo(false)}>
+                  <X className="size-4" />
+                </Button>
+              </div>
+
+              <div className="flex flex-col items-center pt-6 pb-4 px-4 border-b border-gray-200 dark:border-gray-800">
+                <Avatar className="size-16 mb-3">
+                  {activeChat.avatar?.key ? (
+                    <img
+                      src={getCloudinaryUrl(activeChat.avatar.key, { w: 128, h: 128 })}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                      <Users className="size-7" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <p className="text-sm font-bold text-gray-900 dark:text-white text-center px-4">
+                  {activeChat.name || "Group Chat"}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {activeChat.participants?.length ?? 0} members
+                </p>
+              </div>
+
+              <div className="flex-1 overflow-y-auto py-2">
+                <p className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  {activeChat.participants?.length ?? 0} Members
+                </p>
+                {activeChat.participants?.map((p) => {
+                  const isMe = p.user.id === currentUserId;
+                  const isOnline = onlineUserIds.has(p.user.id);
+                  return (
+                    <div key={p.user.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                      <div className="relative shrink-0">
+                        <Avatar className="size-10">
+                          {p.user.avatar ? (
+                            <img
+                              src={getCloudinaryUrl(p.user.avatar.key, { w: 80, h: 80 })}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <AvatarFallback className="text-xs font-medium bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                              {getInitials(p.user.full_name)}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <span
+                          className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white dark:border-gray-900 ${
+                            isOnline ? "bg-emerald-500" : "bg-gray-300 dark:bg-gray-600"
+                          }`}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex items-center gap-1.5">
+                          {p.user.full_name}
+                          {isMe && <span className="text-[10px] text-gray-400 font-normal">(You)</span>}
+                        </p>
+                        <p className={`text-xs ${isOnline ? "text-emerald-500" : "text-gray-400"}`}>
+                          {isOnline ? "Online" : "Offline"}
+                        </p>
+                      </div>
+                      {p.is_admin && (
+                        <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 text-[10px] font-semibold shrink-0">
+                          <ShieldCheck className="size-3" /> Admin
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

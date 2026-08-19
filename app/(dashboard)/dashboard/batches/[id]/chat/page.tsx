@@ -9,6 +9,28 @@ import { Loader2, Send, MessageSquare, Paperclip, X, FileText, Plus, Check } fro
 import { toast } from "sonner";
 import { getCloudinaryUrl } from "@/lib/utils";
 
+const MAX_MESSAGE_ATTACHMENTS = 3;
+const MAX_MESSAGE_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ACCEPTED_MESSAGE_MIME = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
+function isMessageFileValid(file: File): string | null {
+  if (!ACCEPTED_MESSAGE_MIME.includes(file.type)) {
+    const ext = file.name.split(".").pop()?.toUpperCase() ?? file.type;
+    return `"${file.name}" has unsupported type (${ext}). Allowed: JPG, PNG, WEBP, PDF, DOC, DOCX.`;
+  }
+  if (file.size > MAX_MESSAGE_FILE_SIZE) {
+    return `"${file.name}" is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Max allowed is 10MB.`;
+  }
+  return null;
+}
+
 function isSameDay(a: string, b: string) {
   const da = new Date(a);
   const db = new Date(b);
@@ -17,6 +39,31 @@ function isSameDay(a: string, b: string) {
     da.getMonth() === db.getMonth() &&
     da.getDate() === db.getDate()
   );
+}
+
+function renderBody(body: string, mentions?: any[]) {
+  if (!body) return null;
+  const parts = body.split(/(@[\w.]+)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("@")) {
+      const username = part.slice(1).toLowerCase();
+      const m = mentions?.find(
+        (x: any) => x.mentioned_user?.username?.toLowerCase() === username,
+      );
+      if (m) {
+        return (
+          <span
+            key={i}
+            className="font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 rounded px-1 cursor-pointer hover:underline"
+            title={`${m.mentioned_user.full_name} (@${m.mentioned_user.username})`}
+          >
+            {part}
+          </span>
+        );
+      }
+    }
+    return <span key={i}>{part}</span>;
+  });
 }
 
 function formatDay(date: string) {
@@ -139,9 +186,23 @@ export default function BatchChatTab() {
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
-    const remaining = 3 - attachments.length;
-    if (files.length > remaining) toast.error("You can attach up to 3 files");
-    setAttachments((prev) => [...prev, ...files.slice(0, remaining)].slice(0, 3));
+    const remaining = MAX_MESSAGE_ATTACHMENTS - attachments.length;
+
+    const accepted: File[] = [];
+    for (const file of files) {
+      if (accepted.length >= remaining) {
+        toast.error(`You can attach up to ${MAX_MESSAGE_ATTACHMENTS} files`);
+        break;
+      }
+      const err = isMessageFileValid(file);
+      if (err) {
+        toast.error(err);
+        continue;
+      }
+      accepted.push(file);
+    }
+
+    setAttachments((prev) => [...prev, ...accepted].slice(0, MAX_MESSAGE_ATTACHMENTS));
     if (e.target) e.target.value = "";
   }
 
@@ -254,7 +315,7 @@ export default function BatchChatTab() {
                               : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md"
                           }`}
                         >
-                          {msg.body}
+                          {renderBody(msg.body, msg.mentions)}
                         </div>
                       ) : null}
                       <p className={`text-[10px] text-gray-400 mt-1 ${isMe ? "text-right mr-1" : "ml-1"}`}>
