@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPostAction } from "@/lib/actions/posts";
+import { getMyServices } from "@/lib/actions/services";
+import { useUser } from "@/lib/contexts/user-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Image, Hash, Loader2, Bold, Italic, List, Link2 } from "lucide-react";
+import { X, Image, Hash, Loader2, Bold, Italic, List, Link2, GraduationCap, ChevronDown } from "lucide-react";
 
 interface CreatePostModalProps {
   open: boolean;
@@ -13,14 +15,33 @@ interface CreatePostModalProps {
 }
 
 export function CreatePostModal({ open, onClose, onCreated }: CreatePostModalProps) {
-  const [type, setType] = useState<"OFFERING" | "SEEKING">("OFFERING");
+  const user = useUser();
+  const canOffer = user?.role === "TEACHER";
+  const [type, setType] = useState<"OFFERING" | "SEEKING">(canOffer ? "OFFERING" : "SEEKING");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [services, setServices] = useState<Array<{ id: string; title: string }>>([]);
+  const [serviceId, setServiceId] = useState("");
+  const [showServices, setShowServices] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setType(canOffer ? "OFFERING" : "SEEKING");
+  }, [canOffer]);
+
+  useEffect(() => {
+    if (canOffer) {
+      getMyServices(1, 50).then((res: any) => {
+        if (res.success && Array.isArray(res.data)) {
+          setServices(res.data.map((s: any) => ({ id: s.id, title: s.title })));
+        }
+      });
+    }
+  }, [canOffer]);
 
   if (!open) return null;
 
@@ -49,19 +70,21 @@ export function CreatePostModal({ open, onClose, onCreated }: CreatePostModalPro
 
   async function handleSubmit() {
     if (!title.trim() || !content.trim()) return;
+    if (type === "OFFERING" && canOffer && services.length > 0 && !serviceId) return;
     setSubmitting(true);
     try {
       const formData = new FormData();
       formData.set("type", type);
       formData.set("title", title);
       formData.set("content", `<p>${content.replace(/\n/g, "</p><p>")}</p>`);
+      if (serviceId) formData.set("service_id", serviceId);
       formData.set("subject_ids", "[]");
       formData.set("level_ids", "[]");
       for (const file of files) formData.append("media", file);
 
       const res = await createPostAction(null, formData);
       if (res?.success) {
-        setTitle(""); setContent(""); setFiles([]); setPreviews([]); setType("OFFERING");
+        setTitle(""); setContent(""); setFiles([]); setPreviews([]); setType(canOffer ? "OFFERING" : "SEEKING"); setServiceId(""); setShowServices(false);
         onClose();
         onCreated?.();
       }
@@ -78,15 +101,54 @@ export function CreatePostModal({ open, onClose, onCreated }: CreatePostModalPro
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Type Toggle */}
-          <div className="flex gap-2">
-            {(["OFFERING", "SEEKING"] as const).map((t) => (
-              <button key={t} onClick={() => setType(t)}
-                className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-all ${type === t ? "bg-[#0066FF] text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
-                {t === "OFFERING" ? "I'm Offering" : "I'm Seeking"}
+          {/* Type Toggle — only teachers/centers can offer */}
+          {canOffer ? (
+            <div className="flex gap-2">
+              {(["OFFERING", "SEEKING"] as const).map((t) => (
+                <button key={t} onClick={() => setType(t)}
+                  className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-all ${type === t ? "bg-[#0066FF] text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
+                  {t === "OFFERING" ? "I'm Offering" : "I'm Seeking"}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 px-4 py-2.5">
+              <span className="px-3 py-1 rounded-full bg-[#F59E0B] text-white text-[13px] font-semibold">I'm Seeking</span>
+              <p className="text-xs text-amber-700 dark:text-amber-300">Students & guardians can only post "seeking" to find a teacher.</p>
+            </div>
+          )}
+
+          {/* Service picker — teachers attach their own service to OFFERING posts */}
+          {type === "OFFERING" && canOffer && (
+            <div className="relative">
+              <button type="button" onClick={() => setShowServices((v) => !v)}
+                className="w-full flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 px-4 py-3 text-[14px] text-left">
+                <GraduationCap className="size-4 text-[#0066FF] shrink-0" />
+                {serviceId ? (
+                  <span className="font-medium text-gray-900 dark:text-white truncate">{services.find((s) => s.id === serviceId)?.title}</span>
+                ) : (
+                  <span className="text-gray-400">Attach your service (optional)</span>
+                )}
+                <ChevronDown className="size-4 text-gray-400 ml-auto shrink-0" />
               </button>
-            ))}
-          </div>
+              {showServices && (
+                <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl overflow-hidden max-h-56 overflow-y-auto z-20">
+                  {services.length === 0 ? (
+                    <p className="px-4 py-3 text-xs text-gray-400">No services yet — create one first.</p>
+                  ) : (
+                    services.map((s) => (
+                      <button key={s.id} type="button"
+                        onClick={() => { setServiceId(s.id); setShowServices(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-blue-950/30 flex items-center gap-2 ${serviceId === s.id ? "bg-blue-50 dark:bg-blue-950/30 text-blue-600" : "text-gray-700 dark:text-gray-300"}`}>
+                        <GraduationCap className="size-4 shrink-0 text-gray-400" />
+                        <span className="truncate">{s.title}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <Input placeholder="Post title..." value={title} onChange={(e) => setTitle(e.target.value)}
             className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 text-[15px] font-semibold focus:border-[#0066FF] focus:ring-[#0066FF]/20" />

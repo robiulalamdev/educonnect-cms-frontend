@@ -108,6 +108,46 @@ function formatTime(date: string) {
   return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+function formatLastSeen(iso: string) {
+  const then = new Date(iso).getTime();
+  const now = Date.now();
+  const minutes = Math.floor((now - then) / 60000);
+  if (minutes < 1) return "Active now";
+  if (minutes < 60) return `Last seen ${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Last seen ${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "Last seen yesterday";
+  if (days < 7) return `Last seen ${days} days ago`;
+  return `Last seen ${new Date(iso).toLocaleDateString([], { month: "short", day: "numeric" })}`;
+}
+
+// Short notification chime via WebAudio (no asset file needed)
+let audioCtx: AudioContext | null = null;
+function playMessageChime() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const ctx = audioCtx;
+    if (ctx.state === "suspended") ctx.resume();
+    const now = ctx.currentTime;
+    const notes = [880, 1174.66];
+    for (let i = 0; i < notes.length; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = notes[i];
+      gain.gain.setValueAtTime(0.0001, now + i * 0.14);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + i * 0.14 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.14 + 0.22);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + i * 0.14);
+      osc.stop(now + i * 0.14 + 0.24);
+    }
+  } catch {
+    // Audio unavailable — ignore silently
+  }
+}
+
 function isSameDay(a: string, b: string) {
   const da = new Date(a);
   const db = new Date(b);
@@ -160,9 +200,10 @@ function renderBody(body: string, mentions?: Message["mentions"]) {
 
 interface MessagingAppProps {
   currentUserId?: string;
+  initialChatId?: string;
 }
 
-export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppProps) {
+export function MessagingApp({ currentUserId: currentUserIdProp, initialChatId }: MessagingAppProps) {
   const user = useUser();
   const currentUserId = user?.id ?? currentUserIdProp;
   const [chats, setChats] = useState<Chat[]>([]);
@@ -186,21 +227,87 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
   const [chatFilter, setChatFilter] = useState<"ALL" | "DIRECT" | "BATCH_GROUP">("ALL");
   const [showChatInfo, setShowChatInfo] = useState(false);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [lastSeenMap, setLastSeenMap] = useState<Record<string, string | null>>({});
+  const [tabUnread, setTabUnread] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [messagePage, setMessagePage] = useState(1);
+  const [messageMeta, setMessageMeta] = useState<{ total: number; total_pages: number; page: number }>({ total: 0, total_pages: 1, page: 1 });
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const [chatMeta, setChatMeta] = useState({ total: 0, total_pages: 1 });
+  const [loadingMoreChats, setLoadingMoreChats] = useState(false);
+  const chatPageRef = useRef(1);
+  const chatListRef = useRef<HTMLDivElement>(null);
 
   // Load chat list
   const loadChats = useCallback(async () => {
     try {
-      const res = (await getChatList()) as any;
-      if (res.success) setChats(res.data);
+      const res = (await getChatList(1, 20)) as any;
+      if (res.success) {
+        setChats(res.data);
+        setChatMeta(res.meta ?? { total: 0, total_pages: 1 });
+        chatPageRef.current = 1;
+      }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // Deep-link — open the chat referenced by ?chat=<id> once the list is loaded
+  useEffect(() => {
+    if (!initialChatId || loading || activeChat) return;
+    const match = chats.find((c) => c.id === initialChatId);
+    if (match) {
+      setActiveChat(match);
+      setShowChatInfo(false);
+    }
+  }, [initialChatId, chats, loading, activeChat]);
+
+  // Infinite scroll — load the next page of chats when the list bottom is reached
+  const loadMoreChats = useCallback(async () => {
+    if (loadingMoreChats || chatPageRef.current >= (chatMeta.total_pages || 1)) return;
+    setLoadingMoreChats(true);
+    try {
+      const next = chatPageRef.current + 1;
+      const res = (await getChatList(next, 20)) as any;
+      if (res.success && Array.isArray(res.data)) {
+        setChats((prev) => {
+          const seen = new Set(prev.map((c) => c.id));
+          return [...prev, ...res.data.filter((c: any) => !seen.has(c.id))];
+        });
+        setChatMeta(res.meta ?? chatMeta);
+        chatPageRef.current = next;
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMoreChats(false);
+    }
+  }, [loadingMoreChats, chatMeta]);
+
+  // Infinite scroll — load older messages when scrolling up near the top
+  async function loadOlderMessages() {
+    if (loadingOlder || !activeChat) return;
+    const nextPage = messagePage + 1;
+    if (messageMeta.total_pages && nextPage > messageMeta.total_pages) return;
+    setLoadingOlder(true);
+    const el = messagesScrollRef.current;
+    const prevHeight = el?.scrollHeight ?? 0;
+    const res: any = await getMessages(activeChat.id, nextPage, 30);
+    if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+      setMessages((prev) => [...res.data, ...prev]);
+      setMessagePage(nextPage);
+      setMessageMeta(res.meta ?? messageMeta);
+      requestAnimationFrame(() => {
+        if (el) el.scrollTop = el.scrollHeight - prevHeight;
+      });
+    }
+    setLoadingOlder(false);
+  }
 
   useEffect(() => {
     loadChats();
@@ -218,8 +325,12 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
     if (fileInputRef.current) fileInputRef.current.value = "";
     joinChatRoom(activeChat.id);
 
-    getMessages(activeChat.id, 1, 50).then((res: any) => {
-      if (res.success) setMessages(res.data);
+    getMessages(activeChat.id, 1, 30).then((res: any) => {
+      if (res.success) {
+        setMessages(res.data);
+        setMessageMeta(res.meta ?? { total: 0, total_pages: 1, page: 1 });
+        setMessagePage(1);
+      }
       setLoadingMessages(false);
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     });
@@ -239,6 +350,12 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
     const cleanup = onNewMessage((data: any) => {
       if (!data || !data.id) return;
       const isOwn = data.sender_id === currentUserId;
+
+      // Unread badge in the browser tab title when this tab isn't focused
+      if (!isOwn && !(activeChat && activeChat.id === data.chat_id) && document.hidden) {
+        setTabUnread((p) => p + 1);
+        playMessageChime();
+      }
 
       // Update chat list
       setChats((prev) => {
@@ -291,6 +408,26 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
     return cleanup;
   }, [activeChat?.id, currentUserId]);
 
+  // Unread badge in the tab title — reset when the tab regains focus
+  useEffect(() => {
+    const originalTitle = document.title;
+    if (tabUnread > 0) document.title = `(${tabUnread}) Messages`;
+    else document.title = originalTitle;
+    return () => { document.title = originalTitle; };
+  }, [tabUnread]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (!document.hidden) setTabUnread(0);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, []);
+
   // Listen for read receipts — flip our own messages to the "seen" state
   useEffect(() => {
     const cleanup = onMessageRead((data: any) => {
@@ -325,13 +462,14 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
 
   // Live presence — mark members online/offline as socket events arrive
   useEffect(() => {
-    const cleanup = onPresenceUpdate(({ userId, online }) => {
+    const cleanup = onPresenceUpdate(({ userId, online, last_seen }) => {
       setOnlineUserIds((prev) => {
         const next = new Set(prev);
         if (online) next.add(userId);
         else next.delete(userId);
         return next;
       });
+      if (last_seen) setLastSeenMap((prev) => ({ ...prev, [userId]: last_seen }));
     });
     return cleanup;
   }, []);
@@ -342,10 +480,13 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
     const cleanup = onPresenceSnapshot((data) => {
       if (data.chatId !== activeChat.id) return;
       const online = new Set<string>();
+      const lastSeen: Record<string, string | null> = {};
       for (const [uid, status] of Object.entries(data.members)) {
         if (status.online) online.add(uid);
+        lastSeen[uid] = status.last_seen;
       }
       setOnlineUserIds(online);
+      setLastSeenMap(lastSeen);
     });
     return cleanup;
   }, [activeChat?.id]);
@@ -574,7 +715,10 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
         </div>
 
         {/* Chat List */}
-        <div className="flex-1 overflow-y-auto">
+        <div ref={chatListRef} className="flex-1 overflow-y-auto" onScroll={(e) => {
+          const el = e.currentTarget;
+          if (el.scrollTop + el.clientHeight >= el.scrollHeight - 120) loadMoreChats();
+        }}>
           {loading ? (
             <div className="space-y-1 p-2">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -594,82 +738,87 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                 No conversations yet
               </p>
             </div>
-          ) : (
-            filteredChats.map((chat) => {
-              const other = getOtherParticipant(chat);
-              const isActive = activeChat?.id === chat.id;
-              const last = chat.last_message;
-              const isGroup = chat.type === "BATCH_GROUP";
-              const lastIsMine = last?.sender_id === currentUserId;
-              const lastMedia = last?.media?.[0];
-              const lastPreview = lastMedia
-                ? lastMedia.mime_type.startsWith("image/")
-                  ? "Photo"
-                  : lastMedia.filename
-                : (last?.body || null);
-              return (
-                <button
-                  key={chat.id}
-                  onClick={() => setActiveChat(chat)}
-                  className={`w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
-                    isActive ? "bg-blue-50 dark:bg-blue-950/30" : ""
-                  }`}
-                >
-                  <Avatar className="size-12 shrink-0">
-                    {other?.avatar ? (
-                      <img
-                        src={getCloudinaryUrl(other.avatar.key, { w: 96, h: 96 })}
-                        alt={other.full_name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <AvatarFallback className="text-sm font-medium bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-                        {getInitials(other?.full_name || "U")}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <div className="flex-1 min-w-0 text-left">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                        {isGroup ? chat.name || "Group Chat" : other?.full_name || "Unknown"}
-                      </p>
-                      <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 ml-2">
-                        {last ? timeAgo(last.created_at) : ""}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between mt-0.5">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1 min-w-0">
-                        {lastIsMine && (
-                          <span className="text-blue-400 shrink-0 flex items-center">
-                            {lastPreview ? <CheckCheck className="size-3" /> : null}
-                          </span>
-                        )}
-                        {isGroup && last && !lastIsMine && (
-                          <span className="font-semibold text-gray-700 dark:text-gray-300 shrink-0">
-                            {last.sender?.full_name || "Someone"}:{" "}
-                          </span>
-                        )}
-                        {lastMedia ? (
-                          <span className="flex items-center gap-1 min-w-0">
-                            <FileText className="size-3 shrink-0 text-gray-400" />
-                            <span className="truncate">{lastPreview}</span>
-                          </span>
+) : (
+                filteredChats.map((chat) => {
+                  const other = getOtherParticipant(chat);
+                  const isActive = activeChat?.id === chat.id;
+                  const last = chat.last_message;
+                  const isGroup = chat.type === "BATCH_GROUP";
+                  const lastIsMine = last?.sender_id === currentUserId;
+                  const lastMedia = last?.media?.[0];
+                  const lastPreview = lastMedia
+                    ? lastMedia.mime_type.startsWith("image/")
+                      ? "Photo"
+                      : lastMedia.filename
+                    : (last?.body || null);
+                  return (
+                    <button
+                      key={chat.id}
+                      onClick={() => setActiveChat(chat)}
+                      className={`w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
+                        isActive ? "bg-blue-50 dark:bg-blue-950/30" : ""
+                      }`}
+                    >
+                      <Avatar className="size-12 shrink-0">
+                        {other?.avatar ? (
+                          <img
+                            src={getCloudinaryUrl(other.avatar.key, { w: 96, h: 96 })}
+                            alt={other.full_name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
                         ) : (
-                          <span className="truncate">{lastPreview || "Start a conversation"}</span>
+                          <AvatarFallback className="text-sm font-medium bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                            {getInitials(other?.full_name || "U")}
+                          </AvatarFallback>
                         )}
-                      </p>
-                      {!!chat.unread_count && (
-                        <span className="ml-2 min-w-5 h-5 px-1.5 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
-                          {chat.unread_count > 99 ? "99+" : chat.unread_count}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              );
-            })
-          )}
+                      </Avatar>
+                      <div className="flex-1 min-w-0 text-left">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            {isGroup ? chat.name || "Group Chat" : other?.full_name || "Unknown"}
+                          </p>
+                          <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 ml-2">
+                            {last ? timeAgo(last.created_at) : ""}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1 min-w-0">
+                            {lastIsMine && (
+                              <span className="text-blue-400 shrink-0 flex items-center">
+                                {lastPreview ? <CheckCheck className="size-3" /> : null}
+                              </span>
+                            )}
+                            {isGroup && last && !lastIsMine && (
+                              <span className="font-semibold text-gray-700 dark:text-gray-300 shrink-0">
+                                {last.sender?.full_name || "Someone"}:{" "}
+                              </span>
+                            )}
+                            {lastMedia ? (
+                              <span className="flex items-center gap-1 min-w-0">
+                                <FileText className="size-3 shrink-0 text-gray-400" />
+                                <span className="truncate">{lastPreview}</span>
+                              </span>
+                            ) : (
+                              <span className="truncate">{lastPreview || "Start a conversation"}</span>
+                            )}
+                          </p>
+                          {!!chat.unread_count && (
+                            <span className="ml-2 min-w-5 h-5 px-1.5 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
+                              {chat.unread_count > 99 ? "99+" : chat.unread_count}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+              {loadingMoreChats && (
+                <div className="flex justify-center py-3">
+                  <Loader2 className="size-4 text-blue-600 animate-spin" />
+                </div>
+              )}
         </div>
       </div>
 
@@ -739,6 +888,8 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
                       <p className="text-xs text-blue-500 dark:text-blue-400">typing...</p>
                     ) : onlineUserIds.has(getOtherParticipant(activeChat)?.id ?? "") ? (
                       <p className="text-xs text-emerald-500">Online now</p>
+                    ) : lastSeenMap[getOtherParticipant(activeChat)?.id ?? ""] ? (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatLastSeen(lastSeenMap[getOtherParticipant(activeChat)?.id ?? ""]!)}</p>
                     ) : (
                       <p className="text-xs text-gray-500 dark:text-gray-400">Active now</p>
                     )}
@@ -767,7 +918,14 @@ export function MessagingApp({ currentUserId: currentUserIdProp }: MessagingAppP
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+            <div ref={messagesScrollRef} onScroll={(e) => {
+              if (e.currentTarget.scrollTop < 80) loadOlderMessages();
+            }} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+              {loadingOlder && (
+                <div className="flex justify-center py-2">
+                  <Loader2 className="size-4 text-blue-600 animate-spin" />
+                </div>
+              )}
               {loadingMessages ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="size-6 text-blue-600 animate-spin" />

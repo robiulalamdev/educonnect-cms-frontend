@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   description: "Your messages",
 };
 
-export default function MessagesPage() {
-  return <MessagingApp />;
+export default async function MessagesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ chat?: string }>;
+}) {
+  const { chat } = await searchParams;
+  return <MessagingApp initialChatId={chat} />;
 }

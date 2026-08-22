@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import Link from "next/link";
 import { getNotifications, markAsRead, markAllAsRead } from "@/lib/actions/notifications";
 import { Button } from "@/components/ui/button";
 import { Bell, Check, CheckCheck, Loader2, Heart, MessageCircle, UserPlus, X } from "lucide-react";
@@ -9,6 +10,21 @@ import { onNewNotification } from "@/lib/socket";
 interface Notification {
   id: string; type: string; title: string; body: string;
   reference_type?: string; reference_id?: string; is_read: boolean; created_at: string;
+}
+
+function getNotificationHref(n: Notification): string {
+  switch (n.reference_type) {
+    case "CHAT": return `/dashboard/messages?chat=${n.reference_id ?? ""}`;
+    case "post": return n.reference_id ? `/feed?post=${n.reference_id}` : "/feed";
+    case "user": case "follow": return n.reference_id ? `/profile/${n.reference_id}` : "/feed";
+    case "announcement": return "/dashboard/batches";
+    case "task": return "/dashboard/batches";
+    case "enrollment": case "payment": return "/dashboard/batches";
+    case "subscription": return "/dashboard/settings";
+    case "schedule_override": return "/dashboard/calendar";
+    case "daily_note": return "/dashboard/daily-notes";
+    default: return "/dashboard/notifications";
+  }
 }
 
 function getNotificationIcon(type: string) {
@@ -112,7 +128,7 @@ export function NotificationBell() {
               notifications.map((n) => {
                 const Icon = getNotificationIcon(n.type);
                 return (
-                  <div key={n.id} onClick={() => !n.is_read && handleMarkRead(n.id)}
+                  <Link key={n.id} href={getNotificationHref(n)} onClick={() => { if (!n.is_read) handleMarkRead(n.id); setOpen(false); }}
                     className={`flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer border-b border-gray-50 dark:border-gray-800/50 transition-colors ${!n.is_read ? "bg-blue-50/50 dark:bg-blue-950/20" : ""}`}>
                     <div className={`flex size-8 shrink-0 items-center justify-center rounded-full ${!n.is_read ? "bg-[#0066FF]/10 text-[#0066FF]" : "bg-gray-100 dark:bg-gray-800 text-gray-400"}`}>
                       <Icon className="size-3.5" />
@@ -123,7 +139,7 @@ export function NotificationBell() {
                       <p className="text-[11px] text-gray-400 mt-1">{timeAgo(n.created_at)}</p>
                     </div>
                     {!n.is_read && <div className="size-2 rounded-full bg-[#0066FF] shrink-0 mt-1.5" />}
-                  </div>
+                  </Link>
                 );
               })
             )}

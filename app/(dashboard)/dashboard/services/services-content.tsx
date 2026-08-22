@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getMyServices, createServiceAction, updateServiceAction } from "@/lib/actions/services";
 import { getSubjects, getLevels } from "@/lib/actions/education";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LocationPicker } from "@/components/location/location-picker";
+import { toast } from "sonner";
 import {
   Search, Plus, Pencil, Loader2, BookOpen, Globe, MapPin, DollarSign,
-  ChevronLeft, ChevronRight, X, Check,
+  X, Check,
 } from "lucide-react";
 
 interface Service {
@@ -34,6 +35,8 @@ export function ServicesContent() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({ total: 0, total_pages: 0 });
+  const [loadingMore, setLoadingMore] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -50,21 +53,38 @@ export function ServicesContent() {
   const [area, setArea] = useState("");
   const [addressLine, setAddressLine] = useState("");
 
-  const loadServices = useCallback(async (p: number) => {
-    setLoading(true);
+  const loadServices = useCallback(async (p: number, append = false) => {
+    if (!append) setLoading(true);
     try {
       const res = (await getMyServices(p, 10)) as any;
       if (res.success) {
-        let filtered = res.data;
-        if (search) filtered = filtered.filter((s: Service) => s.title.toLowerCase().includes(search.toLowerCase()));
-        setServices(filtered);
+        let fetched = res.data;
+        if (search) fetched = fetched.filter((s: Service) => s.title.toLowerCase().includes(search.toLowerCase()));
+        setServices((prev) => append ? [...prev, ...fetched] : fetched);
         setMeta(res.meta);
+        setPage(p);
       }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   }, [search]);
 
-  useEffect(() => { loadServices(page); }, [page, loadServices]);
+  useEffect(() => { loadServices(1); }, [loadServices]);
+
+  // Infinite scroll — load the next page when the list bottom is reached
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 300) {
+        if (!loadingMore && page < meta.total_pages) {
+          setLoadingMore(true);
+          loadServices(page + 1, true).finally(() => setLoadingMore(false));
+        }
+      }
+    };
+    el.addEventListener("scroll", onScroll);
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [loadingMore, page, meta.total_pages, loadServices]);
 
   useEffect(() => {
     Promise.all([getSubjects(), getLevels()]).then(([s, l]) => {
@@ -75,6 +95,8 @@ export function ServicesContent() {
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (selectedSubjects.length === 0) return toast.error("Select at least one subject");
+    if (selectedLevels.length === 0) return toast.error("Select at least one level");
     setCreating(true);
     const formData = new FormData(e.currentTarget);
     formData.set("subject_ids", JSON.stringify(selectedSubjects));
@@ -87,6 +109,7 @@ export function ServicesContent() {
     const result = await createServiceAction(null, formData);
     setCreating(false);
     if (result.success) { setShowCreateModal(false); loadServices(1); setPage(1); setSelectedSubjects([]); setSelectedLevels([]); setShowLocation(false); setCountry(""); setStateVal(""); setCity(""); setArea(""); setAddressLine(""); }
+    else if (result.error) toast.error(result.error);
   }
 
   async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
@@ -130,7 +153,7 @@ export function ServicesContent() {
       ) : services.length === 0 ? (
         <EmptyState onAdd={() => setShowCreateModal(true)} />
       ) : (
-        <div className="space-y-4">
+        <div ref={listRef} className="space-y-4">
           {services.map((service) => (
             <Card key={service.id} className="group border border-[#E5E7EB] dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300 rounded-[24px]">
               <CardContent className="p-6">
@@ -146,7 +169,7 @@ export function ServicesContent() {
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-[13px] text-[#9CA3AF]">
                       {service.city && <span className="flex items-center gap-1"><MapPin className="size-3" />{service.city}{service.area ? `, ${service.area}` : ""}</span>}
                       {service.monthly_fee && <span className="flex items-center gap-1"><DollarSign className="size-3" />{service.currency || "BDT"} {service.monthly_fee}/mo</span>}
-                      {service.average_rating ? <span className="flex items-center gap-1"><span className="text-[#F59E0B]">★</span>{service.average_rating.toFixed(1)}</span> : null}
+                      {Number(service.average_rating || 0) > 0 ? <span className="flex items-center gap-1"><span className="text-[#F59E0B]">★</span>{Number(service.average_rating).toFixed(1)}</span> : null}
                     </div>
                     {service.subjects && service.subjects.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-1.5">
@@ -174,11 +197,9 @@ export function ServicesContent() {
         </div>
       )}
 
-      {meta.total_pages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-4">
-          <Button variant="outline" size="sm" className="rounded-full" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}><ChevronLeft className="size-4" /></Button>
-          <span className="text-sm text-[#6B7280]">Page {page} of {meta.total_pages}</span>
-          <Button variant="outline" size="sm" className="rounded-full" onClick={() => setPage((p) => Math.min(meta.total_pages, p + 1))} disabled={page === meta.total_pages}><ChevronRight className="size-4" /></Button>
+      {loadingMore && (
+        <div className="flex items-center justify-center gap-2 py-4 text-sm text-[#6B7280]">
+          <Loader2 className="size-4 animate-spin text-[#2563EB]" /> Loading more...
         </div>
       )}
 
@@ -316,6 +337,42 @@ export function ServicesContent() {
                   <option value="PAUSED">Paused</option>
                   <option value="CLOSED">Closed</option>
                 </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium">Format</Label>
+                  <select name="format" defaultValue={editingService.format} className="w-full rounded-full h-11 border border-[#E5E7EB] dark:border-gray-700 bg-[#F9FAFB] dark:bg-gray-800 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20">
+                    <option value="BATCH">Batch</option>
+                    <option value="INDIVIDUAL">Individual</option>
+                    <option value="HOME_PRIVATE">Home Private</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium">Mode</Label>
+                  <select name="mode" defaultValue={editingService.mode} className="w-full rounded-full h-11 border border-[#E5E7EB] dark:border-gray-700 bg-[#F9FAFB] dark:bg-gray-800 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20">
+                    <option value="ONLINE">Online</option>
+                    <option value="OFFLINE">Offline</option>
+                    <option value="HYBRID">Hybrid</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium">Joining Fee</Label>
+                  <Input name="joining_fee" type="number" defaultValue={Number(editingService.joining_fee || 0)} className="rounded-full h-11" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium">Monthly Fee</Label>
+                  <Input name="monthly_fee" type="number" defaultValue={Number(editingService.monthly_fee || 0)} className="rounded-full h-11" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium">Per Session</Label>
+                  <Input name="per_session_fee" type="number" defaultValue={Number(editingService.per_session_fee || 0)} className="rounded-full h-11" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[13px] font-medium">Meeting Link <span className="text-gray-400 font-normal">(optional, for online)</span></Label>
+                <Input name="meeting_link" defaultValue={editingService.meeting_link ?? ""} placeholder="https://meet.google.com/..." className="rounded-full h-11" />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">

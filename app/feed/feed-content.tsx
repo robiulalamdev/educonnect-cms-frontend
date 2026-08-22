@@ -14,11 +14,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { Home, Search, Bell, MessageSquare, Bookmark, User, Settings, MoreHorizontal, Share2, Plus, Crown, ArrowUp, Hash, Loader2, X, ChevronDown, TrendingUp } from "lucide-react";
+import { Home, Search, Bell, MessageSquare, Bookmark, User, Settings, MoreHorizontal, Share2, Plus, Crown, ArrowUp, Hash, Loader2, X, ChevronDown, TrendingUp, GraduationCap, ChevronRight } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { getCloudinaryUrl } from "@/lib/utils";
 
-interface Post { id: string; title: string; content: string; type: string; created_at: string; author: { id: string; full_name: string; avatar?: { key: string } | null }; media: Array<{ id: string; key: string; filename: string; mime_type: string }>; subjects: Array<{ subject: { id: string; name: string } }>; }
+interface Post { id: string; title: string; content: string; type: string; created_at: string; author: { id: string; full_name: string; avatar?: { key: string } | null }; media: Array<{ id: string; key: string; filename: string; mime_type: string }>; subjects: Array<{ subject: { id: string; name: string } }>; service?: { id: string; title: string; slug: string; currency?: string; monthly_fee?: string | null; per_session_fee?: string | null } | null; }
 
 function getMediaUrl(key: string) { return getCloudinaryUrl(key, { w: 680 }); }
 function getInitials(name: string) { return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2); }
@@ -321,6 +321,23 @@ function PostCard({ post, expandedComments, setExpandedComments, expandedPost, s
         {shouldTruncate && <button onClick={() => setExpandedPost(post.id)} className="text-[#0066FF] text-[13px] font-semibold mt-1 hover:underline">See more</button>}
         {isExpanded && <button onClick={() => setExpandedPost(null)} className="text-[#0066FF] text-[13px] font-semibold mt-1 hover:underline">Show less</button>}
       </div>
+      {post.service && (
+        <div className="px-5 pb-3">
+          <a href={`/services/${post.service.slug}`} className="flex items-center gap-3 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-3 hover:border-[#0066FF]/40 hover:shadow-sm transition-all">
+            <div className="size-10 rounded-xl bg-[#0066FF]/10 flex items-center justify-center shrink-0">
+              <GraduationCap className="size-5 text-[#0066FF]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-[#0066FF] uppercase tracking-wide">Attached service</p>
+              <p className="text-[14px] font-semibold text-gray-900 dark:text-white truncate">{post.service.title}</p>
+              {post.service.monthly_fee || post.service.per_session_fee ? (
+                <p className="text-[12px] text-gray-500">{post.service.currency || "BDT"} {Number(post.service.monthly_fee || post.service.per_session_fee)}/mo</p>
+              ) : null}
+            </div>
+            <ChevronRight className="size-4 text-gray-400 ml-auto shrink-0" />
+          </a>
+        </div>
+      )}
       {post.subjects?.length > 0 && <div className="px-5 pb-3 flex flex-wrap gap-1.5">{post.subjects.map((s: any) => (<span key={s.subject.id} className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-950/30 px-2.5 py-1 text-[12px] font-medium text-[#0066FF]"><Hash className="size-3" />{s.subject.name}</span>))}</div>}
       {post.media?.length > 0 && <div className="px-5 pb-3">{post.media.length === 1 ? (<div className="rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer" onClick={() => onImageClick(getMediaUrl(post.media[0].key))}><img src={getMediaUrl(post.media[0].key)} alt="" className="w-full aspect-[16/10] object-cover hover:scale-[1.01] transition-transform duration-500" loading="lazy" /></div>) : (<div className="grid grid-cols-2 gap-1 rounded-2xl overflow-hidden">{post.media.slice(0, 4).map((m: any, i: number) => (<div key={m.id} className="relative overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer aspect-square" onClick={() => onImageClick(getMediaUrl(m.key))}><img src={getMediaUrl(m.key)} alt="" className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500" loading="lazy" />{post.media.length > 4 && i === 3 && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="text-white text-lg font-bold">+{post.media.length - 4}</span></div>}</div>))}</div>)}</div>}
       <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-800/80 flex items-center justify-between">

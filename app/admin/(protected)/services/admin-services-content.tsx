@@ -113,7 +113,7 @@ export function AdminServicesContent() {
                         }`}>{s.status}</span>
                       </td>
                       <td className="px-4 py-3">{s.joining_fee > 0 ? `$${s.joining_fee}` : "Free"}</td>
-                      <td className="px-4 py-3">{s.average_rating ? s.average_rating.toFixed(1) : "-"}</td>
+                      <td className="px-4 py-3">{s.average_rating ? Number(s.average_rating).toFixed(1) : "-"}</td>
                       <td className="px-4 py-3">
                         <Button variant="ghost" size="sm"><Eye className="size-4" /></Button>
                       </td>

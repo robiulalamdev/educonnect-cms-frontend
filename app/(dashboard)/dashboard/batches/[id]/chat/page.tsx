@@ -4,8 +4,9 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { getBatchDetails, getChatMessages, sendChatMessage, sendChatMessageWithMedia } from "@/lib/actions/classroom";
 import { useUser } from "@/lib/contexts/user-context";
+import { joinChatRoom, leaveChatRoom, onNewMessage, onPresenceUpdate, onPresenceSnapshot } from "@/lib/socket";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, MessageSquare, Paperclip, X, FileText, Plus, Check } from "lucide-react";
+import { Loader2, Send, MessageSquare, Paperclip, X, FileText, Plus, Check, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { getCloudinaryUrl } from "@/lib/utils";
 
@@ -93,7 +94,34 @@ export default function BatchChatTab() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [msgPage, setMsgPage] = useState(1);
+  const [msgTotalPages, setMsgTotalPages] = useState(1);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [onlineMembers, setOnlineMembers] = useState<Set<string>>(new Set());
+
+  // Presence — how many members of this chat are online right now
+  useEffect(() => {
+    if (!chatId) return;
+    const onUpdate = onPresenceUpdate(({ userId, online }) => {
+      setOnlineMembers((prev) => {
+        const next = new Set(prev);
+        if (online) next.add(userId);
+        else next.delete(userId);
+        return next;
+      });
+    });
+    const onSnapshot = onPresenceSnapshot((data) => {
+      if (data.chatId !== chatId) return;
+      const online = new Set<string>();
+      for (const [uid, status] of Object.entries(data.members)) {
+        if (status.online) online.add(uid);
+      }
+      setOnlineMembers(online);
+    });
+    return () => { onUpdate(); onSnapshot(); };
+  }, [chatId]);
 
   // 1. Get the batch's group_chat ID
   useEffect(() => {
@@ -106,24 +134,64 @@ export default function BatchChatTab() {
     });
   }, [id]);
 
-  // 2. Fetch messages when chatId is available
+  // 2. Fetch messages when chatId is available — realtime via socket,
+  //    with 5s polling as a fallback for any missed messages.
   useEffect(() => {
     if (!chatId) return;
 
     const fetchMessages = async () => {
       const res = await getChatMessages(chatId);
-      if (res.success) setMessages(res.data);
+      if (res.success) {
+        setMessages(res.data);
+        setMsgTotalPages(res.meta?.total_pages ?? 1);
+      }
       setLoading(false);
     };
 
     fetchMessages();
 
-    // Poll every 5 seconds for new messages
+    // Realtime — join the chat room and listen for new messages
+    joinChatRoom(chatId);
+    const cleanupSocket = onNewMessage((data: any) => {
+      if (!data || data.chat_id !== chatId) return;
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === data.id)) return prev;
+        return [...prev, data];
+      });
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    });
+
+    // Fallback polling every 5 seconds
     pollRef.current = setInterval(fetchMessages, 5000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
+      cleanupSocket();
+      leaveChatRoom(chatId);
     };
   }, [chatId]);
+
+  // Load older messages (page 2+) and prepend them, preserving scroll position
+  async function loadOlderMessages() {
+    if (!chatId || loadingOlder || msgPage >= msgTotalPages) return;
+    setLoadingOlder(true);
+    const container = scrollContainerRef.current;
+    const prevHeight = container?.scrollHeight ?? 0;
+    const nextPage = msgPage + 1;
+    const res = await getChatMessages(chatId, nextPage);
+    if (res.success) {
+      const older = Array.isArray(res.data) ? res.data : [];
+      setMessages((prev) => {
+        const existing = new Set(prev.map((m) => m.id));
+        return [...older.filter((m: any) => !existing.has(m.id)), ...prev];
+      });
+      setMsgTotalPages(res.meta?.total_pages ?? 1);
+      setMsgPage(nextPage);
+      requestAnimationFrame(() => {
+        if (container) container.scrollTop = container.scrollHeight - prevHeight;
+      });
+    }
+    setLoadingOlder(false);
+  }
 
   // 3. Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -229,7 +297,27 @@ export default function BatchChatTab() {
   return (
     <div className="flex flex-col h-full min-h-[450px]">
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1">
+        {onlineMembers.size > 0 && (
+          <div className="flex justify-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {onlineMembers.size} {onlineMembers.size === 1 ? "member" : "members"} online
+            </span>
+          </div>
+        )}
+        {msgPage < msgTotalPages && (
+          <div className="flex justify-center py-2">
+            <button
+              onClick={loadOlderMessages}
+              disabled={loadingOlder}
+              className="flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-300 px-3.5 py-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            >
+              {loadingOlder ? <Loader2 className="size-3.5 animate-spin" /> : <ChevronUp className="size-3.5" />}
+              {loadingOlder ? "Loading..." : "Load earlier messages"}
+            </button>
+          </div>
+        )}
         {messages.length === 0 ? (
           <div className="text-center py-16">
             <div className="size-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mx-auto mb-3">
